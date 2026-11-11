@@ -250,6 +250,90 @@ const server = http.createServer(async (req, res) => {
       return json(res, { success: true, team: updated }, 200, origin)
     }
 
+    // Upload image attachment: POST /api/ensemble/teams/:id/upload-image
+    const uploadMatch = path.match(/^\/api\/ensemble\/teams\/([^/]+)\/upload-image$/)
+    if (uploadMatch && method === 'POST') {
+      const teamId = uploadMatch[1]
+      const team = getTeam(teamId)
+      if (!team) return json(res, { error: 'Team not found' }, 404, origin)
+
+      let body: Record<string, unknown>
+      try {
+        body = JSON.parse(await readBody(req))
+      } catch {
+        return json(res, { error: 'Bad Request: malformed JSON' }, 400, origin)
+      }
+
+      const rawData = (body.data as string) || ''
+      const clientFilename = (body.filename as string) || 'screenshot.png'
+      if (!rawData) return json(res, { error: 'No image data provided' }, 400, origin)
+
+      const matches = rawData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
+      const base64Str = matches ? matches[2] : rawData
+      const buffer = Buffer.from(base64Str, 'base64')
+
+      const ext = nodePath.extname(clientFilename) || '.png'
+      const safeName = `img_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${ext}`
+
+      const attachDir = nodePath.join(team.workingDirectory || os.homedir(), '.attachments')
+      try {
+        fs.mkdirSync(attachDir, { recursive: true })
+        const destPath = nodePath.join(attachDir, safeName)
+        fs.writeFileSync(destPath, buffer)
+
+        const webCacheDir = nodePath.join(os.homedir(), '.ensemble', 'attachments', teamId)
+        fs.mkdirSync(webCacheDir, { recursive: true })
+        fs.writeFileSync(nodePath.join(webCacheDir, safeName), buffer)
+
+        return json(res, {
+          success: true,
+          filename: safeName,
+          filePath: destPath,
+          url: `/api/ensemble/attachments/${teamId}/${safeName}`,
+        }, 200, origin)
+      } catch (err) {
+        console.error('[Upload] Error saving image:', err)
+        return json(res, { error: 'Failed to save image attachment' }, 500, origin)
+      }
+    }
+
+    // Serve attachment image: GET /api/ensemble/attachments/:teamId/:filename
+    const attachServeMatch = path.match(/^\/api\/ensemble\/attachments\/([^/]+)\/([^/]+)$/)
+    if (attachServeMatch && method === 'GET') {
+      const teamId = attachServeMatch[1]
+      const filename = attachServeMatch[2]
+      const team = getTeam(teamId)
+      
+      let filePath = ''
+      if (team && team.workingDirectory) {
+        const p = nodePath.join(team.workingDirectory, '.attachments', filename)
+        if (fs.existsSync(p)) filePath = p
+      }
+      if (!filePath) {
+        const p = nodePath.join(os.homedir(), '.ensemble', 'attachments', teamId, filename)
+        if (fs.existsSync(p)) filePath = p
+      }
+
+      if (filePath && fs.existsSync(filePath)) {
+        const ext = nodePath.extname(filePath).toLowerCase()
+        const mimeTypes: Record<string, string> = {
+          '.png': 'image/png',
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.gif': 'image/gif',
+          '.webp': 'image/webp',
+          '.svg': 'image/svg+xml',
+        }
+        res.writeHead(200, {
+          'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+          'Cache-Control': 'public, max-age=86400',
+        })
+        fs.createReadStream(filePath).pipe(res)
+        return
+      }
+      return json(res, { error: 'Attachment not found' }, 404, origin)
+    }
+
     // Purge completed / disbanded teams: POST /api/ensemble/teams/purge-completed
     if (path === '/api/ensemble/teams/purge-completed' && method === 'POST') {
       const all = loadTeams()

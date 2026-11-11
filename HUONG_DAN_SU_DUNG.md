@@ -58,6 +58,13 @@ collab "Kiểm tra syntax và format code của module HR" review-fast
 Truy cập: **[http://localhost:23000](http://localhost:23000)**
 
 * **Theo dõi thời gian thực**: Tin nhắn của Lead và Worker sẽ lần lượt xuất hiện theo dòng thời gian.
+* **Gửi ảnh chụp màn hình cho Agent phân tích (Mới 🔥)**:
+  1. Chụp ảnh bất kỳ trên màn hình: Nhấn tổ hợp phím **`Windows + Shift + S`** (hoặc nút PrintScreen).
+  2. Quay lại tab Web và bấm **`Ctrl + V`** (hoặc bấm icon 🖼️/📷 cạnh ô nhập).
+  3. Thanh ảnh xem trước sẽ hiện lên ngay phía trên ô chat kèm tên file & dung lượng.
+  4. Gõ thêm yêu cầu chỉ đạo (nếu cần) rồi bấm **Enter** hoặc nút **Gửi 🚀**.
+  5. Hệ thống sẽ tự động lưu ảnh vào thư mục dự án và báo cho Agent: Lead & Worker (Gemini 4 Argon & Gemini Flash) sẽ đọc trực tiếp file ảnh bằng năng lực Multimodal để giải thích lỗi, phân tích UI/sơ đồ hay hướng dẫn sửa code!
+* **Đổi tên phiên chạy**: Bấm icon cây bút ✏️ bên cạnh tên phiên ở thanh tiêu đề hoặc trong danh sách phiên để đặt tên dễ nhớ (ví dụ: `Task sửa giao diện`).
 * **Chỉ đạo thêm cho Agent**: Ở thanh công cụ dưới đáy màn hình, bạn có thể chọn gửi đến `👥 Cả nhóm` hoặc chỉ định `👑 LEAD` / `⚡ WORKER`, gõ tin nhắn và nhấn **Enter** để can thiệp trực tiếp.
 * **Xóa phiên chạy**:
   1. Bấm vào nút **"Phiên chạy"** trên thanh tiêu đề.
