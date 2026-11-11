@@ -1133,18 +1133,7 @@ export async function createEnsembleTeam(
         type: 'chat', timestamp: new Date().toISOString(),
       })
 
-      // Auto-split: Join the 2 panes side-by-side AFTER prompts are delivered
-      if (activeAgents.length === 2) {
-        try {
-          const { execSync } = await import('child_process');
-          const s1 = `${team.name}-${activeAgents[0].name}`;
-          const s2 = `${team.name}-${activeAgents[1].name}`;
-          execSync(`tmux join-pane -h -s "${s2}:0" -t "${s1}:0" && tmux select-layout -t "${s1}" even-horizontal`, { stdio: 'ignore' });
-          console.log(`[Ensemble] Auto-split panes: joined ${s2} into ${s1}`);
-        } catch (e) {
-          console.error('[Ensemble] Auto-split failed:', e);
-        }
-      }
+
     }
   }
 
