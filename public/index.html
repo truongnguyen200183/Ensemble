@@ -574,7 +574,10 @@
       }
 
       if (model.includes('argon')) model = 'Gemini 4 Argon'
+      else if (model.includes('opus')) model = 'Claude Opus 5.5'
+      else if (model.includes('sonnet')) model = 'Claude Sonnet 5.5'
       else if (model.includes('flash')) model = 'Gemini 3.8 Flash'
+      else if (model.includes('gpt-oss') || model.includes('120b')) model = 'GPT-OSS 120B'
 
       return { isLead, role, model }
     }
@@ -1441,14 +1444,28 @@
       const populateSelect = (selectId, selectedVal) => {
         const sel = document.getElementById(selectId)
         sel.innerHTML = ''
+        
+        // Group by model family
+        const groups = {}
         availableModels.forEach(m => {
-          const opt = document.createElement('option')
-          opt.value = m.id
-          const isExhausted = (exhaustedModels || []).includes(m.id)
-          opt.textContent = `${m.name} [Tier ${m.tier}]${isExhausted ? ' (⚠️ Hết Quota)' : ''}`
-          if (m.id === selectedVal) opt.selected = true
-          sel.appendChild(opt)
+          const g = m.group || 'Khác'
+          if (!groups[g]) groups[g] = []
+          groups[g].push(m)
         })
+
+        for (const [groupName, models] of Object.entries(groups)) {
+          const optGroup = document.createElement('optgroup')
+          optGroup.label = `─── ${groupName} ───`
+          models.forEach(m => {
+            const opt = document.createElement('option')
+            opt.value = m.id
+            const isExhausted = (exhaustedModels || []).includes(m.id)
+            opt.textContent = `${m.name} [Tier ${m.tier}]${isExhausted ? ' (⚠️ Hết Quota)' : ''}`
+            if (m.id === selectedVal) opt.selected = true
+            optGroup.appendChild(opt)
+          })
+          sel.appendChild(optGroup)
+        }
       }
 
       populateSelect('modelSelectLead', roles.lead)
