@@ -28,7 +28,7 @@
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-4-argon-low",
+      "gemini-3.8-flash-high",
       "--effort",
       "low"
     ],
@@ -122,7 +122,7 @@
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-4-argon-low",
+      "gemini-3.8-flash-high",
       "--effort",
       "low"
     ],

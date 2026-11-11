@@ -601,8 +601,34 @@
       div.id = `msg-${msg.id}`
       div.className = 'w-full flex flex-col transition-all duration-300'
 
-      // 1. SYSTEM MESSAGE (Centered Pill)
+      // 1. SYSTEM MESSAGE (Centered Pill or Quota Alert Card)
       if (isSystem) {
+        const isQuota = msg.content.toLowerCase().includes('quota') || msg.content.includes('Individual quota reached')
+        if (isQuota) {
+          div.className += ' items-center my-3'
+          div.innerHTML = `
+            <div class="max-w-xl w-full p-4 bg-rose-950/90 border border-rose-600 rounded-xl text-rose-200 shadow-xl flex flex-col space-y-2.5">
+              <div class="flex items-center space-x-2">
+                <span class="text-xl">⚠️</span>
+                <div>
+                  <h4 class="font-bold text-xs text-rose-100">CẢNH BÁO: MÔ HÌNH HẾT HẠN MỨC (QUOTA)</h4>
+                  <p class="text-[10px] text-rose-300 font-mono">${formatTime(msg.timestamp)} • Tác tử không thể tiếp tục do hết lượt gọi API tuần</p>
+                </div>
+              </div>
+              <p class="text-xs text-rose-100 bg-rose-900/40 p-2.5 rounded-lg border border-rose-800/60 leading-relaxed font-mono">
+                ${escapeHtml(msg.content)}
+              </p>
+              <div class="flex items-center justify-between pt-1 border-t border-rose-800/60">
+                <span class="text-[11px] text-rose-300">Bấm vào đây để chọn mô hình thay thế ngay:</span>
+                <button type="button" onclick="openModelConfigModal()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold shadow-md transition cursor-pointer flex items-center space-x-1.5 active:scale-95">
+                  <span>⚙️ Đổi Model Ngay</span>
+                </button>
+              </div>
+            </div>
+          `
+          return div
+        }
+
         div.className += ' items-center my-2'
         const isDone = msg.content.includes('COLLAB_DONE') || msg.content.includes('hoàn thành')
         const isSuccess = msg.content.includes('🚀') || msg.content.includes('joined') || isDone
@@ -1390,6 +1416,19 @@
         if (!res.ok) return
         modelConfigData = await res.json()
         renderModelConfigUI()
+
+        // Highlight header button if any model has exhausted quota
+        const hasExhausted = (modelConfigData.exhaustedModels || []).length > 0
+        const btn = document.getElementById('openModelConfigBtn')
+        if (btn) {
+          if (hasExhausted) {
+            btn.className = 'p-1.5 rounded-lg border border-rose-500/80 bg-rose-950/60 text-rose-300 hover:text-rose-100 transition text-xs flex items-center space-x-1 cursor-pointer shadow-sm'
+            btn.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse-subtle"></span><span class="text-[11px] font-semibold">⚙️ Model (Hết Quota)</span>'
+          } else {
+            btn.className = 'p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 transition text-xs flex items-center space-x-1 cursor-pointer'
+            btn.innerHTML = '<span>⚙️</span><span class="hidden md:inline text-[11px]">Model</span>'
+          }
+        }
       } catch (e) {
         console.warn('Error loading model config:', e)
       }
@@ -1505,9 +1544,13 @@
     async function init() {
       await loadAgentsConfig()
       await loadTeamsList()
+      await loadModelConfig()
 
       // Poll teams list every 4 seconds
       setInterval(loadTeamsList, 4000)
+
+      // Poll model config / quota status every 8 seconds
+      setInterval(loadModelConfig, 8000)
 
       // Poll current team feed every 1.5 seconds
       setInterval(fetchMessages, 1500)

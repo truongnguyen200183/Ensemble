@@ -233,12 +233,33 @@ export class AgentWatchdog {
               ...currentState,
               nudgeBudgetSpentAt: new Date(nowMs).toISOString(),
             })
+
+            let quotaMsg = ''
+            try {
+              const sessionName = `${team.name}-${agent.name}`
+              const runtime = this.deps.getRuntime()
+              if (typeof (runtime as any).capturePane === 'function') {
+                const pane = await (runtime as any).capturePane(sessionName)
+                if (pane && (pane.includes('Individual quota reached') || pane.includes('quota reached'))) {
+                  quotaMsg = `⚠️ CẢNH BÁO: Tác tử ${agent.name} đã chạm trần hạn mức Quota (Individual quota reached)! Hãy bấm vào nút [⚙️ Model] trên thanh công cụ để đổi mô hình tiếp tục.`
+                  try {
+                    const fs = await import('fs')
+                    const p = '/home/truong/.ensemble/exhausted-models.txt'
+                    const curr = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''
+                    if (!curr.includes('gemini-4-argon-low')) {
+                      fs.writeFileSync(p, curr + '\ngemini-4-argon-low\n', 'utf8')
+                    }
+                  } catch {}
+                }
+              }
+            } catch {}
+
             this.deps.appendMessage(team.id, {
               id: uuidv4(),
               teamId: team.id,
               from: 'ensemble',
               to: 'team',
-              content: `🔕 Watchdog stopped nudging ${agent.name} after ${nudgeCount} nudges without progress`,
+              content: quotaMsg || `🔕 Watchdog stopped nudging ${agent.name} after ${nudgeCount} nudges without progress`,
               type: 'chat',
               timestamp: new Date(nowMs).toISOString(),
             })
