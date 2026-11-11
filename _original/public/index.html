@@ -232,6 +232,17 @@
       <button id="toggleAudioBtn" title="Bật/Tắt âm thanh thông báo" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
         <span id="audioIcon">🔔</span>
       </button>
+
+      <!-- Model Config Modal Trigger Button -->
+      <button 
+        id="openModelConfigBtn" 
+        type="button" 
+        title="Cấu hình Model & Bậc xếp hạng (Auto-fallback)" 
+        class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 transition text-xs flex items-center space-x-1 cursor-pointer"
+      >
+        <span>⚙️</span>
+        <span class="hidden md:inline text-[11px]">Model</span>
+      </button>
     </div>
   </header>
 
@@ -338,6 +349,103 @@
       </div>
     </div>
   </footer>
+
+  <!-- MODEL CONFIG MODAL -->
+  <div id="modelConfigModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">⚙️</span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-100">Cấu Hình Model & Bậc Xếp Hạng</h3>
+            <p class="text-[11px] text-slate-400">Tự động hạ cấp (Auto-fallback) khi mô hình cao cấp hết Quota</p>
+          </div>
+        </div>
+        <button id="closeModelConfigBtn" type="button" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 space-y-4 overflow-y-auto text-xs">
+        <!-- Tier Hierarchy Explainer -->
+        <div class="p-3 bg-blue-950/40 border border-blue-800/50 rounded-xl space-y-1.5">
+          <p class="font-semibold text-blue-300 flex items-center space-x-1.5">
+            <span>🛡️</span>
+            <span>Cơ chế Xếp loại & Tự động xuống cấp (Auto-fallback):</span>
+          </p>
+          <p class="text-slate-300 leading-relaxed text-[11px]">
+            Hệ thống sắp xếp Model theo cấp độ: 
+            <strong class="text-indigo-300">Bậc 1 (Argon)</strong> ➔ 
+            <strong class="text-sky-300">Bậc 2 (Claude Sonnet 5.5 / Flash High)</strong> ➔ 
+            <strong class="text-amber-300">Bậc 3 (Flash Low)</strong>. 
+            Nếu Bậc 1 bị khóa hạn mức (Quota reached), hệ thống sẽ <strong>tự động hạ xuống 1 cấp</strong> để phiên làm việc không bao giờ bị dừng!
+          </p>
+        </div>
+
+        <!-- Role Selectors -->
+        <div class="space-y-3">
+          <!-- Lead -->
+          <div class="p-3 bg-slate-800/60 border border-slate-700 rounded-xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-200 flex items-center space-x-1.5">
+                <span>👑</span>
+                <span>LEAD (Kiến trúc sư trưởng / Lập kế hoạch)</span>
+              </label>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/60 text-indigo-300 border border-indigo-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
+            </div>
+            <select id="modelSelectLead" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+            </select>
+          </div>
+
+          <!-- Worker -->
+          <div class="p-3 bg-slate-800/60 border border-slate-700 rounded-xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-200 flex items-center space-x-1.5">
+                <span>⚡</span>
+                <span>WORKER (Lập trình viên thực thi)</span>
+              </label>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-900/60 text-amber-300 border border-amber-700/60 font-semibold">Ưu tiên Bậc 2 / 3</span>
+            </div>
+            <select id="modelSelectWorker" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+            </select>
+          </div>
+
+          <!-- Reviewer -->
+          <div class="p-3 bg-slate-800/60 border border-slate-700 rounded-xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-200 flex items-center space-x-1.5">
+                <span>🔍</span>
+                <span>REVIEWER (Chuyên gia phản biện)</span>
+              </label>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-900/60 text-sky-300 border border-sky-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
+            </div>
+            <select id="modelSelectReviewer" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+            </select>
+          </div>
+        </div>
+
+        <!-- Quota Status Block -->
+        <div class="p-3 bg-slate-800/40 border border-slate-700/80 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-slate-300">Tình trạng Quota hiện tại:</span>
+            <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa đánh dấu hết Quota (Reset)</button>
+          </div>
+          <div id="quotaStatusList" class="space-y-1.5 text-[11px]">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-3 border-t border-slate-800 bg-slate-800/40 flex items-center justify-end space-x-2 shrink-0">
+        <button id="cancelModelConfigBtn" type="button" class="px-3.5 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 transition text-xs cursor-pointer">Đóng</button>
+        <button id="saveModelConfigBtn" type="button" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition text-xs shadow-md cursor-pointer flex items-center space-x-1">
+          <span>Lưu Cấu Hình</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
@@ -1272,6 +1380,126 @@
       const icon = document.getElementById('audioIcon')
       icon.textContent = soundEnabled ? '🔔' : '🔕'
     })
+
+    // Model Config Modal Logic
+    let modelConfigData = null
+
+    async function loadModelConfig() {
+      try {
+        const res = await fetch('/api/ensemble/model-config')
+        if (!res.ok) return
+        modelConfigData = await res.json()
+        renderModelConfigUI()
+      } catch (e) {
+        console.warn('Error loading model config:', e)
+      }
+    }
+
+    function renderModelConfigUI() {
+      if (!modelConfigData) return
+      const { availableModels, roles, exhaustedModels } = modelConfigData
+
+      const populateSelect = (selectId, selectedVal) => {
+        const sel = document.getElementById(selectId)
+        sel.innerHTML = ''
+        availableModels.forEach(m => {
+          const opt = document.createElement('option')
+          opt.value = m.id
+          const isExhausted = (exhaustedModels || []).includes(m.id)
+          opt.textContent = `${m.name} [Tier ${m.tier}]${isExhausted ? ' (⚠️ Hết Quota)' : ''}`
+          if (m.id === selectedVal) opt.selected = true
+          sel.appendChild(opt)
+        })
+      }
+
+      populateSelect('modelSelectLead', roles.lead)
+      populateSelect('modelSelectWorker', roles.worker)
+      populateSelect('modelSelectReviewer', roles.reviewer)
+
+      // Render Quota status list
+      const quotaList = document.getElementById('quotaStatusList')
+      quotaList.innerHTML = ''
+      availableModels.forEach(m => {
+        const isExhausted = (exhaustedModels || []).includes(m.id)
+        const item = document.createElement('div')
+        item.className = 'flex items-center justify-between py-1 border-b border-slate-800 last:border-b-0'
+        item.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
+            <span class="text-slate-200 font-medium">${m.name}</span>
+            <span class="text-[10px] text-slate-400">(${m.desc})</span>
+          </div>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
+            ${isExhausted ? 'Khóa hạn mức (Auto-fallback)' : 'Sẵn sàng'}
+          </span>
+        `
+        quotaList.appendChild(item)
+      })
+    }
+
+    async function saveModelConfig() {
+      const lead = document.getElementById('modelSelectLead').value
+      const worker = document.getElementById('modelSelectWorker').value
+      const reviewer = document.getElementById('modelSelectReviewer').value
+      const btn = document.getElementById('saveModelConfigBtn')
+
+      btn.disabled = true
+      btn.innerHTML = '<span>Đang lưu...</span>'
+
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roles: { lead, worker, reviewer }
+          })
+        })
+        if (res.ok) {
+          alert('Đã lưu cấu hình Model thành công!')
+          closeModelConfigModal()
+          await loadAgentsConfig()
+        } else {
+          alert('Lỗi lưu cấu hình.')
+        }
+      } catch (e) {
+        alert('Lỗi: ' + e.message)
+      } finally {
+        btn.disabled = false
+        btn.innerHTML = '<span>Lưu Cấu Hình</span>'
+      }
+    }
+
+    async function resetExhaustedQuota() {
+      if (!confirm('Bạn có chắc muốn xóa đánh dấu hết Quota để hệ thống thử lại các mô hình bậc cao nhất?')) return
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clearExhausted: true })
+        })
+        if (res.ok) {
+          alert('Đã reset trạng thái Quota thành công!')
+          await loadModelConfig()
+        }
+      } catch (e) {
+        alert('Lỗi: ' + e.message)
+      }
+    }
+
+    function openModelConfigModal() {
+      document.getElementById('modelConfigModal').classList.remove('hidden')
+      loadModelConfig()
+    }
+
+    function closeModelConfigModal() {
+      document.getElementById('modelConfigModal').classList.add('hidden')
+    }
+
+    document.getElementById('openModelConfigBtn').addEventListener('click', openModelConfigModal)
+    document.getElementById('closeModelConfigBtn').addEventListener('click', closeModelConfigModal)
+    document.getElementById('cancelModelConfigBtn').addEventListener('click', closeModelConfigModal)
+    document.getElementById('saveModelConfigBtn').addEventListener('click', saveModelConfig)
+    document.getElementById('resetQuotaBtn').addEventListener('click', resetExhaustedQuota)
 
     // Init loop
     async function init() {

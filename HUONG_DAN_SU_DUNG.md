@@ -62,6 +62,14 @@ Truy cập: **[http://localhost:23000](http://localhost:23000)**
   - Hệ thống đã tắt hoàn toàn cơ chế tự động giải tán (`Auto-disband`).
   - Sau khi hoàn thành xong nhiệm vụ ban đầu, các Agent sẽ **luôn giữ kết nối thường trực**, chờ bạn gửi thêm chỉ đạo, câu hỏi hoặc ảnh chụp màn hình tiếp theo mà không sợ bị tự động đóng phiên.
   - **Nút "🛑 Kết thúc phiên"**: Khi bạn đã hoàn toàn hài lòng và muốn đóng phiên làm việc, chỉ cần bấm nút **`🛑 Kết thúc phiên`** ở góc trên bên phải màn hình (cạnh huy hiệu ĐANG CHẠY). Các Agent sẽ được giải tán và lưu lại tổng kết một cách chủ động theo lệnh của bạn.
+* **Cấu hình Model & Tự động hạ cấp Auto-Fallback (Mới 🔥)**:
+  - Bấm vào nút **`⚙️ Model`** ở góc trên bên phải màn hình Web để mở bảng điều khiển Model.
+  - Cho phép tùy chọn mô hình AI cho từng vai trò:
+    - **👑 LEAD**: Chọn `Gemini 4 Argon` (Bậc 1), `Claude Sonnet 5.5` (Bậc 2), `Gemini 3.8 Flash High` (Bậc 2)...
+    - **⚡ WORKER**: Chọn `Gemini 3.8 Flash Low` (Bậc 3), `Flash High` (Bậc 2)...
+    - **🔍 REVIEWER**: Chọn mô hình phản biện tương ứng.
+  - **Cơ chế Auto-Fallback (Xuống 1 cấp khi hết Quota)**: Nếu mô hình Bậc 1 (ví dụ `Gemini 4 Argon`) bị chạm trần Quota, hệ thống sẽ **tự động hạ xuống Bậc 2 (`Claude Sonnet 5.5` hoặc `Flash High`)** để công việc tiếp tục trơn tru mà không bị lỗi hay gián đoạn.
+  - Có nút **"Xóa đánh dấu hết Quota (Reset)"** trên bảng điều khiển để bạn khôi phục lại mô hình bậc cao nhất bất cứ lúc nào.
 * **Gửi ảnh chụp màn hình cho Agent phân tích (Mới 🔥)**:
   1. Chụp ảnh bất kỳ trên màn hình: Nhấn tổ hợp phím **`Windows + Shift + S`** (hoặc nút PrintScreen).
   2. Quay lại tab Web và bấm **`Ctrl + V`** (hoặc bấm icon 🖼️/📷 cạnh ô nhập).

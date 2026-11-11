@@ -5,10 +5,10 @@
     "flags": [
       "--dangerously-bypass-approvals-and-sandbox"
     ],
-    "readyMarker": "\u203a",
+    "readyMarker": "›",
     "inputMethod": "pasteFromFile",
     "color": "blue",
-    "icon": "\u25c6"
+    "icon": "◆"
   },
   "claude": {
     "name": "claude",
@@ -17,25 +17,25 @@
       "--permission-mode",
       "auto"
     ],
-    "readyMarker": "\u276f",
+    "readyMarker": "❯",
     "inputMethod": "sendKeys",
     "color": "green",
-    "icon": "\u25cf"
+    "icon": "●"
   },
   "agy": {
     "name": "agy",
-    "command": "agy",
+    "command": "agy-smart",
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-3.8-flash-high",
+      "gemini-4-argon-low",
       "--effort",
-      "high"
+      "low"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
     "color": "red",
-    "icon": "\u25b2",
+    "icon": "▲",
     "unsetEnv": [
       "GEMINI_API_KEY",
       "GOOGLE_API_KEY"
@@ -50,7 +50,7 @@
     "readyMarker": "Type your message",
     "inputMethod": "pasteFromFile",
     "color": "yellow",
-    "icon": "\u2605"
+    "icon": "★"
   },
   "opencode": {
     "name": "opencode",
@@ -59,7 +59,7 @@
     "readyMarker": "Ask anything",
     "inputMethod": "sendKeys",
     "color": "cyan",
-    "icon": "\u25a3"
+    "icon": "▣"
   },
   "grok": {
     "name": "grok",
@@ -68,10 +68,10 @@
       "--always-approve",
       "--trust"
     ],
-    "readyMarker": "\u276f",
+    "readyMarker": "❯",
     "inputMethod": "pasteFromFile",
     "color": "white",
-    "icon": "\u2715"
+    "icon": "✕"
   },
   "glm": {
     "name": "glm",
@@ -80,10 +80,10 @@
       "--permission-mode",
       "auto"
     ],
-    "readyMarker": "\u276f",
+    "readyMarker": "❯",
     "inputMethod": "sendKeys",
     "color": "magenta",
-    "icon": "\u25c8"
+    "icon": "◈"
   },
   "mimo": {
     "name": "mimo",
@@ -95,11 +95,11 @@
     "readyMarker": "Type your message",
     "inputMethod": "pasteFromFile",
     "color": "cyan",
-    "icon": "\u25c7"
+    "icon": "◇"
   },
   "agy-worker": {
     "name": "agy-worker",
-    "command": "agy-worker",
+    "command": "agy-smart",
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
@@ -110,7 +110,7 @@
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
     "color": "yellow",
-    "icon": "\u25bc",
+    "icon": "▼",
     "unsetEnv": [
       "GEMINI_API_KEY",
       "GOOGLE_API_KEY"
@@ -118,18 +118,18 @@
   },
   "agy-pro": {
     "name": "agy-pro",
-    "command": "agy-pro",
+    "command": "agy-smart",
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-3.8-flash-high",
+      "gemini-4-argon-low",
       "--effort",
-      "high"
+      "low"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
     "color": "magenta",
-    "icon": "\u25c6",
+    "icon": "◆",
     "unsetEnv": [
       "GEMINI_API_KEY",
       "GOOGLE_API_KEY"

@@ -374,6 +374,90 @@ const server = http.createServer(async (req, res) => {
       return json(res, {}, 200, origin)
     }
 
+    // Model configuration: /api/ensemble/model-config
+    if (path === '/api/ensemble/model-config') {
+      const agentsPath = nodePath.join(serverDir, 'agents.json')
+      const exhaustedFile = nodePath.join(process.env.HOME || '/home/truong', '.ensemble', 'exhausted-models.txt')
+
+      const availableModels = [
+        { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', tier: 1, desc: 'Bậc 1: Siêu mạnh, tư duy sâu' },
+        { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', tier: 2, desc: 'Bậc 2: Cân bằng, code xuất sắc' },
+        { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', tier: 2, desc: 'Bậc 2: Tốc độ cao, code tốt' },
+        { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', tier: 2, desc: 'Bậc 2: Suy luận cao, dồi dào Quota' },
+        { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', tier: 3, desc: 'Bậc 3: Siêu nhẹ, tiết kiệm token' },
+      ]
+
+      if (method === 'GET') {
+        let currentAgents: Record<string, any> = {}
+        if (fs.existsSync(agentsPath)) {
+          try { currentAgents = JSON.parse(fs.readFileSync(agentsPath, 'utf8')) } catch {}
+        }
+        let exhausted: string[] = []
+        if (fs.existsSync(exhaustedFile)) {
+          try {
+            exhausted = fs.readFileSync(exhaustedFile, 'utf8').split('\n').map((s: string) => s.trim()).filter(Boolean)
+          } catch {}
+        }
+
+        const getModel = (key: string) => {
+          const prog = currentAgents[key]
+          if (prog && prog.flags) {
+            const idx = prog.flags.indexOf('--model')
+            if (idx !== -1 && prog.flags[idx + 1]) return prog.flags[idx + 1]
+          }
+          return ''
+        }
+
+        return json(res, {
+          availableModels,
+          roles: {
+            lead: getModel('agy') || 'gemini-4-argon-low',
+            worker: getModel('agy-worker') || 'gemini-3.8-flash-low',
+            reviewer: getModel('agy-pro') || 'gemini-4-argon-low',
+          },
+          exhaustedModels: exhausted,
+        }, 200, origin)
+      }
+
+      if (method === 'POST') {
+        try {
+          const body = JSON.parse(await readBody(req))
+          let currentAgents: Record<string, any> = {}
+          if (fs.existsSync(agentsPath)) {
+            try { currentAgents = JSON.parse(fs.readFileSync(agentsPath, 'utf8')) } catch {}
+          }
+
+          const setModel = (key: string, model: string) => {
+            if (currentAgents[key] && currentAgents[key].flags) {
+              const idx = currentAgents[key].flags.indexOf('--model')
+              if (idx !== -1) currentAgents[key].flags[idx + 1] = model
+            }
+          }
+
+          if (body.roles) {
+            if (body.roles.lead) setModel('agy', body.roles.lead)
+            if (body.roles.worker) setModel('agy-worker', body.roles.worker)
+            if (body.roles.reviewer) setModel('agy-pro', body.roles.reviewer)
+          }
+
+          fs.writeFileSync(agentsPath, JSON.stringify(currentAgents, null, 2), 'utf8')
+          try {
+            fs.writeFileSync('/mnt/d/Ensemble/_original/agents.json', JSON.stringify(currentAgents, null, 2), 'utf8')
+          } catch {}
+
+          if (body.clearExhausted) {
+            fs.writeFileSync(exhaustedFile, '', 'utf8')
+          } else if (Array.isArray(body.exhaustedModels)) {
+            fs.writeFileSync(exhaustedFile, body.exhaustedModels.join('\n') + '\n', 'utf8')
+          }
+
+          return json(res, { success: true }, 200, origin)
+        } catch (err) {
+          return json(res, { error: String(err) }, 400, origin)
+        }
+      }
+    }
+
     // Web Dashboard UI
     if (path === '/' || path === '/index.html' || path === '/dashboard') {
       const publicIndex = nodePath.join(serverDir, 'public', 'index.html')
