@@ -728,16 +728,36 @@
       const selected = teamsList.find(t => t.id === currentTeamId)
       const dot = document.getElementById('selectedSessionDot')
       const title = document.getElementById('selectedSessionTitle')
+      const statusBadge = document.getElementById('teamStatusBadge')
 
       if (selected) {
         const isActive = selected.status === 'active'
+        const isDisbanded = selected.status === 'disbanded'
         const isDone = selected.status === 'completed'
-        dot.className = `w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-emerald-400 animate-pulse-subtle' : isDone ? 'bg-blue-400' : 'bg-slate-500'}`
+        dot.className = `w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-emerald-400 animate-pulse-subtle' : isDisbanded ? 'bg-amber-400' : 'bg-blue-400'}`
         const timeStr = selected.createdAt ? `[${formatTime(selected.createdAt)}] ` : ''
         title.textContent = `${timeStr}${selected.description || selected.name}`
+
+        // Synchronize top right Status Badge
+        if (statusBadge) {
+          if (isActive) {
+            statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/70 text-emerald-300 border border-emerald-600/50'
+            statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse-subtle"></span><span>ĐANG CHẠY (ACTIVE)</span>'
+          } else if (isDisbanded) {
+            statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/70 text-amber-300 border border-amber-600/50'
+            statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span><span>🛑 ĐÃ KẾT THÚC (DISBANDED)</span>'
+          } else {
+            statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-950/70 text-blue-300 border border-blue-600/50'
+            statusBadge.innerHTML = '<span class="mr-1.5">🏁 </span><span>HOÀN THÀNH</span>'
+          }
+        }
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-slate-500 shrink-0'
         title.textContent = 'Chưa chọn phiên'
+        if (statusBadge) {
+          statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700'
+          statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500 mr-1.5"></span><span>CHỜ KẾT NỐI</span>'
+        }
       }
 
       document.getElementById('sessionTotalCount').textContent = teamsList.length
@@ -1032,6 +1052,11 @@
       const targetSelect = document.getElementById('msgTarget')
       const textContent = input.value.trim()
       if ((!textContent && !pendingImage) || !currentTeamId) return
+
+      const currentTeam = teamsList.find(t => t.id === currentTeamId)
+      if (currentTeam && currentTeam.status !== 'active') {
+        alert(`⚠️ Chú ý: Phiên này đã KẾT THÚC (${currentTeam.status.toUpperCase()}) vì các Agent đã hoàn thành và rời nhóm (Auto-disband).\n\nẢnh/tin nhắn vẫn sẽ được lưu vào lịch sử chat. Để các Agent mới tiếp tục phân tích, bạn hãy mở terminal và gọi:\n\ncollab "Phân tích ảnh vừa gửi"`)
+      }
 
       const sendBtn = document.getElementById('sendBtn')
       sendBtn.disabled = true
