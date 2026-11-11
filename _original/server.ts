@@ -10,7 +10,7 @@ import os from 'os'
 import nodePath from 'path'
 import { fileURLToPath } from 'url'
 const serverDir = nodePath.dirname(fileURLToPath(import.meta.url))
-import { deleteTeam, loadTeams, getTeam } from './lib/ensemble-registry'
+import { deleteTeam, loadTeams, getTeam, updateTeam } from './lib/ensemble-registry'
 import {
   createEnsembleTeam, getEnsembleTeam, listEnsembleTeams,
   getTeamFeed, sendTeamMessage, disbandTeam,
@@ -229,6 +229,25 @@ const server = http.createServer(async (req, res) => {
       const result = getTeamFeed(feedMatch[1], since)
       if (result.error) return json(res, { error: result.error }, result.status, origin)
       return json(res, result.data, result.status, origin)
+    }
+
+    // Rename team: POST /api/ensemble/teams/:id/rename
+    const renameMatch = path.match(/^\/api\/ensemble\/teams\/([^/]+)\/rename$/)
+    if (renameMatch && method === 'POST') {
+      const teamId = renameMatch[1]
+      let body: Record<string, unknown>
+      try {
+        body = JSON.parse(await readBody(req))
+      } catch {
+        return json(res, { error: 'Bad Request: malformed JSON' }, 400, origin)
+      }
+      const newName = ((body.name || body.description || '') as string).trim()
+      if (!newName) {
+        return json(res, { error: 'Tên phiên không được để trống' }, 400, origin)
+      }
+      const updated = updateTeam(teamId, { description: newName })
+      if (!updated) return json(res, { error: 'Team not found' }, 404, origin)
+      return json(res, { success: true, team: updated }, 200, origin)
     }
 
     // Purge completed / disbanded teams: POST /api/ensemble/teams/purge-completed
