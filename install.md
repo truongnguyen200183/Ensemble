@@ -225,3 +225,4 @@ Sau đó chạy lại `install.bat` (hoặc `install.sh`) để hệ thống t�
 * Trên Windows: Gõ `wsl tmux attach`
 * Trên macOS / Linux: Gõ `tmux attach`
 * Thoát khỏi màn hình tmux: Nhấn `Ctrl + B`, sau đó nhấn `D`.
+
