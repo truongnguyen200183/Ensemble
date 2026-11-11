@@ -1567,13 +1567,20 @@
         modelConfigData = await res.json()
         renderModelConfigUI()
 
-        // Highlight header button if any model has exhausted quota
-        const hasExhausted = (modelConfigData.exhaustedModels || []).length > 0
+        // Only highlight header button if an active agent is actually assigned an exhausted model
+        const exhaustedList = modelConfigData.exhaustedModels || []
+        const roles = modelConfigData.roles || {}
+        
+        const exhaustedRoles = []
+        if (roles.lead && exhaustedList.includes(roles.lead)) exhaustedRoles.push('Lead')
+        if (roles.worker && exhaustedList.includes(roles.worker)) exhaustedRoles.push('Worker')
+        if (roles.reviewer && exhaustedList.includes(roles.reviewer)) exhaustedRoles.push('Reviewer')
+
         const btn = document.getElementById('openModelConfigBtn')
         if (btn) {
-          if (hasExhausted) {
+          if (exhaustedRoles.length > 0) {
             btn.className = 'p-1.5 rounded-lg border border-rose-500/80 bg-rose-950/60 text-rose-300 hover:text-rose-100 transition text-xs flex items-center space-x-1 cursor-pointer shadow-sm'
-            btn.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse-subtle"></span><span class="text-[11px] font-semibold">⚙️ Model (Hết Quota)</span>'
+            btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse-subtle"></span><span class="text-[11px] font-semibold">⚙️ Model (${exhaustedRoles.join(', ')} hết Quota)</span>`
           } else {
             btn.className = 'p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 transition text-xs flex items-center space-x-1 cursor-pointer'
             btn.innerHTML = '<span>⚙️</span><span class="hidden md:inline text-[11px]">Model</span>'
