@@ -28,9 +28,9 @@
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-4-argon-low",
+      "gemini-3.8-flash-high",
       "--effort",
-      "low"
+      "high"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
@@ -122,9 +122,9 @@
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-4-argon-low",
+      "gemini-3.8-flash-high",
       "--effort",
-      "low"
+      "high"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",

@@ -6,9 +6,9 @@ Tài liệu hướng dẫn nhanh cách vận hành hệ thống đa tác tử AI
 
 ## 1. Kiến Trúc Hoạt Động
 
-* **👑 LEAD (`agy`)**: Kiến trúc sư trưởng / Lập kế hoạch (`gemini-4-argon-low`).
-* **⚡ WORKER (`agy-worker`)**: Lập trình viên thực thi (`gemini-3.8-flash-low` - siêu nhẹ, tiết kiệm token).
-* **🔍 REVIEWER (`agy-pro`)**: Chuyên gia phản biện cao cấp ngang hàng Lead (`gemini-4-argon-low`).
+* **👑 LEAD (`agy`)**: Kiến trúc sư trưởng / Lập kế hoạch (`gemini-3.8-flash-high` - suy luận sâu, dồi dào quota, không lo nghẽn hạn mức).
+* **⚡ WORKER (`agy-worker`)**: Lập trình viên thực thi (`gemini-3.8-flash-low` - siêu nhẹ, tốc độ cao, tiết kiệm token).
+* **🔍 REVIEWER (`agy-pro`)**: Chuyên gia phản biện cao cấp ngang hàng Lead (`gemini-3.8-flash-high`).
 * **🌐 Web Group Chat Dashboard**: Giao diện trực quan tại **[http://localhost:23000](http://localhost:23000)**:
   * Khung chat nhóm duy nhất (Group Chat Stream).
   * **Lead** ở bên **Trái** (xanh dương), **Worker/Reviewer** ở bên **Phải** (xanh ngọc/tím).
