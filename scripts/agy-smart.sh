@@ -68,3 +68,4 @@ if [ -n "$CHOSEN_MODEL" ] && [ "$CHOSEN_MODEL" != "$REQUESTED_MODEL" ]; then
 fi
 
 exec /usr/local/bin/agy "${ARGS[@]}" --model "$CHOSEN_MODEL"
+

@@ -273,6 +273,21 @@
     </div>
   </section>
 
+  <!-- ENDED SESSION NOTICE BANNER -->
+  <div id="endedSessionNotice" class="hidden bg-amber-950/90 border-b border-amber-600/50 px-4 py-2 text-xs text-amber-200 flex items-center justify-between shrink-0 transition-all">
+    <div class="flex items-center space-x-2 truncate">
+      <span class="text-amber-400 text-sm">⚠️</span>
+      <span id="endedSessionNoticeText" class="truncate font-medium">Bạn đang xem phiên đã kết thúc (không còn Agent hoạt động). Tin nhắn gửi vào đây sẽ không được phản hồi.</span>
+    </div>
+    <button 
+      id="switchActiveSessionBtn" 
+      type="button" 
+      class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1 rounded-md text-xs transition shrink-0 ml-3 shadow flex items-center space-x-1 cursor-pointer"
+    >
+      <span>🟢 Chuyển sang phiên đang chạy</span>
+    </button>
+  </div>
+
   <!-- CHAT CONTAINER (GOM 2 PANEL THÀNH 1 GROUP CHAT DUY NHẤT) -->
   <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
     <!-- Initial empty placeholder -->
@@ -911,6 +926,28 @@
             endBtn.classList.remove('sm:inline-flex')
           }
         }
+
+        // Toggle Ended Session Notice Banner
+        const notice = document.getElementById('endedSessionNotice')
+        const latestActive = teamsList.find(t => t.status === 'active')
+        if (notice) {
+          if (!isActive && latestActive) {
+            notice.classList.remove('hidden')
+            const noticeText = document.getElementById('endedSessionNoticeText')
+            if (noticeText) {
+              noticeText.textContent = `Bạn đang xem phiên cũ đã kết thúc. Có phiên mới đang hoạt động: "${latestActive.description || latestActive.name}"`
+            }
+            const switchBtn = document.getElementById('switchActiveSessionBtn')
+            if (switchBtn) {
+              switchBtn.onclick = () => {
+                currentTeamId = latestActive.id
+                onTeamChanged(currentTeamId)
+              }
+            }
+          } else {
+            notice.classList.add('hidden')
+          }
+        }
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-slate-500 shrink-0'
         title.textContent = 'Chưa chọn phiên'
@@ -1099,12 +1136,20 @@
 
         teamsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
+        const latestActiveTeam = teamsList.find(t => t.status === 'active')
+        const currentTeam = teamsList.find(t => t.id === currentTeamId)
+
         if (!currentTeamId || !teamsList.some(t => t.id === currentTeamId)) {
-          const activeTeam = teamsList.find(t => t.status === 'active') || teamsList[0]
-          if (activeTeam) {
-            currentTeamId = activeTeam.id
+          if (latestActiveTeam) {
+            currentTeamId = latestActiveTeam.id
+            onTeamChanged(currentTeamId)
+          } else if (teamsList[0]) {
+            currentTeamId = teamsList[0].id
             onTeamChanged(currentTeamId)
           }
+        } else if (currentTeam && currentTeam.status !== 'active' && latestActiveTeam && !window.userLockedOldSession) {
+          currentTeamId = latestActiveTeam.id
+          onTeamChanged(currentTeamId)
         }
 
         updateSelectedSessionUI()
@@ -1260,7 +1305,20 @@
 
       const currentTeam = teamsList.find(t => t.id === currentTeamId)
       if (currentTeam && currentTeam.status !== 'active') {
-        alert(`⚠️ Chú ý: Phiên này đã KẾT THÚC (${currentTeam.status.toUpperCase()}) vì các Agent đã hoàn thành và rời nhóm (Auto-disband).\n\nẢnh/tin nhắn vẫn sẽ được lưu vào lịch sử chat. Để các Agent mới tiếp tục phân tích, bạn hãy mở terminal và gọi:\n\ncollab "Phân tích ảnh vừa gửi"`)
+        const latestActive = teamsList.find(t => t.status === 'active')
+        if (latestActive) {
+          const switchNow = confirm(`⚠️ Chú ý: Bạn đang gửi tin nhắn vào phiên cũ đã kết thúc (${currentTeam.status.toUpperCase()}).\n\nHiện đang có phiên mới đang hoạt động: "${latestActive.description || latestActive.name}".\n\nBạn có muốn chuyển sang phiên đang chạy để gửi tin nhắn này không?`)
+          if (switchNow) {
+            currentTeamId = latestActive.id
+            window.userLockedOldSession = false
+            await onTeamChanged(currentTeamId)
+          } else {
+            return
+          }
+        } else {
+          alert(`⚠️ Chú ý: Phiên này đã kết thúc (${currentTeam.status.toUpperCase()}) và hiện không có phiên nào đang chạy. Để bắt đầu phiên phân tích mới, bạn hãy mở terminal và gọi:\n\ncollab "Yêu cầu mới"`)
+          return
+        }
       }
 
       const sendBtn = document.getElementById('sendBtn')
