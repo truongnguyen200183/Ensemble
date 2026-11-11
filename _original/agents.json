@@ -28,9 +28,7 @@
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-3.8-flash-high",
-      "--effort",
-      "low"
+      "gemini-3.8-flash-high"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
@@ -103,9 +101,7 @@
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-3.8-flash-low",
-      "--effort",
-      "low"
+      "gemini-3.8-flash-low"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
@@ -122,9 +118,7 @@
     "flags": [
       "--dangerously-skip-permissions",
       "--model",
-      "gemini-3.8-flash-high",
-      "--effort",
-      "low"
+      "gemini-3.8-flash-high"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
