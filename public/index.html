@@ -222,6 +222,17 @@
         <span>Kết thúc phiên</span>
       </button>
 
+      <!-- Reactivate Session Button -->
+      <button 
+        id="reactivateSessionBtn" 
+        type="button" 
+        title="Khởi động lại các Agent để tiếp tục phiên này" 
+        class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-950/80 hover:bg-indigo-900 active:bg-indigo-800 text-indigo-300 hover:text-indigo-100 border border-indigo-600/70 transition shadow-sm cursor-pointer"
+      >
+        <span class="mr-1">🔄</span>
+        <span>Kích hoạt lại phiên</span>
+      </button>
+
       <!-- Auto Scroll Toggle -->
       <button id="toggleScrollBtn" title="Tự động cuộn theo tin nhắn mới" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-blue-400 transition text-xs flex items-center space-x-1">
         <span id="scrollIcon">⬇️</span>
@@ -279,13 +290,22 @@
       <span class="text-amber-400 text-sm">⚠️</span>
       <span id="endedSessionNoticeText" class="truncate font-medium">Bạn đang xem phiên đã kết thúc (không còn Agent hoạt động). Tin nhắn gửi vào đây sẽ không được phản hồi.</span>
     </div>
-    <button 
-      id="switchActiveSessionBtn" 
-      type="button" 
-      class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1 rounded-md text-xs transition shrink-0 ml-3 shadow flex items-center space-x-1 cursor-pointer"
-    >
-      <span>🟢 Chuyển sang phiên đang chạy</span>
-    </button>
+    <div class="flex items-center space-x-2 shrink-0 ml-3">
+      <button 
+        id="noticeReactivateBtn" 
+        type="button" 
+        class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1 rounded-md text-xs transition shadow flex items-center space-x-1 cursor-pointer"
+      >
+        <span>🔄 Kích hoạt lại phiên</span>
+      </button>
+      <button 
+        id="switchActiveSessionBtn" 
+        type="button" 
+        class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1 rounded-md text-xs transition shadow flex items-center space-x-1 cursor-pointer"
+      >
+        <span>🟢 Chuyển sang phiên đang chạy</span>
+      </button>
+    </div>
   </div>
 
   <!-- CHAT CONTAINER (GOM 2 PANEL THÀNH 1 GROUP CHAT DUY NHẤT) -->
@@ -927,22 +947,45 @@
           }
         }
 
+        // Toggle Reactivate Session Button
+        const reactivateBtn = document.getElementById('reactivateSessionBtn')
+        if (reactivateBtn) {
+          if (!isActive) {
+            reactivateBtn.classList.remove('hidden')
+            reactivateBtn.classList.add('sm:inline-flex')
+          } else {
+            reactivateBtn.classList.add('hidden')
+            reactivateBtn.classList.remove('sm:inline-flex')
+          }
+        }
+
         // Toggle Ended Session Notice Banner
         const notice = document.getElementById('endedSessionNotice')
         const latestActive = teamsList.find(t => t.status === 'active')
         if (notice) {
-          if (!isActive && latestActive) {
+          if (!isActive) {
             notice.classList.remove('hidden')
             const noticeText = document.getElementById('endedSessionNoticeText')
             if (noticeText) {
-              noticeText.textContent = `Bạn đang xem phiên cũ đã kết thúc. Có phiên mới đang hoạt động: "${latestActive.description || latestActive.name}"`
+              noticeText.textContent = latestActive 
+                ? `Bạn đang xem phiên cũ đã kết thúc. Có phiên mới đang hoạt động: "${latestActive.description || latestActive.name}"`
+                : `Phiên làm việc này đã kết thúc (không còn Agent hoạt động). Bạn có thể kích hoạt lại để tiếp tục trao đổi.`
             }
             const switchBtn = document.getElementById('switchActiveSessionBtn')
             if (switchBtn) {
-              switchBtn.onclick = () => {
-                currentTeamId = latestActive.id
-                onTeamChanged(currentTeamId)
+              if (latestActive) {
+                switchBtn.classList.remove('hidden')
+                switchBtn.onclick = () => {
+                  currentTeamId = latestActive.id
+                  onTeamChanged(currentTeamId)
+                }
+              } else {
+                switchBtn.classList.add('hidden')
               }
+            }
+            const noticeReactivateBtn = document.getElementById('noticeReactivateBtn')
+            if (noticeReactivateBtn) {
+              noticeReactivateBtn.onclick = reactivateCurrentSession
             }
           } else {
             notice.classList.add('hidden')
@@ -1000,6 +1043,51 @@
         if (endBtn) {
           endBtn.disabled = false
           endBtn.innerHTML = '<span class="mr-1">🛑</span><span>Kết thúc phiên</span>'
+        }
+        updateSelectedSessionUI()
+      }
+    }
+
+    // Reactivate current session
+    async function reactivateCurrentSession() {
+      if (!currentTeamId) return
+      const currentTeam = teamsList.find(t => t.id === currentTeamId)
+      const ok = confirm(`Bạn có muốn KÍCH HOẠT LẠI phiên này?\n\n"${currentTeam?.description || currentTeam?.name}"\n\nHệ thống sẽ khởi động lại các Agent trong cùng thư mục và kết nối lại lịch sử trao đổi.`)
+      if (!ok) return
+
+      const btn = document.getElementById('reactivateSessionBtn')
+      const noticeBtn = document.getElementById('noticeReactivateBtn')
+      if (btn) {
+        btn.disabled = true
+        btn.innerHTML = '<span class="mr-1">⏳</span><span>Đang kích hoạt...</span>'
+      }
+      if (noticeBtn) {
+        noticeBtn.disabled = true
+        noticeBtn.innerHTML = '<span>⏳ Đang kích hoạt...</span>'
+      }
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/reactivate`, {
+          method: 'POST'
+        })
+        if (res.ok) {
+          window.userLockedOldSession = false
+          await loadTeamsList()
+          await fetchMessages()
+        } else {
+          const err = await res.json().catch(() => ({}))
+          alert('Không thể kích hoạt lại: ' + (err.error || res.statusText))
+        }
+      } catch (e) {
+        alert('Lỗi kết nối: ' + e.message)
+      } finally {
+        if (btn) {
+          btn.disabled = false
+          btn.innerHTML = '<span class="mr-1">🔄</span><span>Kích hoạt lại phiên</span>'
+        }
+        if (noticeBtn) {
+          noticeBtn.disabled = false
+          noticeBtn.innerHTML = '<span>🔄 Kích hoạt lại phiên</span>'
         }
         updateSelectedSessionUI()
       }
@@ -1447,6 +1535,7 @@
 
     // End Session Button
     document.getElementById('endSessionBtn').addEventListener('click', endCurrentSession)
+    document.getElementById('reactivateSessionBtn').addEventListener('click', reactivateCurrentSession)
 
     document.getElementById('toggleScrollBtn').addEventListener('click', () => {
       autoScroll = !autoScroll
