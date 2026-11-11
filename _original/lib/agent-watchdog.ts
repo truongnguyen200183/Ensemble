@@ -244,7 +244,11 @@ export class AgentWatchdog {
                   quotaMsg = `⚠️ CẢNH BÁO: Tác tử ${agent.name} đã chạm trần hạn mức Quota (Individual quota reached)! Hãy bấm vào nút [⚙️ Model] trên thanh công cụ để đổi mô hình tiếp tục.`
                   try {
                     const fs = await import('fs')
-                    const p = '/home/truong/.ensemble/exhausted-models.txt'
+                    const os = await import('os')
+                    const path = await import('path')
+                    const p = path.join(os.homedir(), '.ensemble', 'exhausted-models.txt')
+                    const dir = path.dirname(p)
+                    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
                     const curr = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''
                     if (!curr.includes('gemini-4-argon-low')) {
                       fs.writeFileSync(p, curr + '\ngemini-4-argon-low\n', 'utf8')

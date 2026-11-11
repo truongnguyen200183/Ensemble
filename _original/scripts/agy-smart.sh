@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Smart Fallback Wrapper for Google Antigravity CLI (agy)
-STATE_FILE="/home/truong/.ensemble/exhausted-models.txt"
+STATE_FILE="${HOME}/.ensemble/exhausted-models.txt"
 mkdir -p "$(dirname "$STATE_FILE")"
 touch "$STATE_FILE"
 

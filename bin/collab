@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Collab CLI - macOS & Linux Entrypoint
+# ==============================================================================
+set -e
+
+PORT="${ENSEMBLE_PORT:-23000}"
+URL="${ENSEMBLE_URL:-http://localhost:$PORT}"
+
+CMD="${1:-}"
+
+# 1. Trợ giúp: collab help
+if [ "$CMD" = "help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "--help" ]; then
+  echo "========================================================================"
+  echo "                     ENSEMBLE COLLAB CLI GUIDE                          "
+  echo "========================================================================"
+  echo "Cú pháp:"
+  echo "  collab \"Nội dung nhiệm vụ\" [template]   Khởi chạy nhóm 2 Agent tại thư mục hiện tại"
+  echo "  collab status                            Kiểm tra sức khỏe Server & các phiên đang chạy"
+  echo "  collab reactivate [team-id]              Kích hoạt lại phiên làm việc cũ"
+  echo "  collab web                               Mở giao diện Web Dashboard ($URL)"
+  echo "  collab start                             Khởi động Ensemble Server ngầm"
+  echo "  collab stop                              Dừng Ensemble Server"
+  echo ""
+  echo "Ví dụ:"
+  echo "  collab \"Phân tích bảo mật backend NestJS\""
+  echo "  collab \"Kiểm thử API login\" implement"
+  echo "  collab \"Phản biện giải pháp caching\" review"
+  exit 0
+fi
+
+# 2. Xem trạng thái: collab status
+if [ "$CMD" = "status" ]; then
+  echo ">> Đang kiểm tra trạng thái Ensemble Server ($URL)..."
+  if curl -s --max-time 3 "$URL/api/v1/health" >/dev/null; then
+    echo "[✓] Server đang hoạt động tốt!"
+    curl -s --max-time 3 "$URL/api/v1/health" | jq . 2>/dev/null || curl -s "$URL/api/v1/health"
+    echo ""
+    echo ">> Danh sách các phiên làm việc (Teams):"
+    curl -s --max-time 3 "$URL/api/ensemble/teams" | jq -r '(.teams // .)[0:5][] | "  • [\(.id[0:8])] \(.description) (\(.status))"' 2>/dev/null || true
+  else
+    echo "[✗] Server chưa chạy tại $URL"
+    echo "    Chạy lệnh: collab start  để khởi động."
+  fi
+  exit 0
+fi
+
+# 3. Mở Web: collab web
+if [ "$CMD" = "web" ]; then
+  echo ">> Đang mở Web Dashboard: $URL"
+  if command -v open >/dev/null 2>&1; then
+    open "$URL"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$URL"
+  else
+    echo "Vui lòng mở trình duyệt và truy cập: $URL"
+  fi
+  exit 0
+fi
+
+# 4. Kích hoạt lại: collab reactivate [team-id]
+if [ "$CMD" = "reactivate" ]; then
+  TARGET_TEAM="${2:-}"
+  if [ -z "$TARGET_TEAM" ]; then
+    TARGET_TEAM=$(curl -s --max-time 3 "$URL/api/ensemble/teams" | jq -r '.[0].id' 2>/dev/null || true)
+  fi
+  if [ -z "$TARGET_TEAM" ] || [ "$TARGET_TEAM" = "null" ]; then
+    echo "[!] Không tìm thấy phiên nào để kích hoạt."
+    exit 1
+  fi
+  echo ">> Đang kích hoạt lại phiên: $TARGET_TEAM..."
+  curl -s -X POST "$URL/api/ensemble/teams/$TARGET_TEAM/reactivate" | jq . 2>/dev/null || echo "[✓] Đã gửi lệnh kích hoạt!"
+  if command -v open >/dev/null 2>&1; then open "$URL"; elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$URL"; fi
+  exit 0
+fi
+
+# 5. Khởi động server: collab start
+if [ "$CMD" = "start" ]; then
+  echo ">> Đang khởi động Ensemble Server..."
+  if command -v launchctl >/dev/null 2>&1 && [ -f "$HOME/Library/LaunchAgents/com.ensemble.server.plist" ]; then
+    launchctl start com.ensemble.server
+  elif command -v systemctl >/dev/null 2>&1; then
+    systemctl --user start ensemble 2>/dev/null || sudo systemctl start ensemble 2>/dev/null || true
+  else
+    # Fallback chạy ngầm
+    REPO_DIR="$HOME/Ensemble"
+    [ -d "$HOME/ensemble" ] && REPO_DIR="$HOME/ensemble"
+    cd "$REPO_DIR/_original" && nohup npm start > "$HOME/.ensemble/server.log" 2>&1 &
+  fi
+  sleep 2
+  echo "[✓] Server đã chạy!"
+  exit 0
+fi
+
+# 6. Dừng server: collab stop
+if [ "$CMD" = "stop" ]; then
+  echo ">> Đang dừng Ensemble Server..."
+  if command -v launchctl >/dev/null 2>&1; then
+    launchctl stop com.ensemble.server 2>/dev/null || true
+  fi
+  pkill -f "server.ts" 2>/dev/null || true
+  echo "[✓] Đã gửi lệnh dừng server."
+  exit 0
+fi
+
+# 7. Mặc định: Khởi chạy nhiệm vụ Agent
+TASK="${1:-Kiểm tra và hỗ trợ dự án tại thư mục hiện tại}"
+TEMPLATE="${2:-}"
+DIR="$(pwd)"
+
+echo "========================================================================"
+echo "  [Ensemble Collab] Khởi chạy nhóm Agent phối hợp tự động"
+echo "========================================================================"
+echo "  • Thư mục làm việc : $DIR"
+echo "  • Nhiệm vụ         : $TASK"
+[ -n "$TEMPLATE" ] && echo "  • Template         : $TEMPLATE"
+echo ""
+
+# Đảm bảo server đang chạy
+if ! curl -s --max-time 1 "$URL/api/ensemble/status" >/dev/null 2>&1; then
+  echo ">> Server chưa chạy, đang tự động khởi động..."
+  REPO_DIR="$HOME/Ensemble"
+  [ -d "$HOME/ensemble" ] && REPO_DIR="$HOME/ensemble"
+  cd "$REPO_DIR/_original" && nohup npm start > "$HOME/.ensemble/server.log" 2>&1 &
+  sleep 2
+fi
+
+# Gọi run.sh
+REPO_DIR="$HOME/Ensemble"
+[ -d "$HOME/ensemble" ] && REPO_DIR="$HOME/ensemble"
+
+if [ -f "$REPO_DIR/run.sh" ]; then
+  bash "$REPO_DIR/run.sh" "$TASK" "$DIR" "$TEMPLATE"
+else
+  echo "[!] Không tìm thấy run.sh tại $REPO_DIR!"
+  exit 1
+fi
+
+# Mở Web UI
+if command -v open >/dev/null 2>&1; then
+  open "$URL"
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open "$URL"
+fi

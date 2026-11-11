@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": {
+    "name": "Ensemble Collab",
+    "version": "1.0.0",
+    "description": "Multi-agent autonomous collaboration engine with Real-time Web Dashboard",
+    "repository": "https://github.com/truongnguyen200183/Ensemble.git",
+    "branch": "main"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 23000,
+    "url": "http://localhost:23000",
+    "auto_open_browser": true,
+    "service_name": "ensemble"
+  },
+  "models": {
+    "roles": {
+      "lead": "gemini-3.8-flash-thinking",
+      "worker": "gemini-3.8-flash",
+      "reviewer": "gemini-3.8-flash-thinking"
+    },
+    "fallbacks": {
+      "lead": [
+        "gemini-3.8-flash-thinking",
+        "gemini-3.8-flash",
+        "gemini-4-argon",
+        "claude-opus-5.5",
+        "claude-sonnet-5.5"
+      ],
+      "worker": [
+        "gemini-3.8-flash",
+        "gemini-3.8-flash-thinking",
+        "claude-sonnet-5.5"
+      ],
+      "reviewer": [
+        "gemini-3.8-flash-thinking",
+        "gemini-3.8-flash",
+        "claude-opus-5.5"
+      ]
+    },
+    "catalog": [
+      {
+        "id": "gemini-3.8-flash-thinking",
+        "name": "Gemini 3.8 Flash (Thinking)",
+        "badge": "Recommended",
+        "description": "Suy nghĩ sâu, quota dồi dào, cân bằng tốc độ và chất lượng cho Lead / Reviewer",
+        "category": "gemini",
+        "tier": 1
+      },
+      {
+        "id": "gemini-3.8-flash",
+        "name": "Gemini 3.8 Flash",
+        "badge": "Fast",
+        "description": "Tốc độ phản hồi cực nhanh, tối ưu chi phí và không lo hết quota cho Worker",
+        "category": "gemini",
+        "tier": 2
+      },
+      {
+        "id": "gemini-4-argon",
+        "name": "Gemini 4 Argon",
+        "badge": "Heavy / Quota Sensitive",
+        "description": "Mô hình suy luận mạnh nhất của Google nhưng giới hạn quota khắt khe",
+        "category": "gemini",
+        "tier": 3
+      },
+      {
+        "id": "claude-opus-5.5",
+        "name": "Claude Opus 5.5",
+        "badge": "New",
+        "description": "Khả năng phân tích kiến trúc hệ thống và phản biện chi tiết",
+        "category": "claude",
+        "tier": 4
+      },
+      {
+        "id": "claude-sonnet-5.5",
+        "name": "Claude Sonnet 5.5",
+        "badge": "New",
+        "description": "Tối ưu cho lập trình, tạo diff chính xác và phản hồi nhanh",
+        "category": "claude",
+        "tier": 5
+      },
+      {
+        "id": "gpt-oss-120b",
+        "name": "GPT-OSS 120B",
+        "badge": "Notice",
+        "description": "Mô hình mã nguồn mở cộng đồng",
+        "category": "openai",
+        "tier": 6
+      }
+    ]
+  },
+  "environment": {
+    "ENSEMBLE_PORT": "23000",
+    "ENSEMBLE_URL": "http://localhost:23000",
+    "COLLAB_MONITOR": "none",
+    "DEFAULT_LEAD_MODEL": "gemini-3.8-flash-thinking",
+    "DEFAULT_WORKER_MODEL": "gemini-3.8-flash",
+    "DEFAULT_REVIEWER_MODEL": "gemini-3.8-flash-thinking",
+    "NODE_ENV": "production"
+  },
+  "platforms": {
+    "windows": {
+      "requires_wsl": true,
+      "recommended_distro": "Ubuntu",
+      "wsl_target_dir": "$HOME/ensemble",
+      "cli_command": "collab",
+      "required_wsl_packages": [
+        "git",
+        "curl",
+        "tmux",
+        "jq",
+        "nodejs",
+        "npm"
+      ]
+    },
+    "macos": {
+      "requires_wsl": false,
+      "target_dir": "$HOME/Ensemble",
+      "cli_command": "collab",
+      "required_brew_packages": [
+        "git",
+        "curl",
+        "tmux",
+        "jq",
+        "node"
+      ]
+    },
+    "linux": {
+      "requires_wsl": false,
+      "target_dir": "$HOME/ensemble",
+      "cli_command": "collab",
+      "required_apt_packages": [
+        "git",
+        "curl",
+        "tmux",
+        "jq",
+        "nodejs",
+        "npm"
+      ]
+    }
+  }
+}
