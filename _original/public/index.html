@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ensemble Live Chat — Multi-Agent Collaboration</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Marked for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Highlight.js for code blocks -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              lead: '#3b82f6',
+              worker: '#10b981',
+              reviewer: '#a855f7',
+              critic: '#f59e0b',
+              dark: '#0b0f19',
+              card: '#111827',
+              border: '#1f2937'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    /* Markdown Styles */
+    .prose-custom {
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+    .prose-custom p {
+      margin-bottom: 0.5rem;
+    }
+    .prose-custom p:last-child {
+      margin-bottom: 0;
+    }
+    .prose-custom ul, .prose-custom ol {
+      margin-left: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .prose-custom ul { list-style-type: disc; }
+    .prose-custom ol { list-style-type: decimal; }
+    .prose-custom code:not(pre code) {
+      background: rgba(15, 23, 42, 0.7);
+      color: #38bdf8;
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      font-family: monospace;
+    }
+    .prose-custom pre {
+      background: #090d16 !important;
+      border: 1px solid #1e293b;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin: 0.5rem 0;
+      overflow-x: auto;
+      position: relative;
+    }
+    .prose-custom pre code {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .prose-custom blockquote {
+      border-left: 3px solid #475569;
+      padding-left: 0.75rem;
+      color: #94a3b8;
+      font-style: italic;
+      margin: 0.5rem 0;
+    }
+    /* Pulse badge */
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.08); }
+    }
+    .animate-pulse-subtle {
+      animation: pulse-subtle 1.8s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 flex flex-col h-screen overflow-hidden font-sans antialiased">
+
+  <!-- TOP NAVBAR -->
+  <header class="bg-[#111827] border-b border-slate-800 px-4 py-2.5 flex items-center justify-between shadow-md z-30 shrink-0">
+    <!-- Left: Brand & Custom Session Dropdown -->
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl">🤖</span>
+        <div>
+          <h1 class="text-base font-bold bg-gradient-to-r from-blue-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent leading-tight">
+            Ensemble Collab Live
+          </h1>
+          <p class="text-[11px] text-slate-400 flex items-center space-x-1">
+            <span>Group Chat Feed</span>
+            <span>•</span>
+            <span id="connStatus" class="text-emerald-400">Đang đồng bộ</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="h-6 w-px bg-slate-700 hidden sm:block"></div>
+
+      <!-- Custom Session Picker Dropdown -->
+      <div class="relative">
+        <div class="flex items-center space-x-1.5">
+          <label class="text-xs text-slate-400 font-medium hidden md:block">Phiên chạy:</label>
+          <button 
+            id="sessionDropdownBtn" 
+            type="button"
+            class="bg-slate-800 hover:bg-slate-750 active:bg-slate-700 text-slate-200 text-xs rounded-lg border border-slate-700 px-3 py-1.5 flex items-center space-x-2 transition max-w-[220px] sm:max-w-xs truncate cursor-pointer shadow-sm"
+          >
+            <span id="selectedSessionDot" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></span>
+            <span id="selectedSessionTitle" class="truncate font-medium">Đang tải...</span>
+            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1 transition-transform duration-200" id="dropdownArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Floating Dropdown Menu Panel -->
+        <div 
+          id="sessionDropdownMenu" 
+          class="hidden absolute top-full left-0 mt-2 w-80 sm:w-96 bg-[#111827] border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col transition-all duration-150 backdrop-blur-md"
+        >
+          <!-- Header of Dropdown -->
+          <div class="px-3.5 py-2.5 bg-[#0f172a] border-b border-slate-800 flex items-center justify-between text-xs">
+            <span class="font-semibold text-slate-300 flex items-center space-x-1.5">
+              <span>📂</span>
+              <span>Danh sách phiên</span>
+              <span id="sessionTotalCount" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono border border-slate-700">0</span>
+            </span>
+            <button 
+              id="purgeCompletedBtn" 
+              type="button"
+              title="Dọn dẹp các phiên cũ đã hoàn tất hoặc dừng" 
+              class="text-[11px] text-red-400 hover:text-red-300 hover:bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40 transition flex items-center space-x-1"
+            >
+              <span>🗑️</span>
+              <span>Dọn phiên cũ</span>
+            </button>
+          </div>
+
+          <!-- Search Filter Box -->
+          <div class="p-2 border-b border-slate-800/80 bg-[#111827]">
+            <input 
+              id="sessionSearchInput" 
+              type="text" 
+              placeholder="🔍 Tìm kiếm phiên..." 
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+          </div>
+
+          <!-- Scrollable Session Items List -->
+          <div id="sessionListContainer" class="max-h-80 overflow-y-auto divide-y divide-slate-800/50 p-1 space-y-0.5">
+            <!-- Dynamic items rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Roster Badges & Controls -->
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <!-- Agent Badges Container -->
+      <div id="rosterBadges" class="hidden lg:flex items-center space-x-2">
+        <!-- Roster pills rendered dynamically -->
+      </div>
+
+      <!-- Team Status Badge -->
+      <div id="teamStatusBadge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+        <span class="w-2 h-2 rounded-full bg-slate-500 mr-1.5"></span>
+        <span>Chờ kết nối</span>
+      </div>
+
+      <!-- Auto Scroll Toggle -->
+      <button id="toggleScrollBtn" title="Tự động cuộn theo tin nhắn mới" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-blue-400 transition text-xs flex items-center space-x-1">
+        <span id="scrollIcon">⬇️</span>
+        <span class="hidden md:inline text-[11px]">Tự cuộn</span>
+      </button>
+
+      <!-- Audio Alert Toggle -->
+      <button id="toggleAudioBtn" title="Bật/Tắt âm thanh thông báo" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs">
+        <span id="audioIcon">🔔</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- TASK HEADER BANNER -->
+  <section id="taskBanner" class="bg-[#0e1626] border-b border-slate-800/80 px-4 py-2 shrink-0 flex items-center justify-between text-xs text-slate-300 z-10">
+    <div class="flex items-center space-x-2 truncate">
+      <span class="bg-blue-900/60 text-blue-300 border border-blue-700/60 px-2 py-0.5 rounded text-[11px] font-semibold shrink-0">
+        NHIỆM VỤ
+      </span>
+      <span id="taskDescription" class="truncate font-medium text-slate-200">
+        Đang tải thông tin nhiệm vụ...
+      </span>
+    </div>
+    <div class="hidden sm:flex items-center space-x-2 text-slate-400 shrink-0 text-[11px]">
+      <span id="taskDir" class="truncate max-w-xs text-slate-400"></span>
+      <span id="msgCountBadge" class="bg-slate-800 px-2 py-0.5 rounded border border-slate-700 font-mono">0 tin nhắn</span>
+    </div>
+  </section>
+
+  <!-- CHAT CONTAINER (GOM 2 PANEL THÀNH 1 GROUP CHAT DUY NHẤT) -->
+  <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
+    <!-- Initial empty placeholder -->
+    <div id="emptyFeed" class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3">
+      <div class="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
+        💬
+      </div>
+      <p class="text-sm">Chưa có tin nhắn trong phiên này. Hãy đợi các agent bắt đầu trò chuyện...</p>
+    </div>
+  </main>
+
+  <!-- BOTTOM INPUT BAR -->
+  <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20">
+    <div class="max-w-5xl mx-auto flex flex-col space-y-2">
+      <div class="flex items-center space-x-2">
+        <!-- Target Selection -->
+        <div class="relative shrink-0">
+          <select id="msgTarget" class="bg-slate-800 text-slate-200 text-xs rounded-lg border border-slate-700 px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+            <option value="team">👥 Cả nhóm (Team)</option>
+            <option value="lead">👑 Chỉ gửi LEAD</option>
+            <option value="worker">⚡ Chỉ gửi WORKER</option>
+          </select>
+        </div>
+
+        <!-- Input Box -->
+        <input 
+          id="msgInput" 
+          type="text" 
+          placeholder="Nhập chỉ đạo hoặc phản hồi cho các Agent... (Nhấn Enter để gửi)" 
+          class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          autocomplete="off"
+        >
+
+        <!-- Send Button -->
+        <button 
+          id="sendBtn" 
+          class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0"
+        >
+          <span>Gửi</span>
+          <span>🚀</span>
+        </button>
+      </div>
+
+      <!-- Quick Hint -->
+      <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
+        <span>💡 Bạn có thể gửi ý kiến để điều hướng và can thiệp trực tiếp vào cuộc trò chuyện của nhóm.</span>
+        <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // State
+    let currentTeamId = null
+    let teamsList = []
+    let knownAgents = {}       // Map program -> info from agents.json
+    let currentTeamAgents = [] // Agents in the selected team
+    let lastSeenTimestamp = null
+    let renderedMessageIds = new Set()
+    let autoScroll = true
+    let soundEnabled = true
+    let consecutiveErrors = 0
+    let isDropdownOpen = false
+
+    // Audio synthesizer for alerts
+    function playChime() {
+      if (!soundEnabled) return
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime) // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12) // A5
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25)
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.25)
+      } catch (e) {
+        // AudioContext not allowed before user interaction
+      }
+    }
+
+    // Initialize Markdown parser
+    if (window.marked) {
+      marked.setOptions({
+        gfm: true,
+        breaks: true,
+        highlight: function(code, lang) {
+          if (window.hljs && lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value
+          }
+          return code
+        }
+      })
+    }
+
+    // Fallback safe markdown parser
+    function renderMarkdownSafe(text) {
+      if (window.marked) {
+        try {
+          return marked.parse(text)
+        } catch (e) {
+          console.error('Marked parse error:', e)
+        }
+      }
+      return escapeHtml(text).replace(/\n/g, '<br>')
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag))
+    }
+
+    function formatTime(isoString) {
+      if (!isoString) return ''
+      try {
+        const d = new Date(isoString)
+        return d.toLocaleTimeString('vi-VN', { hour12: false })
+      } catch {
+        return ''
+      }
+    }
+
+    // Role detection & agent mapping
+    function getAgentRoleInfo(senderName) {
+      const lower = (senderName || '').toLowerCase().trim()
+      
+      let matchedAgent = currentTeamAgents.find(a => a.name.toLowerCase() === lower || a.role.toLowerCase() === lower)
+      
+      let role = 'WORKER'
+      let isLead = false
+      let model = ''
+
+      if (matchedAgent) {
+        const r = (matchedAgent.role || '').toLowerCase()
+        if (r.includes('lead') || matchedAgent.name === 'agy-1' || currentTeamAgents.indexOf(matchedAgent) === 0) {
+          isLead = true
+          role = 'LEAD'
+        } else if (r.includes('review') || matchedAgent.program === 'agy-pro') {
+          role = 'REVIEWER'
+        } else if (r.includes('critic')) {
+          role = 'CRITIC'
+        } else {
+          role = (matchedAgent.role || 'WORKER').toUpperCase()
+        }
+
+        const prog = knownAgents[matchedAgent.program]
+        if (prog && prog.flags) {
+          const mIdx = prog.flags.indexOf('--model')
+          if (mIdx !== -1 && prog.flags[mIdx + 1]) {
+            model = prog.flags[mIdx + 1]
+          }
+        }
+      } else {
+        if (lower === 'agy-1' || lower === 'lead') {
+          isLead = true
+          role = 'LEAD'
+          model = 'Gemini 4 Argon'
+        } else if (lower === 'agy-2' || lower === 'worker') {
+          role = 'WORKER'
+          model = 'Gemini 3.8 Flash'
+        } else if (lower === 'agy-pro' || lower === 'reviewer') {
+          role = 'REVIEWER'
+          model = 'Gemini 4 Argon'
+        }
+      }
+
+      if (model.includes('argon')) model = 'Gemini 4 Argon'
+      else if (model.includes('flash')) model = 'Gemini 3.8 Flash'
+
+      return { isLead, role, model }
+    }
+
+    // Normalize text: clean self-introductions like "Tôi là agy-1 (ROLE: LEAD)"
+    function normalizeMessageContent(rawText, isLead, role) {
+      if (!rawText) return ''
+      let text = rawText
+      text = text.replace(/Tôi là agy-1 \(ROLE: LEAD\)/gi, 'Tôi là Lead')
+      text = text.replace(/Tôi là agy-2 \(Worker\)/gi, 'Tôi là Worker')
+      text = text.replace(/\bagy-1\b/g, 'Lead')
+      text = text.replace(/\bagy-2\b/g, 'Worker')
+      text = text.replace(/\bagy-pro\b/g, 'Reviewer')
+      return text
+    }
+
+    // Build message HTML
+    function buildMessageElement(msg) {
+      const from = (msg.from || '').toLowerCase().trim()
+      const isSystem = from === 'ensemble' || from === 'system'
+      const isUser = from === 'user'
+
+      const div = document.createElement('div')
+      div.id = `msg-${msg.id}`
+      div.className = 'w-full flex flex-col transition-all duration-300'
+
+      // 1. SYSTEM MESSAGE (Centered Pill)
+      if (isSystem) {
+        div.className += ' items-center my-2'
+        const isDone = msg.content.includes('COLLAB_DONE') || msg.content.includes('hoàn thành')
+        const isSuccess = msg.content.includes('🚀') || msg.content.includes('joined') || isDone
+        const pillBg = isDone ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300' :
+                       isSuccess ? 'bg-blue-950/60 border-blue-600/40 text-blue-300' :
+                       'bg-slate-800/80 border-slate-700 text-slate-300'
+
+        div.innerHTML = `
+          <div class="px-3.5 py-1 rounded-full text-xs font-medium border ${pillBg} flex items-center space-x-2 shadow-sm">
+            <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+            <span>${escapeHtml(msg.content)}</span>
+          </div>
+        `
+        return div
+      }
+
+      // 2. USER MESSAGE (Right side, Sky Blue accent)
+      if (isUser) {
+        div.className += ' items-end'
+        div.innerHTML = `
+          <div class="max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 bg-sky-950/80 border border-sky-600/50 shadow-md">
+            <div class="flex items-center justify-between space-x-3 mb-1.5 pb-1 border-b border-sky-800/40">
+              <span class="font-bold text-xs text-sky-300 flex items-center space-x-1">
+                <span>👤</span>
+                <span>BẠN (USER)</span>
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+            </div>
+            <div class="prose-custom text-sm text-sky-100">
+              ${renderMarkdownSafe(msg.content)}
+            </div>
+          </div>
+        `
+        return div
+      }
+
+      // 3. AGENT MESSAGES
+      const { isLead, role, model } = getAgentRoleInfo(msg.from)
+      const cleanContent = normalizeMessageContent(msg.content, isLead, role)
+      const isSentinelDone = msg.content.trim() === '<<COLLAB_DONE>>'
+
+      if (isLead) {
+        // ---------------- LEAD AGENT (BÊN TRÁI) ----------------
+        div.className += ' items-start'
+        div.innerHTML = `
+          <div class="max-w-[90%] sm:max-w-[80%] rounded-2xl rounded-tl-sm p-4 bg-[#141e33] border-l-4 border-l-blue-500 border border-slate-800/80 shadow-lg">
+            <div class="flex items-center justify-between space-x-3 mb-2 pb-1.5 border-b border-slate-800">
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 rounded-md bg-blue-600/30 text-blue-300 border border-blue-500/40 font-bold text-xs flex items-center space-x-1">
+                  <span>👑</span>
+                  <span>${role}</span>
+                </span>
+                ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
+              </div>
+              <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+            </div>
+            <div class="prose-custom text-sm text-slate-200">
+              ${isSentinelDone ? `
+                <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-semibold">
+                  <span>✨</span>
+                  <span><<COLLAB_DONE>> — Báo cáo hoàn thành nhiệm vụ</span>
+                </div>
+              ` : renderMarkdownSafe(cleanContent)}
+            </div>
+          </div>
+        `
+      } else {
+        // ---------------- WORKER / OTHER AGENTS (BÊN PHẢI) ----------------
+        const isReviewer = role === 'REVIEWER'
+        const borderStyle = isReviewer ? 'border-r-4 border-r-purple-500 bg-[#1d152c]' : 'border-r-4 border-r-emerald-500 bg-[#0d231b]'
+        const badgeStyle = isReviewer ? 'bg-purple-600/30 text-purple-300 border-purple-500/40' : 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40'
+        const icon = isReviewer ? '🔍' : '⚡'
+
+        div.className += ' items-end'
+        div.innerHTML = `
+          <div class="max-w-[90%] sm:max-w-[80%] rounded-2xl rounded-tr-sm p-4 ${borderStyle} border border-slate-800/80 shadow-lg text-left">
+            <div class="flex items-center justify-between space-x-3 mb-2 pb-1.5 border-b border-slate-800/80">
+              <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+              <div class="flex items-center space-x-2">
+                ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
+                <span class="px-2 py-0.5 rounded-md ${badgeStyle} border font-bold text-xs flex items-center space-x-1">
+                  <span>${icon}</span>
+                  <span>${role}</span>
+                </span>
+              </div>
+            </div>
+            <div class="prose-custom text-sm text-slate-200">
+              ${isSentinelDone ? `
+                <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-semibold">
+                  <span>✨</span>
+                  <span><<COLLAB_DONE>> — Báo cáo hoàn thành nhiệm vụ</span>
+                </div>
+              ` : renderMarkdownSafe(cleanContent)}
+            </div>
+          </div>
+        `
+      }
+
+      return div
+    }
+
+    // Fetch Agents Config (/api/ensemble/agents)
+    async function loadAgentsConfig() {
+      try {
+        const res = await fetch('/api/ensemble/agents')
+        if (res.ok) {
+          knownAgents = await res.json()
+        }
+      } catch (e) {
+        console.warn('Could not fetch /api/ensemble/agents:', e)
+      }
+    }
+
+    // Render Custom Session List
+    function renderSessionList(searchTerm = '') {
+      const container = document.getElementById('sessionListContainer')
+      container.innerHTML = ''
+
+      const term = searchTerm.toLowerCase().trim()
+      const filtered = teamsList.filter(t => {
+        if (!term) return true
+        const desc = (t.description || t.name || '').toLowerCase()
+        return desc.includes(term) || (t.createdAt && t.createdAt.includes(term))
+      })
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-4 text-center text-xs text-slate-500">
+            Không tìm thấy phiên nào phù hợp.
+          </div>
+        `
+        return
+      }
+
+      filtered.forEach(t => {
+        const isSelected = t.id === currentTeamId
+        const isActive = t.status === 'active'
+        const isDone = t.status === 'completed'
+        const dotColor = isActive ? 'bg-emerald-400 animate-pulse-subtle' : isDone ? 'bg-blue-400' : 'bg-slate-500'
+        const timeStr = t.createdAt ? formatTime(t.createdAt) : ''
+        const title = t.description || t.name || 'Không có mô tả'
+
+        const itemDiv = document.createElement('div')
+        itemDiv.className = `group flex items-center justify-between p-2 rounded-lg cursor-pointer transition ${
+          isSelected ? 'bg-blue-950/70 border border-blue-600/40 text-blue-200' : 'hover:bg-slate-800/80 text-slate-300'
+        }`
+
+        itemDiv.innerHTML = `
+          <!-- Session Info (Click to select) -->
+          <div class="flex items-center space-x-2 flex-1 min-w-0 pr-2">
+            <span class="w-2 h-2 rounded-full ${dotColor} shrink-0"></span>
+            <span class="text-[10px] text-slate-400 font-mono shrink-0">[${timeStr}]</span>
+            <span class="text-xs truncate font-medium ${isSelected ? 'text-blue-200 font-semibold' : 'text-slate-200'}" title="${escapeHtml(title)}">
+              ${escapeHtml(title)}
+            </span>
+          </div>
+
+          <!-- Delete Icon (Visible on HOVER) -->
+          <button 
+            type="button"
+            data-delete-id="${t.id}"
+            title="Xóa phiên này" 
+            class="delete-btn opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-950 hover:text-red-300 text-slate-400 transition duration-150 shrink-0"
+          >
+            <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </button>
+        `
+
+        // Click row to switch session
+        itemDiv.addEventListener('click', (e) => {
+          if (e.target.closest('.delete-btn')) return
+          selectSession(t.id)
+          closeDropdown()
+        })
+
+        // Click delete button
+        const delBtn = itemDiv.querySelector('.delete-btn')
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          deleteSingleSession(t.id, title)
+        })
+
+        container.appendChild(itemDiv)
+      })
+    }
+
+    // Toggle Dropdown
+    function toggleDropdown() {
+      isDropdownOpen = !isDropdownOpen
+      const menu = document.getElementById('sessionDropdownMenu')
+      const arrow = document.getElementById('dropdownArrow')
+      if (isDropdownOpen) {
+        menu.classList.remove('hidden')
+        arrow.classList.add('rotate-180')
+        renderSessionList(document.getElementById('sessionSearchInput').value)
+        setTimeout(() => document.getElementById('sessionSearchInput').focus(), 50)
+      } else {
+        closeDropdown()
+      }
+    }
+
+    function closeDropdown() {
+      isDropdownOpen = false
+      document.getElementById('sessionDropdownMenu').classList.add('hidden')
+      document.getElementById('dropdownArrow').classList.remove('rotate-180')
+    }
+
+    // Select session
+    function selectSession(teamId) {
+      if (currentTeamId === teamId) return
+      currentTeamId = teamId
+      updateSelectedSessionUI()
+      onTeamChanged(teamId)
+    }
+
+    // Update Dropdown Trigger Button UI
+    function updateSelectedSessionUI() {
+      const selected = teamsList.find(t => t.id === currentTeamId)
+      const dot = document.getElementById('selectedSessionDot')
+      const title = document.getElementById('selectedSessionTitle')
+
+      if (selected) {
+        const isActive = selected.status === 'active'
+        const isDone = selected.status === 'completed'
+        dot.className = `w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-emerald-400 animate-pulse-subtle' : isDone ? 'bg-blue-400' : 'bg-slate-500'}`
+        const timeStr = selected.createdAt ? `[${formatTime(selected.createdAt)}] ` : ''
+        title.textContent = `${timeStr}${selected.description || selected.name}`
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-slate-500 shrink-0'
+        title.textContent = 'Chưa chọn phiên'
+      }
+
+      document.getElementById('sessionTotalCount').textContent = teamsList.length
+    }
+
+    // Delete a single session
+    async function deleteSingleSession(teamId, taskName) {
+      if (!confirm(`Bạn có chắc chắn muốn xóa phiên: "${taskName}"?`)) return
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${teamId}/delete`, { method: 'POST' })
+        if (res.ok) {
+          // Remove from local list
+          teamsList = teamsList.filter(t => t.id !== teamId)
+          
+          // If deleted session was current, switch to latest available
+          if (currentTeamId === teamId) {
+            const next = teamsList.find(t => t.status === 'active') || teamsList[0]
+            if (next) {
+              selectSession(next.id)
+            } else {
+              currentTeamId = null
+              document.getElementById('chatFeed').innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3">
+                  <div class="text-3xl">🗑️</div>
+                  <p class="text-sm">Đã xóa hết các phiên. Hãy khởi tạo một phiên collab mới.</p>
+                </div>
+              `
+              updateSelectedSessionUI()
+            }
+          }
+
+          updateSelectedSessionUI()
+          renderSessionList(document.getElementById('sessionSearchInput').value)
+        } else {
+          alert('Không thể xóa phiên này.')
+        }
+      } catch (e) {
+        alert('Lỗi khi xóa phiên: ' + e.message)
+      }
+    }
+
+    // Purge all completed / disbanded sessions
+    async function purgeCompletedSessions() {
+      const completedCount = teamsList.filter(t => t.status !== 'active').length
+      if (completedCount === 0) {
+        alert('Không có phiên cũ nào cần dọn dẹp.')
+        return
+      }
+
+      if (!confirm(`Bạn có chắc chắn muốn xóa tất cả ${completedCount} phiên cũ đã kết thúc? (Các phiên đang active sẽ được giữ nguyên)`)) return
+
+      try {
+        const res = await fetch('/api/ensemble/teams/purge-completed', { method: 'POST' })
+        if (res.ok) {
+          const data = await res.json()
+          await loadTeamsList()
+          renderSessionList()
+          alert(`Đã dọn dẹp thành công ${data.count} phiên cũ!`)
+        }
+      } catch (e) {
+        alert('Lỗi khi dọn dẹp phiên: ' + e.message)
+      }
+    }
+
+    // Fetch Teams List (/api/ensemble/teams)
+    async function loadTeamsList() {
+      try {
+        const res = await fetch('/api/ensemble/teams')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        teamsList = data.teams || []
+
+        // Sort: newest first
+        teamsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
+        // Auto select if none selected
+        if (!currentTeamId || !teamsList.some(t => t.id === currentTeamId)) {
+          const activeTeam = teamsList.find(t => t.status === 'active') || teamsList[0]
+          if (activeTeam) {
+            currentTeamId = activeTeam.id
+            onTeamChanged(currentTeamId)
+          }
+        }
+
+        updateSelectedSessionUI()
+        if (isDropdownOpen) {
+          renderSessionList(document.getElementById('sessionSearchInput').value)
+        }
+
+        consecutiveErrors = 0
+        document.getElementById('connStatus').textContent = 'Đã kết nối'
+        document.getElementById('connStatus').className = 'text-emerald-400'
+      } catch (e) {
+        consecutiveErrors++
+        if (consecutiveErrors >= 3) {
+          document.getElementById('connStatus').textContent = 'Lỗi kết nối server'
+          document.getElementById('connStatus').className = 'text-red-400'
+        }
+      }
+    }
+
+    // When team changed
+    async function onTeamChanged(teamId) {
+      if (!teamId) return
+      currentTeamId = teamId
+      lastSeenTimestamp = null
+      renderedMessageIds.clear()
+      
+      const feed = document.getElementById('chatFeed')
+      feed.innerHTML = ''
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${teamId}`)
+        if (res.ok) {
+          const data = await res.json()
+          const team = data.team || {}
+          currentTeamAgents = team.agents || []
+
+          // Update Task Banner
+          document.getElementById('taskDescription').textContent = team.description || team.name || 'Không có mô tả'
+          document.getElementById('taskDir').textContent = team.workingDirectory ? `📁 ${team.workingDirectory}` : ''
+
+          // Update Status Badge
+          const statusBadge = document.getElementById('teamStatusBadge')
+          if (team.status === 'active') {
+            statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/70 text-emerald-300 border border-emerald-600/50'
+            statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse-subtle"></span><span>ĐANG CHẠY (ACTIVE)</span>'
+          } else if (team.status === 'completed') {
+            statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-950/70 text-blue-300 border border-blue-600/50'
+            statusBadge.innerHTML = '<span class="mr-1.5">🏁</span><span>HOÀN THÀNH</span>'
+          } else {
+            statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700'
+            statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-500 mr-1.5"></span><span>${(team.status || 'KẾT THÚC').toUpperCase()}</span>`
+          }
+
+          // Update Roster Badges
+          const rosterEl = document.getElementById('rosterBadges')
+          rosterEl.innerHTML = ''
+          currentTeamAgents.forEach((a) => {
+            const { role, isLead } = getAgentRoleInfo(a.name)
+            const pill = document.createElement('div')
+            pill.className = isLead
+              ? 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-950/80 border border-blue-500/50 text-blue-300 flex items-center space-x-1'
+              : 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center space-x-1'
+            pill.innerHTML = `<span>${isLead ? '👑' : '⚡'}</span><span>${role}</span>`
+            rosterEl.appendChild(pill)
+          })
+
+          // Update Target Selector options
+          const targetSelect = document.getElementById('msgTarget')
+          targetSelect.innerHTML = '<option value="team">👥 Cả nhóm (Team)</option>'
+          currentTeamAgents.forEach(a => {
+            const { role, isLead } = getAgentRoleInfo(a.name)
+            const opt = document.createElement('option')
+            opt.value = a.name
+            opt.textContent = `${isLead ? '👑' : '⚡'} ${role}`
+            targetSelect.appendChild(opt)
+          })
+        }
+      } catch (e) {
+        console.error('Error fetching team details:', e)
+      }
+
+      await fetchMessages()
+    }
+
+    // Fetch Messages Feed
+    async function fetchMessages() {
+      if (!currentTeamId) return
+      try {
+        const url = `/api/ensemble/teams/${currentTeamId}/feed`
+        const res = await fetch(url)
+        if (!res.ok) return
+        const data = await res.json()
+        const messages = data.messages || []
+
+        const feed = document.getElementById('chatFeed')
+        let hasNew = false
+
+        messages.forEach(msg => {
+          if (!renderedMessageIds.has(msg.id)) {
+            renderedMessageIds.add(msg.id)
+            hasNew = true
+            const el = buildMessageElement(msg)
+            feed.appendChild(el)
+          }
+        })
+
+        if (hasNew) {
+          const lastMsg = messages[messages.length - 1]
+          if (lastMsg && lastMsg.from !== 'user') {
+            playChime()
+          }
+
+          if (autoScroll) {
+            feed.scrollTop = feed.scrollHeight
+          }
+
+          document.getElementById('msgCountBadge').textContent = `${messages.length} tin nhắn`
+        }
+
+        // Add code block copy buttons
+        feed.querySelectorAll('pre').forEach(pre => {
+          if (!pre.querySelector('.copy-btn')) {
+            const btn = document.createElement('button')
+            btn.className = 'copy-btn absolute top-2 right-2 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] border border-slate-700 transition'
+            btn.textContent = 'Copy'
+            btn.onclick = () => {
+              const code = pre.querySelector('code')?.innerText || pre.innerText
+              navigator.clipboard.writeText(code)
+              btn.textContent = 'Đã copy!'
+              setTimeout(() => btn.textContent = 'Copy', 1500)
+            }
+            pre.appendChild(btn)
+          }
+        })
+
+      } catch (e) {
+        console.warn('Error fetching feed:', e)
+      }
+    }
+
+    // Send Message
+    async function sendMessage() {
+      const input = document.getElementById('msgInput')
+      const targetSelect = document.getElementById('msgTarget')
+      const content = input.value.trim()
+      if (!content || !currentTeamId) return
+
+      const sendBtn = document.getElementById('sendBtn')
+      sendBtn.disabled = true
+      sendBtn.classList.add('opacity-50')
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'user',
+            to: targetSelect.value || 'team',
+            content: content
+          })
+        })
+
+        if (res.ok) {
+          input.value = ''
+          await fetchMessages()
+        }
+      } catch (e) {
+        alert('Lỗi gửi tin nhắn: ' + e.message)
+      } finally {
+        sendBtn.disabled = false
+        sendBtn.classList.remove('opacity-50')
+        input.focus()
+      }
+    }
+
+    // Event Listeners
+    document.getElementById('sendBtn').addEventListener('click', sendMessage)
+    document.getElementById('msgInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        sendMessage()
+      }
+    })
+
+    document.getElementById('sessionDropdownBtn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      toggleDropdown()
+    })
+
+    document.getElementById('purgeCompletedBtn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      purgeCompletedSessions()
+    })
+
+    document.getElementById('sessionSearchInput').addEventListener('input', (e) => {
+      renderSessionList(e.target.value)
+    })
+
+    // Click outside to close dropdown
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#sessionDropdownBtn') && !e.target.closest('#sessionDropdownMenu')) {
+        closeDropdown()
+      }
+    })
+
+    document.getElementById('toggleScrollBtn').addEventListener('click', () => {
+      autoScroll = !autoScroll
+      const btn = document.getElementById('toggleScrollBtn')
+      if (autoScroll) {
+        btn.classList.add('text-blue-400')
+        btn.classList.remove('text-slate-500')
+        const feed = document.getElementById('chatFeed')
+        feed.scrollTop = feed.scrollHeight
+      } else {
+        btn.classList.remove('text-blue-400')
+        btn.classList.add('text-slate-500')
+      }
+    })
+
+    document.getElementById('toggleAudioBtn').addEventListener('click', () => {
+      soundEnabled = !soundEnabled
+      const icon = document.getElementById('audioIcon')
+      icon.textContent = soundEnabled ? '🔔' : '🔕'
+    })
+
+    // Init loop
+    async function init() {
+      await loadAgentsConfig()
+      await loadTeamsList()
+
+      // Poll teams list every 4 seconds
+      setInterval(loadTeamsList, 4000)
+
+      // Poll current team feed every 1.5 seconds
+      setInterval(fetchMessages, 1500)
+    }
+
+    window.addEventListener('DOMContentLoaded', init)
+  </script>
+</body>
+</html>
