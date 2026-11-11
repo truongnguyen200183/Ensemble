@@ -15,3 +15,4 @@ if %ERRORLEVEL% NEQ 0 (
     echo [LOI] Qua trinh cai dat gap loi (Exit Code: %ERRORLEVEL%).
     pause
 )
+

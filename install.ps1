@@ -59,13 +59,21 @@ $config = Get-Content $configFile -Raw -Encoding UTF8 | ConvertFrom-Json
 $repoUrl = $config.project.repository
 $branch = $config.project.branch
 $port = $config.server.port
-$ensembleUrl = $config.server.url
+$domain = if ($config.server.domain) { $config.server.domain.Trim() } else { "" }
+$ensembleUrl = if ($domain) {
+    if ($domain.StartsWith("http://") -or $domain.StartsWith("https://")) { $domain } else { "https://$domain" }
+} else { $config.server.url }
+$corsOrigin = if ($config.server.cors_origins) { $config.server.cors_origins } else { "$ensembleUrl,http://localhost:$port" }
 $wslDistro = $config.platforms.windows.recommended_distro
 $wslTargetDir = $config.platforms.windows.wsl_target_dir
 
 Write-Success "Dự án: $($config.project.name) v$($config.project.version)"
 Write-Success "Repository: $repoUrl (Branch: $branch)"
-Write-Success "Server Port: $port ($ensembleUrl)"
+if ($domain) {
+    Write-Success "Tên miền (Domain): $domain ($ensembleUrl)"
+} else {
+    Write-Success "Server Port: $port ($ensembleUrl)"
+}
 
 # ------------------------------------------------------------------------------
 # 2. Kiểm tra các công cụ trên Windows (Git, Node.js)
@@ -233,9 +241,11 @@ Write-Header "Bước 5/6: Thiết lập Biến môi trường (ENV) & Dịch v�
 # 1. Set Windows User Environment Variables
 [Environment]::SetEnvironmentVariable("ENSEMBLE_PORT", "$port", "User")
 [Environment]::SetEnvironmentVariable("ENSEMBLE_URL", "$ensembleUrl", "User")
+[Environment]::SetEnvironmentVariable("ENSEMBLE_CORS_ORIGIN", "$corsOrigin", "User")
 [Environment]::SetEnvironmentVariable("COLLAB_MONITOR", "$($config.environment.COLLAB_MONITOR)", "User")
 $env:ENSEMBLE_PORT = "$port"
 $env:ENSEMBLE_URL = "$ensembleUrl"
+$env:ENSEMBLE_CORS_ORIGIN = "$corsOrigin"
 $env:COLLAB_MONITOR = "$($config.environment.COLLAB_MONITOR)"
 Write-Success "Đã lưu biến môi trường Windows (ENSEMBLE_PORT=$port, ENSEMBLE_URL=$ensembleUrl)."
 
@@ -246,6 +256,7 @@ grep -q "ENSEMBLE_PORT=" ~/.bashrc 2>/dev/null || cat << 'EOF' >> ~/.bashrc
 # Ensemble Collab Environment
 export ENSEMBLE_PORT=$port
 export ENSEMBLE_URL="$ensembleUrl"
+export ENSEMBLE_CORS_ORIGIN="$corsOrigin"
 export COLLAB_MONITOR="$($config.environment.COLLAB_MONITOR)"
 export PATH="\$HOME/ensemble/bin:\$PATH"
 EOF
@@ -342,3 +353,4 @@ if ($config.server.auto_open_browser) {
 
 Write-Host "Nhấn phím bất kỳ để kết thúc..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+

@@ -37,13 +37,19 @@ fi
 info "Đang đọc cấu hình từ: $CONFIG_FILE"
 
 # Sử dụng node để phân tích JSON cấu hình chính xác
-read -r REPO_URL BRANCH PORT URL < <(node -e "
+read -r REPO_URL BRANCH PORT URL CORS_ORIGINS < <(node -e "
   const c = require('$CONFIG_FILE');
-  console.log(c.project.repository, c.project.branch, c.server.port, c.server.url);
-" 2>/dev/null || echo "https://github.com/truongnguyen200183/Ensemble.git main 23000 http://localhost:23000")
+  let url = c.server.url;
+  if (c.server.domain && c.server.domain.trim()) {
+    const d = c.server.domain.trim();
+    url = d.startsWith('http') ? d : 'https://' + d;
+  }
+  const cors = c.server.cors_origins || (url + ',http://localhost:' + c.server.port);
+  console.log(c.project.repository, c.project.branch, c.server.port, url, cors);
+" 2>/dev/null || echo "https://github.com/truongnguyen200183/Ensemble.git main 23000 http://localhost:23000 http://localhost:23000")
 
 success "Repository: $REPO_URL (Branch: $BRANCH)"
-success "Server Port: $PORT ($URL)"
+success "Server URL: $URL (Port: $PORT)"
 
 # ------------------------------------------------------------------------------
 # 2. Kiểm tra Hệ điều hành & Package Manager
@@ -133,6 +139,7 @@ for rc in "${RC_FILES[@]}"; do
 # Ensemble Collab Environment
 export ENSEMBLE_PORT=$PORT
 export ENSEMBLE_URL="$URL"
+export ENSEMBLE_CORS_ORIGIN="$CORS_ORIGINS"
 export COLLAB_MONITOR="none"
 export PATH="$TARGET_DIR/bin:\$PATH"
 EOF
@@ -271,3 +278,4 @@ elif command -v xdg-open >/dev/null 2>&1; then
 fi
 
 echo -e "${YELLOW}>> Lưu ý: Mở terminal mới để biến môi trường và lệnh 'collab' có hiệu lực.${NC}"
+
