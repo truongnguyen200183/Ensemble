@@ -368,8 +368,12 @@ class EnsembleService {
     }
   }
 
-  private shouldAutoDisband(team: EnsembleTeam): boolean {
-    const messages = getMessages(team.id)
+  private shouldAutoDisband(_team: EnsembleTeam): boolean {
+    // User requested manual control: Never auto-disband.
+    // The session stays alive until user clicks 'Ket thuc phien' on Web UI.
+    return false;
+    /* disabled auto-disband
+    const messages = getMessages(_team.id)
     const activeNames = new Set(team.agents.filter(a => a.status === 'active').map(a => a.name))
     const knownNames = new Set(team.agents.map(a => a.name))
     const nonEnsembleMessages = messages.filter(message =>
@@ -452,6 +456,9 @@ class EnsembleService {
       }
     }
     return false
+  }
+
+    */
   }
 
   private stop(): void {
@@ -725,10 +732,9 @@ export function buildPromptPreview(params: {
     `4. After EVERY team-say, run team-read to check for responses`,
     `5. If teammate shared findings, RESPOND to them`,
     `6. Keep alternating: analyze, share, read, respond, analyze`,
-    `DONE PROTOCOL (important):`,
-    `7. When your work is complete and there is no unanswered teammate content or question after your last message, report the conclusion and send a FINAL team-say whose message is EXACTLY the sentinel <<COLLAB_DONE>> (nothing else, no quotes, no prose). Do not send status messages without new information, do not wait for an approval that may never come, and do not leave open questions addressed to you unresolved.`,
-    `8. The team auto-disbands only after all ${agentTotal} agents have sent <<COLLAB_DONE>>. If new teammate content arrives after your sentinel, respond substantively and send the sentinel again once your work is complete and all questions addressed to you are resolved.`,
-    `9. Before sending <<COLLAB_DONE>>, make sure the important conclusions (recommendation, rationale, build list, layout, decisions) are actually present as long team-say messages in the transcript — that is what the summary will preserve. Do not keep insights only in your head.`,
+    `DONE PROTOCOL:`,
+    `7. Khi hoan thanh cong viec cua nhiem vu hien tai, hay dung team-say bao cao chi tiet ket qua cho dong doi va nguoi dung. Sau do luon giu trang thai san sang va lang nghe yeu cau chi dao tiep theo tu nguoi dung (User).`,
+    `8. KHONG tu y dong phien hay gui lenh ket thuc. Phien lam viec se tiep tuc mo cho den khi nguoi dung chu dong bam nut Ket thuc tren Web UI.`,
     `Start NOW: greet your teammate with team-say, then begin.`,
   ].join(' ')
 }

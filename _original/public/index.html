@@ -211,6 +211,17 @@
         <span>Chờ kết nối</span>
       </div>
 
+      <!-- Manual End Session Button -->
+      <button 
+        id="endSessionBtn" 
+        type="button" 
+        title="Dừng phiên làm việc này khi bạn đã hoàn thành" 
+        class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-950/80 hover:bg-rose-900 active:bg-rose-800 text-rose-300 hover:text-rose-100 border border-rose-600/70 transition shadow-sm cursor-pointer"
+      >
+        <span class="mr-1">🛑</span>
+        <span>Kết thúc phiên</span>
+      </button>
+
       <!-- Auto Scroll Toggle -->
       <button id="toggleScrollBtn" title="Tự động cuộn theo tin nhắn mới" class="p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-blue-400 transition text-xs flex items-center space-x-1">
         <span id="scrollIcon">⬇️</span>
@@ -751,6 +762,18 @@
             statusBadge.innerHTML = '<span class="mr-1.5">🏁 </span><span>HOÀN THÀNH</span>'
           }
         }
+
+        // Toggle End Session Button
+        const endBtn = document.getElementById('endSessionBtn')
+        if (endBtn) {
+          if (isActive) {
+            endBtn.classList.remove('hidden')
+            endBtn.classList.add('sm:inline-flex')
+          } else {
+            endBtn.classList.add('hidden')
+            endBtn.classList.remove('sm:inline-flex')
+          }
+        }
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-slate-500 shrink-0'
         title.textContent = 'Chưa chọn phiên'
@@ -758,9 +781,54 @@
           statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700'
           statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-500 mr-1.5"></span><span>CHỜ KẾT NỐI</span>'
         }
+        const endBtn = document.getElementById('endSessionBtn')
+        if (endBtn) {
+          endBtn.classList.add('hidden')
+          endBtn.classList.remove('sm:inline-flex')
+        }
       }
 
       document.getElementById('sessionTotalCount').textContent = teamsList.length
+    }
+
+    // End/Disband current session manually on user click
+    async function endCurrentSession() {
+      if (!currentTeamId) return
+      const currentTeam = teamsList.find(t => t.id === currentTeamId)
+      if (!currentTeam || currentTeam.status !== 'active') {
+        alert('Phiên này đã kết thúc rồi.')
+        return
+      }
+
+      const ok = confirm(`Bạn có chắc chắn muốn KẾT THÚC phiên làm việc này?\n\nNhiệm vụ: "${currentTeam.description || currentTeam.name}"\n\nCác Agent sẽ giải tán và tiến trình sẽ dừng.`)
+      if (!ok) return
+
+      const endBtn = document.getElementById('endSessionBtn')
+      if (endBtn) {
+        endBtn.disabled = true
+        endBtn.innerHTML = '<span class="mr-1">⏳</span><span>Đang dừng...</span>'
+      }
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/disband`, {
+          method: 'POST'
+        })
+        if (res.ok) {
+          await loadTeamsList()
+          await fetchMessages()
+        } else {
+          const err = await res.json().catch(() => ({}))
+          alert('Không thể kết thúc phiên: ' + (err.error || res.statusText))
+        }
+      } catch (e) {
+        alert('Lỗi khi dừng phiên: ' + e.message)
+      } finally {
+        if (endBtn) {
+          endBtn.disabled = false
+          endBtn.innerHTML = '<span class="mr-1">🛑</span><span>Kết thúc phiên</span>'
+        }
+        updateSelectedSessionUI()
+      }
     }
 
     // Rename a session
@@ -1181,6 +1249,9 @@
         closeDropdown()
       }
     })
+
+    // End Session Button
+    document.getElementById('endSessionBtn').addEventListener('click', endCurrentSession)
 
     document.getElementById('toggleScrollBtn').addEventListener('click', () => {
       autoScroll = !autoScroll

@@ -58,6 +58,10 @@ collab "Kiểm tra syntax và format code của module HR" review-fast
 Truy cập: **[http://localhost:23000](http://localhost:23000)**
 
 * **Theo dõi thời gian thực**: Tin nhắn của Lead và Worker sẽ lần lượt xuất hiện theo dòng thời gian.
+* **Quyền kiểm soát chủ động (Mới 🔥 - Agent KHÔNG tự ngắt phiên)**:
+  - Hệ thống đã tắt hoàn toàn cơ chế tự động giải tán (`Auto-disband`).
+  - Sau khi hoàn thành xong nhiệm vụ ban đầu, các Agent sẽ **luôn giữ kết nối thường trực**, chờ bạn gửi thêm chỉ đạo, câu hỏi hoặc ảnh chụp màn hình tiếp theo mà không sợ bị tự động đóng phiên.
+  - **Nút "🛑 Kết thúc phiên"**: Khi bạn đã hoàn toàn hài lòng và muốn đóng phiên làm việc, chỉ cần bấm nút **`🛑 Kết thúc phiên`** ở góc trên bên phải màn hình (cạnh huy hiệu ĐANG CHẠY). Các Agent sẽ được giải tán và lưu lại tổng kết một cách chủ động theo lệnh của bạn.
 * **Gửi ảnh chụp màn hình cho Agent phân tích (Mới 🔥)**:
   1. Chụp ảnh bất kỳ trên màn hình: Nhấn tổ hợp phím **`Windows + Shift + S`** (hoặc nút PrintScreen).
   2. Quay lại tab Web và bấm **`Ctrl + V`** (hoặc bấm icon 🖼️/📷 cạnh ô nhập).
