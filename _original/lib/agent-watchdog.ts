@@ -241,19 +241,48 @@ export class AgentWatchdog {
               if (typeof (runtime as any).capturePane === 'function') {
                 const pane = await (runtime as any).capturePane(sessionName)
                 if (pane && (pane.includes('Individual quota reached') || pane.includes('quota reached'))) {
-                  quotaMsg = `⚠️ CẢNH BÁO: Tác tử ${agent.name} đã chạm trần hạn mức Quota (Individual quota reached)! Hãy bấm vào nút [⚙️ Model] trên thanh công cụ để đổi mô hình tiếp tục.`
+                  let exhaustedModel = ''
                   try {
                     const fs = await import('fs')
                     const os = await import('os')
                     const path = await import('path')
-                    const p = path.join(os.homedir(), '.ensemble', 'exhausted-models.txt')
-                    const dir = path.dirname(p)
-                    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
-                    const curr = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''
-                    if (!curr.includes('gemini-4-argon-low')) {
-                      fs.writeFileSync(p, curr + '\ngemini-4-argon-low\n', 'utf8')
+                    const { fileURLToPath } = await import('url')
+
+                    // Xác định model THỰC TẾ của agent (theo program trong agents.json),
+                    // thay vì luôn ghi cứng 'gemini-4-argon-low'.
+                    const candidates = [
+                      fileURLToPath(new URL('../agents.json', import.meta.url)),
+                      path.join(process.cwd(), 'agents.json'),
+                    ]
+                    for (const agentsPath of candidates) {
+                      if (!fs.existsSync(agentsPath)) continue
+                      try {
+                        const cfg = JSON.parse(fs.readFileSync(agentsPath, 'utf8'))
+                        const flags: string[] = cfg?.[agent.program]?.flags ?? []
+                        const idx = flags.indexOf('--model')
+                        if (idx !== -1 && flags[idx + 1]) exhaustedModel = flags[idx + 1]
+                      } catch {}
+                      if (exhaustedModel) break
+                    }
+
+                    if (exhaustedModel) {
+                      // Quota tính theo họ model: High/Medium/Low dùng chung hạn mức
+                      const base = exhaustedModel.replace(/-(low|medium|high)$/, '')
+                      const family = base !== exhaustedModel
+                        ? [`${base}-high`, `${base}-medium`, `${base}-low`]
+                        : [exhaustedModel]
+
+                      const p = path.join(os.homedir(), '.ensemble', 'exhausted-models.txt')
+                      const dir = path.dirname(p)
+                      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+                      const curr = fs.existsSync(p)
+                        ? fs.readFileSync(p, 'utf8').split('\n').map(s => s.trim()).filter(Boolean)
+                        : []
+                      const merged = Array.from(new Set([...curr, ...family]))
+                      fs.writeFileSync(p, merged.join('\n') + '\n', 'utf8')
                     }
                   } catch {}
+                  quotaMsg = `⚠️ CẢNH BÁO: Tác tử ${agent.name}${exhaustedModel ? ` (model ${exhaustedModel})` : ''} đã chạm trần hạn mức Quota (Individual quota reached)! Hãy bấm vào nút [⚙️ Model] trên thanh công cụ để đổi mô hình tiếp tục.`
                 }
               }
             } catch {}
