@@ -1146,8 +1146,28 @@ export function getEnsembleTeam(teamId: string): ServiceResult<{ team: EnsembleT
   return { data: { team, messages: getMessages(teamId) }, status: 200 }
 }
 
-export function listEnsembleTeams(): ServiceResult<{ teams: EnsembleTeam[] }> {
-  return { data: { teams: loadTeams() }, status: 200 }
+export async function listEnsembleTeams(): Promise<ServiceResult<{ teams: EnsembleTeam[] }>> {
+  const teams = loadTeams()
+  const runtime = getRuntime()
+  for (const team of teams) {
+    if (team.status === 'active') {
+      let anyAlive = false
+      for (const agent of team.agents) {
+        const sessionName = `${team.name}-${agent.name}`
+        try {
+          if (await runtime.sessionExists(sessionName)) {
+            anyAlive = true
+            break
+          }
+        } catch {}
+      }
+      if (!anyAlive) {
+        team.status = 'disbanded'
+        updateTeam(team.id, { status: 'disbanded' })
+      }
+    }
+  }
+  return { data: { teams }, status: 200 }
 }
 
 export async function checkIdleTeams(): Promise<void> {
@@ -1180,6 +1200,7 @@ export async function sendTeamMessage(
     : team.agents.filter(a => a.status === 'active' && a.name === to)
 
   const runtime = getRuntime()
+  let deliveredCount = 0
 
   for (const targetAgent of recipients) {
     try {
@@ -1205,6 +1226,7 @@ export async function sendTeamMessage(
         fs.mkdirSync(path.dirname(tmpFile), { recursive: true })
         fs.writeFileSync(tmpFile, deliveryText)
         await runtime.pasteFromFile(sessionName, tmpFile)
+        deliveredCount++
       }
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err)
@@ -1218,6 +1240,14 @@ export async function sendTeamMessage(
         type: 'chat', timestamp: new Date().toISOString(),
       })
     }
+  }
+
+  if (recipients.length > 0 && deliveredCount === 0) {
+    appendMessage(teamId, {
+      id: uuidv4(), teamId, from: 'ensemble', to: 'team',
+      content: '⚠️ Không thể chuyển tin nhắn tới Agent: Phiên này đã kết thúc (không còn tiến trình Agent nào hoạt động). Vui lòng chuyển sang phiên đang chạy trên thanh tiêu đề.',
+      type: 'chat', timestamp: new Date().toISOString(),
+    })
   }
 
   return { data: { message }, status: 200 }
@@ -1530,4 +1560,95 @@ export const __testing = {
   afhandelenExport,
   memoryExportFailureMessage,
   postToAlertHub,
+}
+
+export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ team: EnsembleTeam }>> {
+  const team = getTeam(teamId)
+  if (!team) return { error: 'Team not found', status: 404 }
+
+  const runtime = getRuntime()
+  const cwd = team.workingDirectory || process.cwd()
+  ensureCollabDirs(team.id)
+
+  team.status = 'active'
+  team.createdAt = new Date().toISOString()
+  updateTeam(team.id, { status: 'active', createdAt: team.createdAt })
+
+  appendMessage(team.id, {
+    id: uuidv4(), teamId: team.id, from: 'ensemble', to: 'team',
+    content: `🔄 Kích hoạt lại phiên #${team.name}: Đang khởi động lại các Agent...`,
+    type: 'chat', timestamp: new Date().toISOString(),
+  })
+
+  // Get last messages for context
+  const previousMessages = getMessages(team.id)
+  const recentHistory = previousMessages
+    .filter(m => m.type === 'chat' && m.from !== 'ensemble')
+    .slice(-8)
+    .map(m => `[${m.from} -> ${m.to}]: ${m.content.slice(0, 300)}`)
+    .join('\n')
+
+  for (let i = 0; i < team.agents.length; i++) {
+    const agentSpec = team.agents[i]
+    const agentName = `${team.name}-${agentSpec.name}`
+    const exists = await runtime.sessionExists(agentName)
+
+    if (!exists) {
+      const agentCwd = agentSpec.worktreePath || team.worktreePath || cwd
+      const hostId = agentSpec.hostId || getSelfHostId()
+      const spawned = await spawnLocalAgent({
+        name: agentName,
+        program: agentSpec.program,
+        workingDirectory: agentCwd,
+        hostId,
+      })
+      agentSpec.agentId = spawned.id
+      agentSpec.status = 'active'
+      fs.appendFileSync(collabSessionsFile(team.id), `${agentName}\n`)
+    }
+  }
+
+  updateTeam(team.id, { agents: team.agents })
+
+  // Inject resume prompt in background
+  setTimeout(async () => {
+    // Grace period for agent CLI TUI initialization
+    await new Promise(r => setTimeout(r, 4000));
+    for (let i = 0; i < team.agents.length; i++) {
+      const agentSpec = team.agents[i]
+      const agentName = `${team.name}-${agentSpec.name}`
+      const teammateNames = team.agents.filter((_, j) => j !== i).map(a => a.name)
+
+      const resumePrompt = [
+        `You are ${agentSpec.name} in team "${team.name}" with teammate(s) ${teammateNames.join(', ')}.`,
+        `Task: ${team.description}.`,
+        `This session was REACTIVATED by the user to continue collaborating.`,
+        `COMMUNICATION RULES:`,
+        `1. Send findings/chat: /home/truong/ensemble/scripts/team-say.sh ${team.id} ${agentSpec.name} ${teammateNames[0] || 'team'} "your message"`,
+        `2. Read teammate messages: /home/truong/ensemble/scripts/team-read.sh ${team.id}`,
+        `3. Keep alternating: analyze, share, read, respond.`,
+        recentHistory ? `--- RECENT HISTORY ---\n${recentHistory}\n--- END HISTORY ---` : '',
+        `ACTION: Run team-say to notify your teammate and user that you are back online and ready for instructions.`,
+      ].filter(Boolean).join('\n\n')
+
+      const promptFile = collabPromptFile(team.id, agentSpec.name)
+      fs.writeFileSync(promptFile, resumePrompt)
+
+      try {
+        await waitForReady(agentName, agentSpec.program, agentSpec.hostId, 30000)
+        await runtime.pasteFromFile(agentName, promptFile)
+        console.log(`[Reactivate] Injected prompt to ${agentName}`)
+      } catch (err) {
+        console.error(`[Reactivate] Failed to inject prompt to ${agentName}:`, err)
+      }
+    }
+
+    appendMessage(team.id, {
+      id: uuidv4(), teamId: team.id, from: 'ensemble', to: 'team',
+      content: `✅ Tất cả Agent đã trực tuyến trở lại! Bạn có thể gửi lệnh hoặc nhắn tin tiếp.`,
+      type: 'chat', timestamp: new Date().toISOString(),
+    })
+  }, 1000)
+
+  return { data: { team }, status: 200 }
 }

@@ -155,6 +155,17 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
+
+          <!-- Nút Tạo Nhiệm Vụ Mới -->
+          <button 
+            id="openNewTaskBtn" 
+            type="button" 
+            title="Tạo nhiệm vụ phân tích mới cho 2 Agent"
+            class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold text-xs px-2.5 py-1.5 rounded-lg flex items-center space-x-1 transition shadow-sm cursor-pointer shrink-0 border border-blue-400/30"
+          >
+            <span class="text-xs">➕</span>
+            <span class="hidden sm:inline">Nhiệm vụ mới</span>
+          </button>
         </div>
 
         <!-- Floating Dropdown Menu Panel -->
@@ -169,15 +180,26 @@
               <span>Danh sách phiên</span>
               <span id="sessionTotalCount" class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono border border-slate-700">0</span>
             </span>
-            <button 
-              id="purgeCompletedBtn" 
-              type="button"
-              title="Dọn dẹp các phiên cũ đã hoàn tất hoặc dừng" 
-              class="text-[11px] text-red-400 hover:text-red-300 hover:bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40 transition flex items-center space-x-1"
-            >
-              <span>🗑️</span>
-              <span>Dọn phiên cũ</span>
-            </button>
+            <div class="flex items-center space-x-1.5">
+              <button 
+                id="dropdownNewTaskBtn" 
+                type="button"
+                title="Tạo nhiệm vụ phân tích mới ngay" 
+                class="text-[11px] text-blue-400 hover:text-blue-300 hover:bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40 transition flex items-center space-x-1 cursor-pointer"
+              >
+                <span>➕</span>
+                <span>Tạo mới</span>
+              </button>
+              <button 
+                id="purgeCompletedBtn" 
+                type="button"
+                title="Dọn dẹp các phiên cũ đã hoàn tất hoặc dừng" 
+                class="text-[11px] text-red-400 hover:text-red-300 hover:bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40 transition flex items-center space-x-1 cursor-pointer"
+              >
+                <span>🗑️</span>
+                <span>Dọn phiên</span>
+              </button>
+            </div>
           </div>
 
           <!-- Search Filter Box -->
@@ -220,6 +242,17 @@
       >
         <span class="mr-1">🛑</span>
         <span>Kết thúc phiên</span>
+      </button>
+
+      <!-- Reactivate Session Button -->
+      <button 
+        id="reactivateSessionBtn" 
+        type="button" 
+        title="Khởi động lại các Agent để tiếp tục phiên này" 
+        class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-950/80 hover:bg-indigo-900 active:bg-indigo-800 text-indigo-300 hover:text-indigo-100 border border-indigo-600/70 transition shadow-sm cursor-pointer"
+      >
+        <span class="mr-1">🔄</span>
+        <span>Kích hoạt lại phiên</span>
       </button>
 
       <!-- Auto Scroll Toggle -->
@@ -273,6 +306,30 @@
     </div>
   </section>
 
+  <!-- ENDED SESSION NOTICE BANNER -->
+  <div id="endedSessionNotice" class="hidden bg-amber-950/90 border-b border-amber-600/50 px-4 py-2 text-xs text-amber-200 flex items-center justify-between shrink-0 transition-all">
+    <div class="flex items-center space-x-2 truncate">
+      <span class="text-amber-400 text-sm">⚠️</span>
+      <span id="endedSessionNoticeText" class="truncate font-medium">Bạn đang xem phiên đã kết thúc (không còn Agent hoạt động). Tin nhắn gửi vào đây sẽ không được phản hồi.</span>
+    </div>
+    <div class="flex items-center space-x-2 shrink-0 ml-3">
+      <button 
+        id="noticeReactivateBtn" 
+        type="button" 
+        class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3 py-1 rounded-md text-xs transition shadow flex items-center space-x-1 cursor-pointer"
+      >
+        <span>🔄 Kích hoạt lại phiên</span>
+      </button>
+      <button 
+        id="switchActiveSessionBtn" 
+        type="button" 
+        class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1 rounded-md text-xs transition shadow flex items-center space-x-1 cursor-pointer"
+      >
+        <span>🟢 Chuyển sang phiên đang chạy</span>
+      </button>
+    </div>
+  </div>
+
   <!-- CHAT CONTAINER (GOM 2 PANEL THÀNH 1 GROUP CHAT DUY NHẤT) -->
   <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
     <!-- Initial empty placeholder -->
@@ -323,19 +380,20 @@
           </svg>
         </button>
 
-        <!-- Input Box -->
-        <input 
+        <!-- Input Box (Textarea) -->
+        <textarea 
           id="msgInput" 
-          type="text" 
-          placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V) vào đây... (Nhấn Enter để gửi)" 
-          class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          autocomplete="off"
-        >
+          rows="1" 
+          placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V)... (Enter để gửi, Ctrl + Enter xuống hàng)" 
+          class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none max-h-36 overflow-y-auto leading-relaxed"
+          style="min-height: 42px; height: 42px;"
+        ></textarea>
 
         <!-- Send Button -->
         <button 
           id="sendBtn" 
-          class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0"
+          class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0 self-end"
+          style="height: 42px;"
         >
           <span>Gửi</span>
           <span>🚀</span>
@@ -345,10 +403,80 @@
       <!-- Quick Hint -->
       <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
         <span>💡 <b>Hỗ trợ ảnh:</b> Chụp màn hình (Windows+Shift+S) rồi bấm <b>Ctrl + V</b> để dán ảnh trực tiếp cho Agent phân tích.</span>
-        <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd></span>
+        <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd> gửi • <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Ctrl + Enter</kbd> xuống hàng</span>
       </div>
     </div>
   </footer>
+
+  <!-- NEW TASK MODAL -->
+  <div id="newTaskModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🚀</span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-100">Tạo Nhiệm Vụ Mới</h3>
+            <p class="text-[11px] text-slate-400">Khởi chạy nhóm 2 Agent (Lead & Worker) phân tích tự động</p>
+          </div>
+        </div>
+        <button id="closeNewTaskBtn" type="button" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <form id="newTaskForm" class="p-5 space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">
+            Yêu cầu / Nhiệm vụ phân tích <span class="text-rose-400">*</span>
+          </label>
+          <textarea 
+            id="newTaskDescription" 
+            rows="3" 
+            required 
+            placeholder="Ví dụ: Phân tích các lỗ hổng bảo mật trong module auth và đề xuất giải pháp vá..."
+            class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none leading-relaxed"
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">
+            Thư mục làm việc (Working Directory)
+          </label>
+          <input 
+            id="newTaskWorkingDir" 
+            type="text" 
+            placeholder="/mnt/d/Projects/..."
+            class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+          >
+          <p class="text-[10px] text-slate-500 mt-1">Đường dẫn thư mục dự án trong WSL / Linux để Agent đọc và sửa file.</p>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">
+            Chế độ / Template phối hợp
+          </label>
+          <select id="newTaskTemplate" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+            <option value="">⚙️ Mặc định (Lead hoạch định + Worker thực thi)</option>
+            <option value="review">🔍 Phản biện ngang hàng (Reviewer vs Critic)</option>
+            <option value="implement">⚡ Triển khai tính năng (Implement code)</option>
+            <option value="debug">🐛 Gỡ lỗi chuyên sâu (Debug bug & memory)</option>
+          </select>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end space-x-2">
+          <button id="cancelNewTaskBtn" type="button" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition cursor-pointer">
+            Hủy
+          </button>
+          <button id="submitNewTaskBtn" type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition flex items-center space-x-1.5 shadow-sm active:scale-95 cursor-pointer">
+            <span>Bắt đầu nhiệm vụ</span>
+            <span>🚀</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODEL CONFIG MODAL -->
   <div id="modelConfigModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
@@ -911,6 +1039,51 @@
             endBtn.classList.remove('sm:inline-flex')
           }
         }
+
+        // Toggle Reactivate Session Button
+        const reactivateBtn = document.getElementById('reactivateSessionBtn')
+        if (reactivateBtn) {
+          if (!isActive) {
+            reactivateBtn.classList.remove('hidden')
+            reactivateBtn.classList.add('sm:inline-flex')
+          } else {
+            reactivateBtn.classList.add('hidden')
+            reactivateBtn.classList.remove('sm:inline-flex')
+          }
+        }
+
+        // Toggle Ended Session Notice Banner
+        const notice = document.getElementById('endedSessionNotice')
+        const latestActive = teamsList.find(t => t.status === 'active')
+        if (notice) {
+          if (!isActive) {
+            notice.classList.remove('hidden')
+            const noticeText = document.getElementById('endedSessionNoticeText')
+            if (noticeText) {
+              noticeText.textContent = latestActive 
+                ? `Bạn đang xem phiên cũ đã kết thúc. Có phiên mới đang hoạt động: "${latestActive.description || latestActive.name}"`
+                : `Phiên làm việc này đã kết thúc (không còn Agent hoạt động). Bạn có thể kích hoạt lại để tiếp tục trao đổi.`
+            }
+            const switchBtn = document.getElementById('switchActiveSessionBtn')
+            if (switchBtn) {
+              if (latestActive) {
+                switchBtn.classList.remove('hidden')
+                switchBtn.onclick = () => {
+                  currentTeamId = latestActive.id
+                  onTeamChanged(currentTeamId)
+                }
+              } else {
+                switchBtn.classList.add('hidden')
+              }
+            }
+            const noticeReactivateBtn = document.getElementById('noticeReactivateBtn')
+            if (noticeReactivateBtn) {
+              noticeReactivateBtn.onclick = reactivateCurrentSession
+            }
+          } else {
+            notice.classList.add('hidden')
+          }
+        }
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-slate-500 shrink-0'
         title.textContent = 'Chưa chọn phiên'
@@ -963,6 +1136,51 @@
         if (endBtn) {
           endBtn.disabled = false
           endBtn.innerHTML = '<span class="mr-1">🛑</span><span>Kết thúc phiên</span>'
+        }
+        updateSelectedSessionUI()
+      }
+    }
+
+    // Reactivate current session
+    async function reactivateCurrentSession() {
+      if (!currentTeamId) return
+      const currentTeam = teamsList.find(t => t.id === currentTeamId)
+      const ok = confirm(`Bạn có muốn KÍCH HOẠT LẠI phiên này?\n\n"${currentTeam?.description || currentTeam?.name}"\n\nHệ thống sẽ khởi động lại các Agent trong cùng thư mục và kết nối lại lịch sử trao đổi.`)
+      if (!ok) return
+
+      const btn = document.getElementById('reactivateSessionBtn')
+      const noticeBtn = document.getElementById('noticeReactivateBtn')
+      if (btn) {
+        btn.disabled = true
+        btn.innerHTML = '<span class="mr-1">⏳</span><span>Đang kích hoạt...</span>'
+      }
+      if (noticeBtn) {
+        noticeBtn.disabled = true
+        noticeBtn.innerHTML = '<span>⏳ Đang kích hoạt...</span>'
+      }
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/reactivate`, {
+          method: 'POST'
+        })
+        if (res.ok) {
+          window.userLockedOldSession = false
+          await loadTeamsList()
+          await fetchMessages()
+        } else {
+          const err = await res.json().catch(() => ({}))
+          alert('Không thể kích hoạt lại: ' + (err.error || res.statusText))
+        }
+      } catch (e) {
+        alert('Lỗi kết nối: ' + e.message)
+      } finally {
+        if (btn) {
+          btn.disabled = false
+          btn.innerHTML = '<span class="mr-1">🔄</span><span>Kích hoạt lại phiên</span>'
+        }
+        if (noticeBtn) {
+          noticeBtn.disabled = false
+          noticeBtn.innerHTML = '<span>🔄 Kích hoạt lại phiên</span>'
         }
         updateSelectedSessionUI()
       }
@@ -1099,12 +1317,20 @@
 
         teamsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
+        const latestActiveTeam = teamsList.find(t => t.status === 'active')
+        const currentTeam = teamsList.find(t => t.id === currentTeamId)
+
         if (!currentTeamId || !teamsList.some(t => t.id === currentTeamId)) {
-          const activeTeam = teamsList.find(t => t.status === 'active') || teamsList[0]
-          if (activeTeam) {
-            currentTeamId = activeTeam.id
+          if (latestActiveTeam) {
+            currentTeamId = latestActiveTeam.id
+            onTeamChanged(currentTeamId)
+          } else if (teamsList[0]) {
+            currentTeamId = teamsList[0].id
             onTeamChanged(currentTeamId)
           }
+        } else if (currentTeam && currentTeam.status !== 'active' && latestActiveTeam && !window.userLockedOldSession) {
+          currentTeamId = latestActiveTeam.id
+          onTeamChanged(currentTeamId)
         }
 
         updateSelectedSessionUI()
@@ -1260,25 +1486,45 @@
 
       const currentTeam = teamsList.find(t => t.id === currentTeamId)
       if (currentTeam && currentTeam.status !== 'active') {
-        alert(`⚠️ Chú ý: Phiên này đã KẾT THÚC (${currentTeam.status.toUpperCase()}) vì các Agent đã hoàn thành và rời nhóm (Auto-disband).\n\nẢnh/tin nhắn vẫn sẽ được lưu vào lịch sử chat. Để các Agent mới tiếp tục phân tích, bạn hãy mở terminal và gọi:\n\ncollab "Phân tích ảnh vừa gửi"`)
+        const latestActive = teamsList.find(t => t.status === 'active')
+        if (latestActive) {
+          const switchNow = confirm(`⚠️ Chú ý: Bạn đang gửi tin nhắn vào phiên cũ đã kết thúc (${currentTeam.status.toUpperCase()}).\n\nHiện đang có phiên mới đang hoạt động: "${latestActive.description || latestActive.name}".\n\nBạn có muốn chuyển sang phiên đang chạy để gửi tin nhắn này không?`)
+          if (switchNow) {
+            currentTeamId = latestActive.id
+            window.userLockedOldSession = false
+            await onTeamChanged(currentTeamId)
+          } else {
+            return
+          }
+        } else {
+          alert(`⚠️ Chú ý: Phiên này đã kết thúc (${currentTeam.status.toUpperCase()}) và hiện không có phiên nào đang chạy. Để bắt đầu phiên phân tích mới, bạn hãy bấm nút [➕ Nhiệm vụ mới] ở thanh trên cùng!`)
+          return
+        }
       }
+
+      // OPTIMISTIC CLEAR: Xóa nội dung input và ảnh ngay lập tức để người dùng không phải chờ!
+      const textToSend = textContent
+      const cachedImage = pendingImage
+      input.value = ''
+      input.style.height = '42px'
+      removePendingImage()
 
       const sendBtn = document.getElementById('sendBtn')
       sendBtn.disabled = true
       sendBtn.classList.add('opacity-50')
 
       try {
-        let finalContent = textContent
+        let finalContent = textToSend
 
         // 1. If image attached, upload first
-        if (pendingImage) {
+        if (cachedImage) {
           sendBtn.innerHTML = '<span>Tải ảnh...</span><span>⏳</span>'
           const uploadRes = await fetch(`/api/ensemble/teams/${currentTeamId}/upload-image`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              filename: pendingImage.filename,
-              data: pendingImage.data
+              filename: cachedImage.filename,
+              data: cachedImage.data
             })
           })
 
@@ -1287,10 +1533,11 @@
             const imgMarkdown = `![${imgInfo.filename}](${imgInfo.url})\n\n[Hình ảnh đính kèm lưu tại: \`${imgInfo.filePath}\` - Hãy đọc file ảnh này để phân tích]`
             finalContent = finalContent ? `${finalContent}\n\n${imgMarkdown}` : `Phân tích hình ảnh đính kèm này giúp tôi:\n\n${imgMarkdown}`
           } else {
+            input.value = textToSend
+            input.style.height = 'auto'
+            input.style.height = Math.min(input.scrollHeight, 144) + 'px'
+            pendingImage = cachedImage
             alert('Không thể tải ảnh lên server.')
-            sendBtn.disabled = false
-            sendBtn.classList.remove('opacity-50')
-            sendBtn.innerHTML = '<span>Gửi</span><span>🚀</span>'
             return
           }
         }
@@ -1308,11 +1555,17 @@
         })
 
         if (res.ok) {
-          input.value = ''
-          removePendingImage()
           await fetchMessages()
+        } else {
+          input.value = textToSend
+          input.style.height = 'auto'
+          input.style.height = Math.min(input.scrollHeight, 144) + 'px'
+          alert('Máy chủ không thể gửi tin nhắn đến Agent.')
         }
       } catch (e) {
+        input.value = textToSend
+        input.style.height = 'auto'
+        input.style.height = Math.min(input.scrollHeight, 144) + 'px'
         alert('Lỗi gửi tin nhắn: ' + e.message)
       } finally {
         sendBtn.disabled = false
@@ -1322,13 +1575,23 @@
       }
     }
 
-    // Event Listeners
+    // Event Listeners for msgInput & sendBtn
     document.getElementById('sendBtn').addEventListener('click', sendMessage)
-    document.getElementById('msgInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+    
+    const msgInputEl = document.getElementById('msgInput')
+    msgInputEl.addEventListener('keydown', (e) => {
+      // Enter alone (without Ctrl / Shift / Meta) sends the message
+      if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
         e.preventDefault()
         sendMessage()
       }
+      // Ctrl + Enter or Shift + Enter lets the default behavior insert a newline!
+    })
+
+    // Auto-grow textarea height
+    msgInputEl.addEventListener('input', () => {
+      msgInputEl.style.height = '42px'
+      msgInputEl.style.height = Math.min(msgInputEl.scrollHeight, 144) + 'px'
     })
 
     // Image Upload Events
@@ -1389,6 +1652,7 @@
 
     // End Session Button
     document.getElementById('endSessionBtn').addEventListener('click', endCurrentSession)
+    document.getElementById('reactivateSessionBtn').addEventListener('click', reactivateCurrentSession)
 
     document.getElementById('toggleScrollBtn').addEventListener('click', () => {
       autoScroll = !autoScroll
@@ -1420,13 +1684,20 @@
         modelConfigData = await res.json()
         renderModelConfigUI()
 
-        // Highlight header button if any model has exhausted quota
-        const hasExhausted = (modelConfigData.exhaustedModels || []).length > 0
+        // Only highlight header button if an active agent is actually assigned an exhausted model
+        const exhaustedList = modelConfigData.exhaustedModels || []
+        const roles = modelConfigData.roles || {}
+        
+        const exhaustedRoles = []
+        if (roles.lead && exhaustedList.includes(roles.lead)) exhaustedRoles.push('Lead')
+        if (roles.worker && exhaustedList.includes(roles.worker)) exhaustedRoles.push('Worker')
+        if (roles.reviewer && exhaustedList.includes(roles.reviewer)) exhaustedRoles.push('Reviewer')
+
         const btn = document.getElementById('openModelConfigBtn')
         if (btn) {
-          if (hasExhausted) {
+          if (exhaustedRoles.length > 0) {
             btn.className = 'p-1.5 rounded-lg border border-rose-500/80 bg-rose-950/60 text-rose-300 hover:text-rose-100 transition text-xs flex items-center space-x-1 cursor-pointer shadow-sm'
-            btn.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse-subtle"></span><span class="text-[11px] font-semibold">⚙️ Model (Hết Quota)</span>'
+            btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse-subtle"></span><span class="text-[11px] font-semibold">⚙️ Model (${exhaustedRoles.join(', ')} hết Quota)</span>`
           } else {
             btn.className = 'p-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-300 transition text-xs flex items-center space-x-1 cursor-pointer'
             btn.innerHTML = '<span>⚙️</span><span class="hidden md:inline text-[11px]">Model</span>'
@@ -1556,6 +1827,104 @@
     document.getElementById('cancelModelConfigBtn').addEventListener('click', closeModelConfigModal)
     document.getElementById('saveModelConfigBtn').addEventListener('click', saveModelConfig)
     document.getElementById('resetQuotaBtn').addEventListener('click', resetExhaustedQuota)
+
+    // New Task Modal Logic
+    function openNewTaskModal() {
+      const modal = document.getElementById('newTaskModal')
+      if (!modal) return
+
+      const currentTeam = teamsList.find(t => t.id === currentTeamId)
+      const dirInput = document.getElementById('newTaskWorkingDir')
+      if (dirInput) {
+        if (currentTeam && currentTeam.workingDirectory) {
+          dirInput.value = currentTeam.workingDirectory
+        } else if (!dirInput.value) {
+          dirInput.value = '/mnt/d/Projects/AZ/ABCD'
+        }
+      }
+
+      const descInput = document.getElementById('newTaskDescription')
+      if (descInput) {
+        descInput.value = ''
+      }
+
+      modal.classList.remove('hidden')
+      if (descInput) descInput.focus()
+    }
+
+    function closeNewTaskModal() {
+      const modal = document.getElementById('newTaskModal')
+      if (modal) modal.classList.add('hidden')
+    }
+
+    const openNewTaskBtn = document.getElementById('openNewTaskBtn')
+    if (openNewTaskBtn) openNewTaskBtn.addEventListener('click', openNewTaskModal)
+
+    const dropdownNewTaskBtn = document.getElementById('dropdownNewTaskBtn')
+    if (dropdownNewTaskBtn) dropdownNewTaskBtn.addEventListener('click', () => {
+      closeDropdown()
+      openNewTaskModal()
+    })
+
+    const closeNewTaskBtn = document.getElementById('closeNewTaskBtn')
+    if (closeNewTaskBtn) closeNewTaskBtn.addEventListener('click', closeNewTaskModal)
+
+    const cancelNewTaskBtn = document.getElementById('cancelNewTaskBtn')
+    if (cancelNewTaskBtn) cancelNewTaskBtn.addEventListener('click', closeNewTaskModal)
+
+    document.getElementById('newTaskForm').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const descInput = document.getElementById('newTaskDescription')
+      const dirInput = document.getElementById('newTaskWorkingDir')
+      const templateSelect = document.getElementById('newTaskTemplate')
+      const submitBtn = document.getElementById('submitNewTaskBtn')
+
+      const task = descInput.value.trim()
+      if (!task) return
+
+      submitBtn.disabled = true
+      submitBtn.classList.add('opacity-50')
+      submitBtn.innerHTML = '<span>Đang khởi tạo...</span><span>⏳</span>'
+
+      try {
+        const res = await fetch('/api/ensemble/launch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task,
+            workingDirectory: dirInput.value.trim() || undefined,
+            template: templateSelect.value || undefined,
+          })
+        })
+
+        const data = await res.json()
+        if (res.ok && data.success) {
+          closeNewTaskModal()
+          // Reload teams list
+          await loadTeamsList()
+          if (data.teamId) {
+            currentTeamId = data.teamId
+            window.userLockedOldSession = false
+            await onTeamChanged(currentTeamId)
+          } else {
+            const latest = teamsList[0]
+            if (latest) {
+              currentTeamId = latest.id
+              window.userLockedOldSession = false
+              await onTeamChanged(currentTeamId)
+            }
+          }
+        } else {
+          alert('Không thể tạo nhiệm vụ mới: ' + (data.error || 'Lỗi không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi tạo nhiệm vụ: ' + err.message)
+      } finally {
+        submitBtn.disabled = false
+        submitBtn.classList.remove('opacity-50')
+        submitBtn.innerHTML = '<span>Bắt đầu nhiệm vụ</span><span>🚀</span>'
+      }
+    })
 
     // Init loop
     async function init() {

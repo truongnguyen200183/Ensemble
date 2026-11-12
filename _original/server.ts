@@ -13,7 +13,7 @@ const serverDir = nodePath.dirname(fileURLToPath(import.meta.url))
 import { deleteTeam, loadTeams, getTeam, updateTeam } from './lib/ensemble-registry'
 import {
   createEnsembleTeam, getEnsembleTeam, listEnsembleTeams,
-  getTeamFeed, sendTeamMessage, disbandTeam,
+  getTeamFeed, sendTeamMessage, disbandTeam, reactivateTeam,
 } from './services/ensemble-service'
 
 const PORT = parseInt(process.env.ENSEMBLE_PORT || process.env.ORCHESTRA_PORT || '23000', 10)
@@ -171,7 +171,7 @@ const server = http.createServer(async (req, res) => {
     // List teams / Create team
     if (path === '/api/ensemble/teams') {
       if (method === 'GET') {
-        const result = listEnsembleTeams()
+        const result = await listEnsembleTeams()
         return json(res, result.data, result.status, origin)
       }
       if (method === 'POST') {
@@ -212,6 +212,76 @@ const server = http.createServer(async (req, res) => {
         if (result.error) return json(res, { error: result.error }, result.status, origin)
         return json(res, result.data, result.status, origin)
       }
+    }
+
+    // Reactivate: /api/ensemble/teams/:id/reactivate
+    const reactivateMatch = path.match(/^\/api\/ensemble\/teams\/([^/]+)\/reactivate$/)
+    if (reactivateMatch && method === 'POST') {
+      const result = await reactivateTeam(reactivateMatch[1])
+      if (result.error) return json(res, { error: result.error }, result.status, origin)
+      return json(res, result.data, result.status, origin)
+    }
+
+    // Launch new team / session: POST /api/ensemble/launch
+    if (path === '/api/ensemble/launch' && method === 'POST') {
+      let body: Record<string, unknown>
+      try {
+        body = JSON.parse(await readBody(req))
+      } catch {
+        return json(res, { error: 'Bad Request: malformed JSON' }, 400, origin)
+      }
+      const task = ((body.task || body.description || '') as string).trim()
+      if (!task) {
+        return json(res, { error: 'Nội dung nhiệm vụ không được để trống' }, 400, origin)
+      }
+      const workingDir = ((body.workingDirectory || body.cwd || '') as string).trim() || process.env.HOME || '/home/truong'
+      const template = ((body.template || body.templateName || '') as string).trim()
+
+      const scriptCandidates = [
+        nodePath.join(serverDir, 'scripts', 'collab-launch.sh'),
+        nodePath.join(serverDir, '_original', 'scripts', 'collab-launch.sh'),
+        nodePath.join(serverDir, '..', 'scripts', 'collab-launch.sh'),
+        nodePath.join(os.homedir(), 'ensemble', 'scripts', 'collab-launch.sh'),
+      ]
+      const scriptPath = scriptCandidates.find(p => fs.existsSync(p))
+      if (!scriptPath) {
+        return json(res, { error: 'Không tìm thấy file collab-launch.sh trên hệ thống' }, 500, origin)
+      }
+
+      const agents = (template === 'review' || template === 'review-pro') ? 'agy,agy-pro' : 'agy,agy-worker'
+
+      const { spawn } = await import('child_process')
+      const child = spawn(scriptPath, [workingDir, task, agents, template], {
+        cwd: workingDir,
+        env: { ...process.env, COLLAB_MONITOR: 'none' },
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+
+      let stdoutData = ''
+      let teamIdFound = ''
+
+      const teamIdPromise = new Promise<string>((resolve) => {
+        const timer = setTimeout(() => resolve(''), 5000)
+        child.stdout?.on('data', chunk => {
+          const str = chunk.toString()
+          stdoutData += str
+          const m = str.match(/TEAM_ID=([a-f0-9-]+)/i)
+          if (m) {
+            clearTimeout(timer)
+            teamIdFound = m[1]
+            resolve(m[1])
+          }
+        })
+        child.on('exit', () => {
+          clearTimeout(timer)
+          const m = stdoutData.match(/TEAM_ID=([a-f0-9-]+)/i)
+          resolve(m ? m[1] : teamIdFound)
+        })
+      })
+
+      const teamId = await teamIdPromise
+      return json(res, { success: true, teamId: teamId || undefined }, 200, origin)
     }
 
     // Disband: /api/ensemble/teams/:id/disband
