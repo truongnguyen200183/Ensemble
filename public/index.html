@@ -345,16 +345,20 @@
   <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20">
     <div class="max-w-5xl mx-auto flex flex-col space-y-2">
 
-      <!-- Attached Image Preview Bar (Hidden by default) -->
-      <div id="imagePreviewContainer" class="hidden flex items-center space-x-3 px-3 py-2 bg-slate-800/90 border border-slate-700 rounded-xl max-w-md shadow-lg transition">
-        <img id="imagePreviewImg" class="w-11 h-11 object-cover rounded-lg border border-slate-600 shrink-0 cursor-pointer" title="Bấm để xem ảnh lớn" />
-        <div class="flex-1 min-w-0">
-          <p id="imagePreviewName" class="text-xs text-slate-200 truncate font-medium">screenshot.png</p>
-          <p id="imagePreviewSize" class="text-[10px] text-blue-400">Đã đính kèm ảnh (Bấm gửi để phân tích)</p>
+      <!-- Attached Images Preview Bar (Supports Multiple Files) -->
+      <div id="imagePreviewContainer" class="hidden flex flex-col space-y-1.5 p-2 bg-slate-800/95 border border-slate-700 rounded-xl shadow-lg transition max-w-2xl">
+        <div class="flex items-center justify-between px-1 text-[11px] text-slate-300">
+          <span class="font-semibold flex items-center space-x-1.5 text-blue-300">
+            <span>📎</span>
+            <span id="imagePreviewCount">Đã đính kèm 0 tệp</span>
+          </span>
+          <button id="clearAllImagesBtn" type="button" class="text-rose-400 hover:text-rose-300 text-[11px] hover:underline cursor-pointer">
+            Xóa tất cả
+          </button>
         </div>
-        <button id="removeImageBtn" type="button" class="p-1 hover:bg-slate-700 text-slate-400 hover:text-red-400 rounded-lg transition shrink-0" title="Hủy ảnh này">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
+        <div id="imagePreviewList" class="flex items-center space-x-2 overflow-x-auto pb-1 max-w-full">
+          <!-- Dynamic thumbnails rendered here -->
+        </div>
       </div>
 
       <div class="flex items-center space-x-2">
@@ -367,8 +371,8 @@
           </select>
         </div>
 
-        <!-- Image Attachment Button -->
-        <input type="file" id="imageFileInput" accept="image/*" class="hidden">
+        <!-- Image Attachment Button (multiple) -->
+        <input type="file" id="imageFileInput" accept="image/*" multiple class="hidden">
         <button 
           id="attachImageBtn" 
           type="button" 
@@ -588,7 +592,7 @@
     let soundEnabled = true
     let consecutiveErrors = 0
     let isDropdownOpen = false
-    let pendingImage = null    // { data: base64, filename: string, sizeText: string }
+    let pendingFiles = []    // Array of { id: string, data: base64, filename: string, sizeText: string, sizeKb: number }
 
     // Audio synthesizer for alerts
     function playChime() {
@@ -1274,38 +1278,82 @@
       }
     }
 
-    // Image Attachment Handlers
-    function handleSelectedImageFile(file, customName) {
-      if (!file || !file.type.startsWith('image/')) return
+    // Image & File Attachment Handlers (Supports Multiple Files)
+    function handleSelectedFiles(fileList, customName) {
+      if (!fileList || fileList.length === 0) return
 
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const base64Data = e.target.result
-        const filename = customName || file.name || 'screenshot.png'
-        const sizeKb = Math.round(file.size / 1024)
+      Array.from(fileList).forEach(file => {
+        if (!file.type || !file.type.startsWith('image/')) return
 
-        pendingImage = {
-          data: base64Data,
-          filename: filename,
-          sizeText: `${sizeKb} KB`
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const base64Data = e.target.result
+          const filename = customName || file.name || `screenshot_${Date.now()}.png`
+          const sizeKb = Math.round(file.size / 1024)
+          const fileId = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+
+          pendingFiles.push({
+            id: fileId,
+            data: base64Data,
+            filename: filename,
+            sizeKb: sizeKb,
+            sizeText: `${sizeKb} KB`
+          })
+
+          renderImagePreviews()
+          document.getElementById('msgInput').focus()
         }
+        reader.readAsDataURL(file)
+      })
+    }
 
-        // Show preview bar
-        document.getElementById('imagePreviewImg').src = base64Data
-        document.getElementById('imagePreviewName').textContent = filename
-        document.getElementById('imagePreviewSize').textContent = `${sizeKb} KB (Sẵn sàng gửi cho Agent)`
-        document.getElementById('imagePreviewContainer').classList.remove('hidden')
-        document.getElementById('msgInput').focus()
+    function renderImagePreviews() {
+      const container = document.getElementById('imagePreviewContainer')
+      const listEl = document.getElementById('imagePreviewList')
+      const countEl = document.getElementById('imagePreviewCount')
+
+      if (!container || !listEl) return
+
+      if (pendingFiles.length === 0) {
+        container.classList.add('hidden')
+        listEl.innerHTML = ''
+        return
       }
-      reader.readAsDataURL(file)
+
+      container.classList.remove('hidden')
+      if (countEl) {
+        countEl.textContent = `Đã đính kèm ${pendingFiles.length} hình ảnh (Bấm gửi để phân tích)`
+      }
+
+      listEl.innerHTML = pendingFiles.map(file => `
+        <div class="relative group flex items-center space-x-2 bg-slate-900/90 border border-slate-700 hover:border-slate-600 rounded-lg p-1.5 shrink-0 transition shadow-sm max-w-[210px]">
+          <img src="${file.data}" class="w-10 h-10 object-cover rounded border border-slate-700 shrink-0 cursor-pointer hover:opacity-90" title="Bấm để xem ảnh lớn" onclick="window.open('${file.data}', '_blank')" />
+          <div class="flex-1 min-w-0 pr-1">
+            <p class="text-xs text-slate-200 truncate font-medium" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</p>
+            <p class="text-[10px] text-blue-400 font-mono">${file.sizeText}</p>
+          </div>
+          <button type="button" onclick="removeSingleFile('${file.id}')" class="p-1 hover:bg-slate-800 text-slate-400 hover:text-rose-400 rounded transition shrink-0 cursor-pointer" title="Hủy ảnh này">
+            <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      `).join('')
     }
 
-    function removePendingImage() {
-      pendingImage = null
-      document.getElementById('imagePreviewContainer').classList.add('hidden')
-      document.getElementById('imagePreviewImg').src = ''
-      document.getElementById('imageFileInput').value = ''
+    function removeSingleFile(id) {
+      pendingFiles = pendingFiles.filter(f => f.id !== id)
+      renderImagePreviews()
+      const fileInput = document.getElementById('imageFileInput')
+      if (fileInput && pendingFiles.length === 0) fileInput.value = ''
     }
+    window.removeSingleFile = removeSingleFile
+
+    function removeAllPendingFiles() {
+      pendingFiles = []
+      renderImagePreviews()
+      const fileInput = document.getElementById('imageFileInput')
+      if (fileInput) fileInput.value = ''
+    }
+    window.removeAllPendingFiles = removeAllPendingFiles
 
     // Fetch Teams List (/api/ensemble/teams)
     async function loadTeamsList() {
@@ -1477,12 +1525,12 @@
       }
     }
 
-    // Send Message (Supports Text + Image)
+    // Send Message (Supports Text + Multiple Images)
     async function sendMessage() {
       const input = document.getElementById('msgInput')
       const targetSelect = document.getElementById('msgTarget')
       const textContent = input.value.trim()
-      if ((!textContent && !pendingImage) || !currentTeamId) return
+      if ((!textContent && pendingFiles.length === 0) || !currentTeamId) return
 
       const currentTeam = teamsList.find(t => t.id === currentTeamId)
       if (currentTeam && currentTeam.status !== 'active') {
@@ -1504,10 +1552,10 @@
 
       // OPTIMISTIC CLEAR: Xóa nội dung input và ảnh ngay lập tức để người dùng không phải chờ!
       const textToSend = textContent
-      const cachedImage = pendingImage
+      const filesToSend = [...pendingFiles]
       input.value = ''
       input.style.height = '42px'
-      removePendingImage()
+      removeAllPendingFiles()
 
       const sendBtn = document.getElementById('sendBtn')
       sendBtn.disabled = true
@@ -1516,28 +1564,42 @@
       try {
         let finalContent = textToSend
 
-        // 1. If image attached, upload first
-        if (cachedImage) {
-          sendBtn.innerHTML = '<span>Tải ảnh...</span><span>⏳</span>'
-          const uploadRes = await fetch(`/api/ensemble/teams/${currentTeamId}/upload-image`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              filename: cachedImage.filename,
-              data: cachedImage.data
+        // 1. Upload all attached images (if any)
+        if (filesToSend.length > 0) {
+          const uploadedMarkdowns = []
+          for (let i = 0; i < filesToSend.length; i++) {
+            const f = filesToSend[i]
+            sendBtn.innerHTML = `<span>Tải ảnh (${i + 1}/${filesToSend.length})...</span><span>⏳</span>`
+            const uploadRes = await fetch(`/api/ensemble/teams/${currentTeamId}/upload-image`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                filename: f.filename,
+                data: f.data
+              })
             })
-          })
 
-          if (uploadRes.ok) {
-            const imgInfo = await uploadRes.json()
-            const imgMarkdown = `![${imgInfo.filename}](${imgInfo.url})\n\n[Hình ảnh đính kèm lưu tại: \`${imgInfo.filePath}\` - Hãy đọc file ảnh này để phân tích]`
-            finalContent = finalContent ? `${finalContent}\n\n${imgMarkdown}` : `Phân tích hình ảnh đính kèm này giúp tôi:\n\n${imgMarkdown}`
+            if (uploadRes.ok) {
+              const imgInfo = await uploadRes.json()
+              const imgMarkdown = `![${imgInfo.filename}](${imgInfo.url})\n[Hình ảnh ${i + 1} lưu tại: \`${imgInfo.filePath}\` - Hãy đọc file ảnh này để phân tích]`
+              uploadedMarkdowns.push(imgMarkdown)
+            } else {
+              console.warn('Lỗi tải ảnh:', f.filename)
+            }
+          }
+
+          if (uploadedMarkdowns.length > 0) {
+            const imgsBlock = uploadedMarkdowns.join('\n\n')
+            finalContent = finalContent 
+              ? `${finalContent}\n\n${imgsBlock}` 
+              : `Phân tích ${uploadedMarkdowns.length} hình ảnh đính kèm này giúp tôi:\n\n${imgsBlock}`
           } else {
             input.value = textToSend
             input.style.height = 'auto'
             input.style.height = Math.min(input.scrollHeight, 144) + 'px'
-            pendingImage = cachedImage
-            alert('Không thể tải ảnh lên server.')
+            pendingFiles = filesToSend
+            renderImagePreviews()
+            alert('Không thể tải các ảnh đính kèm lên server.')
             return
           }
         }
@@ -1560,12 +1622,16 @@
           input.value = textToSend
           input.style.height = 'auto'
           input.style.height = Math.min(input.scrollHeight, 144) + 'px'
+          pendingFiles = filesToSend
+          renderImagePreviews()
           alert('Máy chủ không thể gửi tin nhắn đến Agent.')
         }
       } catch (e) {
         input.value = textToSend
         input.style.height = 'auto'
         input.style.height = Math.min(input.scrollHeight, 144) + 'px'
+        pendingFiles = filesToSend
+        renderImagePreviews()
         alert('Lỗi gửi tin nhắn: ' + e.message)
       } finally {
         sendBtn.disabled = false
@@ -1594,31 +1660,43 @@
       msgInputEl.style.height = Math.min(msgInputEl.scrollHeight, 144) + 'px'
     })
 
-    // Image Upload Events
+    // Image Upload Events (Multiple)
     document.getElementById('attachImageBtn').addEventListener('click', () => {
       document.getElementById('imageFileInput').click()
     })
 
     document.getElementById('imageFileInput').addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0]) {
-        handleSelectedImageFile(e.target.files[0])
+      if (e.target.files && e.target.files.length > 0) {
+        handleSelectedFiles(e.target.files)
       }
     })
 
-    document.getElementById('removeImageBtn').addEventListener('click', removePendingImage)
+    const clearAllImagesBtn = document.getElementById('clearAllImagesBtn')
+    if (clearAllImagesBtn) {
+      clearAllImagesBtn.addEventListener('click', removeAllPendingFiles)
+    }
 
-    // Clipboard Paste (Ctrl + V) for Images
+    // Clipboard Paste (Ctrl + V) for Images (Supports appending multiple pasted images)
     document.addEventListener('paste', (e) => {
       const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items
       if (!items) return
 
+      const imageBlobs = []
       for (const item of items) {
         if (item.type.indexOf('image') !== -1) {
           const blob = item.getAsFile()
-          const timeStr = new Date().toISOString().replace(/[:.]/g, '-')
-          handleSelectedImageFile(blob, `screenshot_${timeStr}.png`)
-          break
+          if (blob) imageBlobs.push(blob)
         }
+      }
+
+      if (imageBlobs.length > 0) {
+        const timeStr = new Date().toISOString().replace(/[:.]/g, '-').slice(11, 19)
+        imageBlobs.forEach((blob, idx) => {
+          const name = imageBlobs.length > 1
+            ? `screenshot_${timeStr}_${idx + 1}.png`
+            : `screenshot_${timeStr}.png`
+          handleSelectedFiles([blob], name)
+        })
       }
     })
 
