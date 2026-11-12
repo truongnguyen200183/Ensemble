@@ -465,6 +465,14 @@ const server = http.createServer(async (req, res) => {
         { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', tier: 2, group: 'Claude Sonnet 5.5', desc: 'Bậc 2: Cân bằng & code chuẩn' },
         { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', tier: 2, group: 'Claude Sonnet 5.5', desc: 'Bậc 2: Tốc độ cao' },
 
+        // 3b. Claude Pro (Claude Code CLI - dùng quota gói Claude Pro)
+        { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc' },
+        { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp' },
+        { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh' },
+        { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Lập trình chuyên sâu' },
+        { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn' },
+        { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao' },
+
         // 4. Gemini 3.8 Flash
         { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', tier: 2, group: 'Gemini 3.8 Flash', desc: 'Bậc 2: Suy luận cao, dồi dào Quota' },
         { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', tier: 3, group: 'Gemini 3.8 Flash', desc: 'Bậc 3: Đa phương thức, tốc độ cao' },
@@ -516,8 +524,25 @@ const server = http.createServer(async (req, res) => {
 
           const setModel = (key: string, model: string) => {
             if (currentAgents[key] && currentAgents[key].flags) {
-              const idx = currentAgents[key].flags.indexOf('--model')
-              if (idx !== -1) currentAgents[key].flags[idx + 1] = model
+              const a = currentAgents[key]
+              if (model.startsWith('cc-')) {
+                // Model Claude Pro -> chạy qua Claude Code CLI
+                a.command = 'claude-smart'
+                a.flags = ['--permission-mode', 'auto', '--model', model]
+                a.readyMarker = '❯'
+                a.unsetEnv = ['ANTHROPIC_API_KEY']
+              } else {
+                // Model Antigravity -> chạy qua agy-smart
+                if (a.command === 'claude-smart') {
+                  a.command = 'agy-smart'
+                  a.flags = ['--dangerously-skip-permissions', '--model', model]
+                  a.readyMarker = '? for shortcuts'
+                  a.unsetEnv = ['GEMINI_API_KEY', 'GOOGLE_API_KEY']
+                } else {
+                  const idx = a.flags.indexOf('--model')
+                  if (idx !== -1) a.flags[idx + 1] = model
+                }
+              }
             }
           }
 

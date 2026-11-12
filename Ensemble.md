@@ -13,6 +13,7 @@ Tài liệu này ghi chép lại **toàn bộ quy trình cài đặt thực tế
   * **Lead (`agy`)**: Kiến trúc sư trưởng / Quản lý nhóm (`gemini-4-argon-low`).
   * **Worker (`agy-worker`)**: Lập trình viên thực thi (`gemini-3.8-flash-low` - tốc độ cao, tiết kiệm token).
   * **Critic / Reviewer (`agy-pro`)**: Chuyên gia phản biện cao cấp ngang hàng Lead (`gemini-4-argon-low`).
+  * **Claude (`claude`)**: Agent Claude Code chính hãng của Anthropic (dùng account **Claude Pro**), có thể thay thế Critic hoặc Worker khi cần chất lượng code/phản biện cao (`sonnet`).
 * **Giao diện theo dõi & Tương tác:**
   * **Web Dashboard (Mặc định)**: `http://localhost:23000` — Group Chat một khung duy nhất (Lead bên Trái, Worker bên Phải, tên hiển thị theo Role, hover xóa phiên).
   * **Terminal Split Monitor (Tùy chọn)**: `wsl tmux attach` — Màn hình chia đôi 50/50 nếu muốn xem terminal.
@@ -77,6 +78,37 @@ ln -sf /mnt/c/Users/<TenUserWindows>/.gemini ~/.gemini
 * Sau đó gõ `agy` trong terminal Ubuntu (không gõ `agy login`).
 * Màn hình sẽ yêu cầu xác nhận **Workspace Trust** (`> Yes, I trust this folder`) ➔ Nhấn **`Enter`**.
 * Kiểm tra góc dưới hiển thị model (ví dụ `Gemini 4 Argon` hoặc `Gemini 3.8 Flash`) là đăng nhập thành công. Nhấn `Ctrl + D` để thoát.
+
+---
+
+## 3B. Cài Đặt và Xác Thực Claude Code (`claude`) với Account Claude Pro
+
+Ensemble đã hỗ trợ sẵn agent `claude` (xem `agents.json` gốc), chỉ cần cài CLI và đăng nhập trong WSL.
+
+### Bước 1: Cài đặt Claude Code trong WSL
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+# hoặc: sudo npm install -g @anthropic-ai/claude-code
+claude --version
+```
+Nếu dùng bản cài bằng script, binary nằm ở `~/.local/bin/claude`; đưa ra dùng chung:
+```bash
+sudo cp ~/.local/bin/claude /usr/local/bin/claude
+sudo chmod +x /usr/local/bin/claude
+```
+
+### Bước 2: Đăng nhập bằng account Claude Pro (OAuth)
+```bash
+claude
+# Trong giao diện: gõ /login ➔ chọn "Claude account with subscription" (Pro/Max)
+# WSL sẽ in ra 1 URL ➔ mở trên trình duyệt Windows, đăng nhập và dán mã xác nhận lại.
+```
+* Phiên đăng nhập lưu tại `~/.claude/` (trong WSL, riêng biệt với Windows). Chỉ cần đăng nhập **một lần**.
+* Lần đầu sẽ hỏi **Workspace Trust** ➔ chọn `Yes, I trust this folder`.
+
+> ⚠️ **Quan trọng:** Phải **bỏ** `ANTHROPIC_API_KEY` khỏi môi trường, nếu không Claude Code sẽ tính tiền theo API thay vì dùng quota gói Pro. Vì vậy cấu hình agent bên dưới có `"unsetEnv": ["ANTHROPIC_API_KEY"]`.
+
+> 💡 **Lưu ý quota Pro:** Gói Pro có giới hạn theo khung 5 giờ và dùng chung giữa Claude web + Claude Code. Nên dùng **Sonnet** cho agent chạy thường xuyên, chỉ dùng **Opus** (`--model opus`) cho vai trò Critic ngắn hạn.
 
 ---
 
@@ -171,9 +203,31 @@ Chỉnh sửa file `~/ensemble/agents.json`:
     "color": "magenta",
     "icon": "◆",
     "unsetEnv": ["GEMINI_API_KEY", "GOOGLE_API_KEY"]
+  },
+  "claude": {
+    "name": "claude",
+    "command": "claude",
+    "flags": ["--permission-mode", "auto", "--model", "sonnet"],
+    "readyMarker": "❯",
+    "inputMethod": "sendKeys",
+    "color": "green",
+    "icon": "●",
+    "unsetEnv": ["ANTHROPIC_API_KEY"]
+  },
+  "claude-opus": {
+    "name": "claude-opus",
+    "command": "claude",
+    "flags": ["--permission-mode", "auto", "--model", "opus"],
+    "readyMarker": "❯",
+    "inputMethod": "sendKeys",
+    "color": "green",
+    "icon": "◉",
+    "unsetEnv": ["ANTHROPIC_API_KEY"]
   }
 }
 ```
+* `claude` (Sonnet) dùng cho Worker/Critic thường xuyên; `claude-opus` dùng khi cần phản biện sâu (tốn quota Pro nhanh hơn).
+* Cả hai cùng gọi binary `claude` và dùng chung phiên đăng nhập Pro ở `~/.claude/`, nên không cần tạo shim như `agy-worker`.
 
 ---
 
@@ -244,6 +298,18 @@ case "$MODE" in
   review-fast|review-flash)
     AGENTS="agy,agy-worker"
     TEMPLATE="review"
+    ;;
+  review-claude)
+    AGENTS="agy,claude"
+    TEMPLATE="review"
+    ;;
+  review-opus)
+    AGENTS="agy,claude-opus"
+    TEMPLATE="review"
+    ;;
+  claude-worker)
+    AGENTS="agy,claude"
+    TEMPLATE="implement"
     ;;
   implement)
     AGENTS="agy,agy-worker"
@@ -317,12 +383,22 @@ collab "Rà soát toàn diện bảo mật và logic" review
 
 # 3. Chế độ Phản biện Nhanh & Tiết kiệm (Lead Argon + Critic Flash):
 collab "Kiểm tra syntax và conventions" review-fast
+
+# 4. Dùng Claude Pro làm Critic (Lead Argon + Claude Sonnet):
+collab "Rà soát logic và kiến trúc" review-claude
+
+# 5. Phản biện sâu bằng Claude Opus (tốn quota Pro hơn):
+collab "Đánh giá thiết kế hệ thống" review-opus
+
+# 6. Claude làm Worker thực thi (Lead Argon + Claude Sonnet):
+collab "Cài đặt tính năng X" claude-worker
 ```
 
 ### 6.2. Theo dõi & Tương tác trên Web (`http://localhost:23000`)
 * **Khung Group Chat duy nhất:**
   * **👑 LEAD**: Căn bên **Trái** (màu xanh dương đậm, vương miện, `Gemini 4 Argon`).
   * **⚡ WORKER / 🔍 REVIEWER**: Căn bên **Phải** (màu xanh ngọc / tím, `Gemini 3.8 Flash`).
+  * **Claude** (khi dùng `review-claude` / `claude-worker`): hiển thị bên **Phải** theo Role tương ứng, màu xanh lá, model `Claude Sonnet` / `Claude Opus`.
   * **Tên Role chuẩn**: Tự động chuẩn hóa, không hiển thị mã `agy-1`, `agy-2`.
 * **Xóa phiên chạy:** Bấm vào mục **Phiên chạy**, rê chuột (hover) vào dòng bất kỳ để hiện icon thùng rác 🗑️ và bấm xóa. Hoặc bấm nút **"🗑️ Dọn phiên cũ"** để dọn dẹp hàng loạt.
 * **Tương tác 2 chiều:** Nhập tin nhắn vào ô chat dưới cùng để can thiệp / chỉ đạo trực tiếp cho cả nhóm hoặc từng agent.

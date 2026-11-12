@@ -15,28 +15,33 @@
     "command": "claude",
     "flags": [
       "--permission-mode",
-      "auto"
+      "auto",
+      "--model",
+      "sonnet"
     ],
     "readyMarker": "❯",
     "inputMethod": "sendKeys",
     "color": "green",
-    "icon": "●"
+    "icon": "●",
+    "unsetEnv": [
+      "ANTHROPIC_API_KEY"
+    ]
   },
   "agy": {
     "name": "agy",
-    "command": "agy-smart",
+    "command": "claude-smart",
     "flags": [
-      "--dangerously-skip-permissions",
+      "--permission-mode",
+      "auto",
       "--model",
-      "gemini-3.8-flash-high"
+      "cc-opus-medium"
     ],
-    "readyMarker": "? for shortcuts",
+    "readyMarker": "❯",
     "inputMethod": "sendKeys",
     "color": "red",
     "icon": "▲",
     "unsetEnv": [
-      "GEMINI_API_KEY",
-      "GOOGLE_API_KEY"
+      "ANTHROPIC_API_KEY"
     ]
   },
   "gemini": {
@@ -97,36 +102,53 @@
   },
   "agy-worker": {
     "name": "agy-worker",
-    "command": "agy-smart",
+    "command": "claude-smart",
     "flags": [
-      "--dangerously-skip-permissions",
+      "--permission-mode",
+      "auto",
       "--model",
-      "gemini-3.8-flash-low"
+      "cc-sonnet-medium"
     ],
-    "readyMarker": "? for shortcuts",
+    "readyMarker": "❯",
     "inputMethod": "sendKeys",
     "color": "yellow",
     "icon": "▼",
     "unsetEnv": [
-      "GEMINI_API_KEY",
-      "GOOGLE_API_KEY"
+      "ANTHROPIC_API_KEY"
     ]
   },
   "agy-pro": {
     "name": "agy-pro",
-    "command": "agy-smart",
+    "command": "claude-smart",
     "flags": [
-      "--dangerously-skip-permissions",
+      "--permission-mode",
+      "auto",
       "--model",
-      "gemini-3.8-flash-high"
+      "cc-sonnet-high"
     ],
-    "readyMarker": "? for shortcuts",
+    "readyMarker": "❯",
     "inputMethod": "sendKeys",
     "color": "magenta",
     "icon": "◆",
     "unsetEnv": [
-      "GEMINI_API_KEY",
-      "GOOGLE_API_KEY"
+      "ANTHROPIC_API_KEY"
+    ]
+  },
+  "claude-opus": {
+    "name": "claude-opus",
+    "command": "claude",
+    "flags": [
+      "--permission-mode",
+      "auto",
+      "--model",
+      "opus"
+    ],
+    "readyMarker": "❯",
+    "inputMethod": "sendKeys",
+    "color": "green",
+    "icon": "◉",
+    "unsetEnv": [
+      "ANTHROPIC_API_KEY"
     ]
   }
 }

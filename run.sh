@@ -26,6 +26,21 @@ case "$MODE" in
     TEMPLATE="review"
     echo ">> [Review Nhanh]: Reviewer (Argon) vs Critic (Flash)"
     ;;
+  review-claude)
+    AGENTS="agy,claude"
+    TEMPLATE="review"
+    echo ">> [Review Claude]: Lead (Argon) vs Critic (Claude Sonnet)"
+    ;;
+  review-opus)
+    AGENTS="agy,claude-opus"
+    TEMPLATE="review"
+    echo ">> [Review Opus]: Lead (Argon) vs Critic (Claude Opus)"
+    ;;
+  claude-worker)
+    AGENTS="agy,claude"
+    TEMPLATE="implement"
+    echo ">> [Claude Worker]: Lead (Argon) + Worker (Claude Sonnet)"
+    ;;
   implement)
     AGENTS="agy,agy-worker"
     TEMPLATE="implement"
