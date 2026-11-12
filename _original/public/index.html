@@ -117,7 +117,7 @@
     }
   </style>
 </head>
-<body class="bg-[#0b0f19] text-slate-100 flex flex-col h-screen overflow-hidden font-sans antialiased">
+<body class="bg-[#0b0f19] text-slate-100 flex flex-col h-screen overflow-hidden font-sans antialiased relative">
 
   <!-- TOP NAVBAR -->
   <header class="bg-[#111827] border-b border-slate-800 px-4 py-2.5 flex items-center justify-between shadow-md z-30 shrink-0">
@@ -381,6 +381,18 @@
     </div>
   </main>
 
+  <!-- FLOATING SCROLL TO BOTTOM BUTTON (Sticky scroll / New messages indicator) -->
+  <button 
+    id="scrollToBottomBtn" 
+    type="button" 
+    onclick="scrollToBottom()" 
+    class="hidden absolute bottom-24 right-6 z-30 bg-blue-600/90 hover:bg-blue-500 active:scale-95 text-white font-medium px-4 py-2 rounded-full shadow-2xl border border-blue-400/50 backdrop-blur text-xs flex items-center space-x-2 cursor-pointer transition-all duration-200 animate-bounce"
+    title="Bấm để cuộn xuống tin nhắn mới nhất"
+  >
+    <span class="text-sm">⬇️</span>
+    <span id="unreadNoticeText" class="font-semibold tracking-wide">Tin nhắn mới</span>
+  </button>
+
   <!-- BOTTOM INPUT BAR & IMAGE PREVIEW -->
   <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20">
     <div class="max-w-5xl mx-auto flex flex-col space-y-2">
@@ -629,10 +641,39 @@
     let lastSeenTimestamp = null
     let renderedMessageIds = new Set()
     let autoScroll = true
+    let isUserScrolledUp = false
+    let unreadCount = 0
     let soundEnabled = true
     let consecutiveErrors = 0
     let isDropdownOpen = false
     let pendingFiles = []    // Array of { id: string, data: base64, filename: string, sizeText: string, sizeKb: number }
+
+    // Scroll helpers for Smart Auto-scroll (Sticky scroll UX)
+    function showScrollToBottomBtn(count) {
+      const btn = document.getElementById('scrollToBottomBtn')
+      const countText = document.getElementById('unreadNoticeText')
+      if (btn && countText) {
+        countText.textContent = count > 1 ? `${count} tin nhắn mới` : 'Có tin nhắn mới'
+        btn.classList.remove('hidden')
+      }
+    }
+
+    function hideScrollToBottomBtn() {
+      const btn = document.getElementById('scrollToBottomBtn')
+      if (btn) {
+        btn.classList.add('hidden')
+      }
+    }
+
+    function scrollToBottom() {
+      const feed = document.getElementById('chatFeed')
+      if (feed) {
+        feed.scrollTo({ top: feed.scrollHeight, behavior: 'smooth' })
+      }
+      isUserScrolledUp = false
+      unreadCount = 0
+      hideScrollToBottomBtn()
+    }
 
     // Audio synthesizer for alerts
     function playChime() {
@@ -1535,6 +1576,9 @@
       currentTeamId = teamId
       lastSeenTimestamp = null
       renderedMessageIds.clear()
+      isUserScrolledUp = false
+      unreadCount = 0
+      hideScrollToBottomBtn()
       
       const feed = document.getElementById('chatFeed')
       feed.innerHTML = ''
@@ -1606,11 +1650,17 @@
 
         const feed = document.getElementById('chatFeed')
         let hasNew = false
+        let newCount = 0
+        const isInitialLoad = renderedMessageIds.size === 0
+        // Ghi nhận vị trí trước khi thêm tin để giữ nguyên chỗ đang đọc
+        const prevScrollTop = feed.scrollTop
+        const wasNearBottom = (feed.scrollHeight - feed.scrollTop - feed.clientHeight) < 80
 
         messages.forEach(msg => {
           if (!renderedMessageIds.has(msg.id)) {
             renderedMessageIds.add(msg.id)
             hasNew = true
+            newCount++
             const el = buildMessageElement(msg)
             feed.appendChild(el)
           }
@@ -1622,8 +1672,16 @@
             playChime()
           }
 
-          if (autoScroll) {
+          // Smart auto-scroll: chỉ cuộn xuống khi user đang ở cuối feed
+          if (isInitialLoad || (autoScroll && wasNearBottom && !isUserScrolledUp)) {
             feed.scrollTop = feed.scrollHeight
+            unreadCount = 0
+            hideScrollToBottomBtn()
+          } else {
+            // User đang đọc phía trên -> giữ nguyên vị trí, hiện nút báo tin mới
+            feed.scrollTop = prevScrollTop
+            unreadCount += newCount
+            showScrollToBottomBtn(unreadCount)
           }
 
           document.getElementById('msgCountBadge').textContent = `${messages.length} tin nhắn`
@@ -1748,7 +1806,10 @@
         })
 
         if (res.ok) {
+          // User vừa gửi tin -> luôn cuộn xuống để thấy tin của mình
+          isUserScrolledUp = false
           await fetchMessages()
+          scrollToBottom()
         } else {
           input.value = textToSend
           input.style.height = 'auto'
@@ -1859,6 +1920,19 @@
       }
     })
 
+    // Theo dõi thao tác cuộn của user: cuộn lên -> tạm dừng auto-scroll, về cuối -> bật lại
+    document.getElementById('chatFeed').addEventListener('scroll', () => {
+      const feed = document.getElementById('chatFeed')
+      const distanceFromBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight
+      if (distanceFromBottom < 80) {
+        isUserScrolledUp = false
+        unreadCount = 0
+        hideScrollToBottomBtn()
+      } else {
+        isUserScrolledUp = true
+      }
+    }, { passive: true })
+
     // End Session Button
     document.getElementById('endSessionBtn').addEventListener('click', endCurrentSession)
     document.getElementById('reactivateSessionBtn').addEventListener('click', reactivateCurrentSession)
@@ -1869,8 +1943,7 @@
       if (autoScroll) {
         btn.classList.add('text-blue-400')
         btn.classList.remove('text-slate-500')
-        const feed = document.getElementById('chatFeed')
-        feed.scrollTop = feed.scrollHeight
+        scrollToBottom()
       } else {
         btn.classList.remove('text-blue-400')
         btn.classList.add('text-slate-500')
