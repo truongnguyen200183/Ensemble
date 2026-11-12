@@ -1959,12 +1959,14 @@
     // Model Config Modal Logic
     let modelConfigData = null
 
-    async function loadModelConfig() {
+    async function loadModelConfig(forceRender = false) {
       try {
         const res = await fetch('/api/ensemble/model-config')
         if (!res.ok) return
         modelConfigData = await res.json()
-        renderModelConfigUI()
+        // Không render lại các ô chọn khi modal đang mở (tránh ghi đè lựa chọn user đang chỉnh)
+        const modalOpen = !document.getElementById('modelConfigModal').classList.contains('hidden')
+        if (forceRender || !modalOpen) renderModelConfigUI()
 
         // Only highlight header button if an active agent is actually assigned an exhausted model
         const exhaustedList = modelConfigData.exhaustedModels || []
@@ -1990,7 +1992,7 @@
       }
     }
 
-    function renderModelConfigUI() {
+    function renderModelConfigUI(keepCurrent = false) {
       if (!modelConfigData) return
       const { availableModels, roles, exhaustedModels } = modelConfigData
 
@@ -2021,9 +2023,14 @@
         }
       }
 
-      populateSelect('modelSelectLead', roles.lead)
-      populateSelect('modelSelectWorker', roles.worker)
-      populateSelect('modelSelectReviewer', roles.reviewer)
+      // keepCurrent: giữ nguyên lựa chọn user đang chỉnh trong modal (chưa lưu)
+      const pick = (selectId, savedVal) => {
+        const cur = document.getElementById(selectId)?.value
+        return keepCurrent && cur ? cur : savedVal
+      }
+      populateSelect('modelSelectLead', pick('modelSelectLead', roles.lead))
+      populateSelect('modelSelectWorker', pick('modelSelectWorker', roles.worker))
+      populateSelect('modelSelectReviewer', pick('modelSelectReviewer', roles.reviewer))
 
       // Render Quota status list
       const quotaList = document.getElementById('quotaStatusList')
@@ -2089,6 +2096,7 @@
         if (res.ok) {
           alert('Đã reset trạng thái Quota thành công!')
           await loadModelConfig()
+          renderModelConfigUI(true)
         }
       } catch (e) {
         alert('Lỗi: ' + e.message)
@@ -2097,7 +2105,7 @@
 
     function openModelConfigModal() {
       document.getElementById('modelConfigModal').classList.remove('hidden')
-      loadModelConfig()
+      loadModelConfig(true)
     }
 
     function closeModelConfigModal() {
