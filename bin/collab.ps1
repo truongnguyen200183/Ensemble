@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Collab CLI - Windows Entrypoint
 # Seamless integration between Windows Terminal and WSL Ensemble Agents
 # ==============================================================================
@@ -11,6 +11,17 @@ $arg3 = $args[2]
 
 $port = if ($env:ENSEMBLE_PORT) { $env:ENSEMBLE_PORT } else { "23000" }
 $url = if ($env:ENSEMBLE_URL) { $env:ENSEMBLE_URL } else { "http://localhost:$port" }
+
+# 0. Protocol handler (collab://start, collab://open)
+if ($arg1 -eq "protocol" -or $arg1 -like "collab://*") {
+    $uri = if ($arg1 -like "collab://*") { $arg1 } else { $arg2 }
+    # Silently wake up WSL and start the ensemble systemd service or background daemon
+    wsl -u root -e systemctl start ensemble 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        wsl -e bash -c "cd ~/ensemble/_original && nohup npm start > ~/.ensemble/server.log 2>&1 &"
+    }
+    exit 0
+}
 
 function Convert-ToWslPath {
     param([string]$WinPath)
@@ -83,7 +94,10 @@ if ($arg1 -eq "reactivate") {
 # 4. Lệnh khởi động server: collab start
 if ($arg1 -eq "start") {
     Write-Host ">> Đang khởi động Ensemble Server trong WSL..." -ForegroundColor Cyan
-    wsl bash -c "sudo systemctl start ensemble 2>/dev/null || (cd ~/ensemble/_original && nohup npm start > ~/.ensemble/server.log 2>&1 &)"
+    wsl -u root -e systemctl start ensemble 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        wsl -e bash -c "cd ~/ensemble/_original && nohup npm start > ~/.ensemble/server.log 2>&1 &"
+    }
     Start-Sleep -Seconds 2
     Start-Process "$url"
     exit 0

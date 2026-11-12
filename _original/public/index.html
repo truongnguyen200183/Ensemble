@@ -132,7 +132,17 @@
           <p class="text-[11px] text-slate-400 flex items-center space-x-1">
             <span>Group Chat Feed</span>
             <span>•</span>
-            <span id="connStatus" class="text-emerald-400">Đang đồng bộ</span>
+            <span id="connStatus" class="text-emerald-400 font-medium">Đang đồng bộ</span>
+            <!-- Button click để start WSL ngay trên header khi mất kết nối -->
+            <button 
+              id="headerStartWslBtn" 
+              type="button" 
+              onclick="handleStartWslServer()" 
+              title="Khởi động máy ảo WSL và Ensemble Server" 
+              class="hidden px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-[10px] shadow transition ml-1 cursor-pointer animate-pulse"
+            >
+              ▶️ Bật WSL & Server
+            </button>
           </p>
         </div>
       </div>
@@ -278,6 +288,36 @@
       </button>
     </div>
   </header>
+
+  <!-- SERVER OFFLINE / WSL DISCONNECTED BANNER -->
+  <div id="serverOfflineBanner" class="hidden bg-rose-950/95 border-b border-rose-600/70 px-4 py-2.5 text-xs text-rose-200 flex items-center justify-between shrink-0 shadow-lg z-30 transition-all">
+    <div class="flex items-center space-x-2.5 truncate">
+      <span class="text-base text-rose-400 animate-pulse">⚠️</span>
+      <div>
+        <span class="font-bold text-white">Chưa kết nối được với Ensemble Server (WSL chưa bật hoặc đang tắt).</span>
+        <span class="text-rose-300 ml-1 hidden sm:inline">Bạn có thể bấm nút bên phải để tự động bật WSL và khởi động máy chủ.</span>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2 shrink-0 ml-3">
+      <button 
+        id="bannerStartWslBtn" 
+        type="button" 
+        onclick="handleStartWslServer()" 
+        class="bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow flex items-center space-x-1.5 cursor-pointer"
+      >
+        <span>🚀</span>
+        <span id="startWslBtnText">Khởi động WSL & Server</span>
+      </button>
+      <button 
+        type="button" 
+        onclick="manualRetryConnection()" 
+        class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-2.5 py-1.5 rounded-lg text-xs border border-slate-700 transition cursor-pointer"
+        title="Kiểm tra lại kết nối"
+      >
+        <span>🔄 Thử lại</span>
+      </button>
+    </div>
+  </div>
 
   <!-- TASK HEADER BANNER -->
   <section id="taskBanner" class="bg-[#0e1626] border-b border-slate-800/80 px-4 py-2 shrink-0 flex items-center justify-between text-xs text-slate-300 z-10">
@@ -1388,14 +1428,106 @@
 
         consecutiveErrors = 0
         document.getElementById('connStatus').textContent = 'Đã kết nối'
-        document.getElementById('connStatus').className = 'text-emerald-400'
+        document.getElementById('connStatus').className = 'text-emerald-400 font-medium'
+        document.getElementById('headerStartWslBtn')?.classList.add('hidden')
+        document.getElementById('serverOfflineBanner')?.classList.add('hidden')
       } catch (e) {
         consecutiveErrors++
-        if (consecutiveErrors >= 3) {
+        if (consecutiveErrors >= 2) {
           document.getElementById('connStatus').textContent = 'Lỗi kết nối server'
-          document.getElementById('connStatus').className = 'text-red-400'
+          document.getElementById('connStatus').className = 'text-rose-400 font-semibold'
+          document.getElementById('headerStartWslBtn')?.classList.remove('hidden')
+          document.getElementById('serverOfflineBanner')?.classList.remove('hidden')
         }
       }
+    }
+
+    // Handler: Khởi động WSL & Server khi click trên Web
+    let isStartingWsl = false
+    function handleStartWslServer() {
+      if (isStartingWsl) return
+      isStartingWsl = true
+
+      const bannerBtnText = document.getElementById('startWslBtnText')
+      const headerBtn = document.getElementById('headerStartWslBtn')
+      if (bannerBtnText) bannerBtnText.textContent = 'Đang bật WSL...'
+      if (headerBtn) headerBtn.textContent = '⏳ Đang bật WSL...'
+
+      // Gọi custom protocol collab://start đã đăng ký trên Windows
+      const iframe = document.createElement('iframe')
+      iframe.style.display = 'none'
+      iframe.src = 'collab://start'
+      document.body.appendChild(iframe)
+      setTimeout(() => iframe.remove(), 2500)
+
+      const connStatus = document.getElementById('connStatus')
+      if (connStatus) {
+        connStatus.textContent = 'Đang gọi WSL...'
+        connStatus.className = 'text-amber-400'
+      }
+
+      // Ping liên tục mỗi 1.5s để đón nhận ngay khi WSL khởi động xong
+      let attempts = 0
+      const pingInterval = setInterval(async () => {
+        attempts++
+        try {
+          const res = await fetch('/api/v1/health', { cache: 'no-store' })
+          if (res.ok) {
+            clearInterval(pingInterval)
+            isStartingWsl = false
+            consecutiveErrors = 0
+            if (connStatus) {
+              connStatus.textContent = 'Đã kết nối'
+              connStatus.className = 'text-emerald-400 font-medium'
+            }
+            document.getElementById('headerStartWslBtn')?.classList.add('hidden')
+            document.getElementById('serverOfflineBanner')?.classList.add('hidden')
+            if (bannerBtnText) bannerBtnText.textContent = 'Khởi động WSL & Server'
+            if (headerBtn) headerBtn.textContent = '▶️ Bật WSL & Server'
+            await loadTeamsList()
+            await fetchMessages()
+          }
+        } catch {}
+
+        if (attempts >= 25) {
+          clearInterval(pingInterval)
+          isStartingWsl = false
+          if (bannerBtnText) bannerBtnText.textContent = 'Khởi động lại'
+          if (headerBtn) headerBtn.textContent = '▶️ Thử lại'
+          if (connStatus) {
+            connStatus.textContent = 'Lỗi kết nối server'
+            connStatus.className = 'text-rose-400 font-semibold'
+          }
+        }
+      }, 1500)
+    }
+
+    async function manualRetryConnection() {
+      const connStatus = document.getElementById('connStatus')
+      if (connStatus) {
+        connStatus.textContent = 'Đang thử lại...'
+        connStatus.className = 'text-blue-400'
+      }
+      try {
+        const res = await fetch('/api/v1/health', { cache: 'no-store' })
+        if (res.ok) {
+          consecutiveErrors = 0
+          if (connStatus) {
+            connStatus.textContent = 'Đã kết nối'
+            connStatus.className = 'text-emerald-400 font-medium'
+          }
+          document.getElementById('headerStartWslBtn')?.classList.add('hidden')
+          document.getElementById('serverOfflineBanner')?.classList.add('hidden')
+          await loadTeamsList()
+          await fetchMessages()
+        }
+      } catch {
+        if (connStatus) {
+          connStatus.textContent = 'Lỗi kết nối server'
+          connStatus.className = 'text-rose-400 font-semibold'
+        }
+      }
+    }
     }
 
     // When team changed

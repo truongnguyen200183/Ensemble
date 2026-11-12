@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Ensemble Collab - Automated Universal Installer for Windows
 # Reads install.config.json -> Checks Git, Node, WSL -> Auto-configures ENV & CLI
 # ==============================================================================
@@ -329,6 +329,32 @@ if ($userPath -notlike "*$binDir*") {
 } else {
     Write-Success "$binDir đã tồn tại trong Windows PATH."
 }
+
+# Đăng ký Custom Protocol (collab://) trong Windows Registry (để Web có thể click mở/start WSL)
+try {
+    $regPath = "HKCU:\Software\Classes\collab"
+    New-Item -Path $regPath -Force | Out-Null
+    Set-ItemProperty -Path $regPath -Name "(Default)" -Value "URL:Collab Protocol"
+    Set-ItemProperty -Path $regPath -Name "URL Protocol" -Value ""
+    $cmdReg = Join-Path $regPath "shell\open\command"
+    New-Item -Path $cmdReg -Force | Out-Null
+    $collabPs1Path = Join-Path $binDir "collab.ps1"
+    Set-ItemProperty -Path $cmdReg -Name "(Default)" -Value "powershell.exe -WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -File `"$collabPs1Path`" protocol `"%1`""
+    Write-Success "Đã đăng ký giao thức 'collab://' (Cho phép web 1-click kích hoạt WSL/Server)."
+} catch {
+    Write-Warn "Không thể đăng ký giao thức 'collab://': $_"
+}
+
+# Đăng ký tự động khởi động cùng Windows (Startup Folder)
+try {
+    $startupFolder = [Environment]::GetFolderPath("Startup")
+    if ($startupFolder -and (Test-Path $startupFolder)) {
+        $startupCmd = Join-Path $startupFolder "EnsembleCollabStartup.cmd"
+        $startupContent = "@echo off`r`nwsl -e systemctl start ensemble 2>nul`r`n"
+        [System.IO.File]::WriteAllText($startupCmd, $startupContent, [System.Text.Encoding]::ASCII)
+        Write-Success "Đã đăng ký tự khởi động WSL Ensemble Server cùng Windows."
+    }
+} catch {}
 
 # ------------------------------------------------------------------------------
 # 8. Hoàn tất & Mở Web Dashboard
