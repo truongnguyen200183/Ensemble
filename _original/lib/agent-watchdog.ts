@@ -266,10 +266,12 @@ export class AgentWatchdog {
                     }
 
                     if (exhaustedModel) {
-                      // Quota tính theo họ model: High/Medium/Low dùng chung hạn mức
-                      const base = exhaustedModel.replace(/-(low|medium|high)$/, '')
+                      // Quota tính theo họ model: High/Medium/Low/XHigh dùng chung hạn mức
+                      const base = exhaustedModel.replace(/-(low|medium|high|xhigh)$/, '')
                       const family = base !== exhaustedModel
-                        ? [`${base}-high`, `${base}-medium`, `${base}-low`]
+                        ? (base.includes('hydrogen')
+                            ? [`${base}-xhigh`, `${base}-high`, `${base}-medium`, `${base}-low`]
+                            : [`${base}-high`, `${base}-medium`, `${base}-low`])
                         : [exhaustedModel]
 
                       const p = path.join(os.homedir(), '.ensemble', 'exhausted-models.txt')

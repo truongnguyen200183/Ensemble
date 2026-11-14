@@ -224,10 +224,12 @@ fi
 echo ">> Đang cài đặt thư viện NPM trong WSL..."
 npm install --prefer-offline --no-audit
 
-# Cấp quyền thực thi cho các scripts
+# Cấp quyền thực thi cho các scripts và cài đặt wrapper vào PATH
 find scripts -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
 find ../scripts -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
 chmod +x ../run.sh 2>/dev/null || true
+[ -f scripts/agy-smart.sh ] && sudo cp scripts/agy-smart.sh /usr/local/bin/agy-smart && sudo chmod +x /usr/local/bin/agy-smart 2>/dev/null || true
+[ -f scripts/claude-smart.sh ] && sudo cp scripts/claude-smart.sh /usr/local/bin/claude-smart && sudo chmod +x /usr/local/bin/claude-smart 2>/dev/null || true
 "@
 
 & wsl -d $wslDistroFound -e bash -c "$syncScript"

@@ -455,6 +455,15 @@ const server = http.createServer(async (req, res) => {
         { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Tư duy tiêu chuẩn' },
         { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Nhanh & Nhẹ' },
 
+        // 1b. Gemini 4 Hydrogen (New)
+        { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Siêu tư duy cực hạn (XHigh)' },
+        { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Tư duy nâng cao' },
+        { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Cân bằng thế hệ mới' },
+        { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Tốc độ cao & tiết kiệm' },
+
+        // 1c. Orchestrator (Argon) (New)
+        { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', tier: 1, group: 'Orchestrator (Argon)', desc: 'Bậc 1: Chuyên điều phối nhóm tác tử' },
+
         // 2. Claude Opus 5.5
         { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', tier: 1, group: 'Claude Opus 5.5', desc: 'Bậc 1: Siêu phân tích kiến trúc' },
         { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', tier: 1, group: 'Claude Opus 5.5', desc: 'Bậc 1: Cân bằng cao cấp' },
@@ -465,7 +474,7 @@ const server = http.createServer(async (req, res) => {
         { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', tier: 2, group: 'Claude Sonnet 5.5', desc: 'Bậc 2: Cân bằng & code chuẩn' },
         { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', tier: 2, group: 'Claude Sonnet 5.5', desc: 'Bậc 2: Tốc độ cao' },
 
-        // 3b. Claude Pro (Claude Code CLI - dùng quota gói Claude Pro)
+        // 4. Claude Pro (Claude Code CLI - Gói thuê bao Claude Pro)
         { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc' },
         { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp' },
         { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh' },
@@ -473,12 +482,12 @@ const server = http.createServer(async (req, res) => {
         { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn' },
         { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao' },
 
-        // 4. Gemini 3.8 Flash
+        // 5. Gemini 3.8 Flash
         { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', tier: 2, group: 'Gemini 3.8 Flash', desc: 'Bậc 2: Suy luận cao, dồi dào Quota' },
         { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', tier: 3, group: 'Gemini 3.8 Flash', desc: 'Bậc 3: Đa phương thức, tốc độ cao' },
         { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', tier: 3, group: 'Gemini 3.8 Flash', desc: 'Bậc 3: Siêu nhẹ, tiết kiệm token' },
 
-        // 5. GPT-OSS 120B
+        // 6. GPT-OSS 120B
         { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', tier: 2, group: 'GPT-OSS 120B', desc: 'Bậc 2: Mô hình mở 120B' },
       ]
 

@@ -67,6 +67,22 @@
         "tier": 3
       },
       {
+        "id": "gemini-4-hydrogen",
+        "name": "Gemini 4 Hydrogen",
+        "badge": "New",
+        "description": "Thế hệ mô hình mới cân bằng hiệu năng vượt trội và tư duy nâng cao",
+        "category": "gemini",
+        "tier": 3
+      },
+      {
+        "id": "gemini-pro-orchestrator-g1-pro",
+        "name": "Orchestrator (Argon)",
+        "badge": "New",
+        "description": "Mô hình chuyên dụng tối ưu cho tác vụ điều phối nhóm tác tử tự động",
+        "category": "gemini",
+        "tier": 3
+      },
+      {
         "id": "claude-opus-5.5",
         "name": "Claude Opus 5.5",
         "badge": "New",

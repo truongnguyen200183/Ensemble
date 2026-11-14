@@ -29,19 +29,19 @@
   },
   "agy": {
     "name": "agy",
-    "command": "claude-smart",
+    "command": "agy-smart",
     "flags": [
-      "--permission-mode",
-      "auto",
+      "--dangerously-skip-permissions",
       "--model",
-      "cc-opus-low"
+      "gemini-4-argon-high"
     ],
-    "readyMarker": "❯",
+    "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
     "color": "red",
     "icon": "▲",
     "unsetEnv": [
-      "ANTHROPIC_API_KEY"
+      "GEMINI_API_KEY",
+      "GOOGLE_API_KEY"
     ]
   },
   "gemini": {
@@ -119,19 +119,19 @@
   },
   "agy-pro": {
     "name": "agy-pro",
-    "command": "claude-smart",
+    "command": "agy-smart",
     "flags": [
-      "--permission-mode",
-      "auto",
+      "--dangerously-skip-permissions",
       "--model",
-      "cc-sonnet-medium"
+      "claude-opus-5-5-high"
     ],
-    "readyMarker": "❯",
+    "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",
     "color": "magenta",
     "icon": "◆",
     "unsetEnv": [
-      "ANTHROPIC_API_KEY"
+      "GEMINI_API_KEY",
+      "GOOGLE_API_KEY"
     ]
   },
   "claude-opus": {
