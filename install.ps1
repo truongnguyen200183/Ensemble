@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Ensemble Collab - Automated Universal Installer for Windows
 # Reads install.config.json -> Checks Git, Node, WSL -> Auto-configures ENV & CLI
 # ==============================================================================
@@ -17,7 +17,7 @@ function Write-Header {
 
 function Write-Success {
     param([string]$Text)
-    Write-Host "[✓] $Text" -ForegroundColor Green
+    Write-Host "[OK] $Text" -ForegroundColor Green
 }
 
 function Write-Warn {
@@ -32,7 +32,7 @@ function Write-Info {
 
 function Write-Err {
     param([string]$Text)
-    Write-Host "[✗] $Text" -ForegroundColor Red
+    Write-Host "[X] $Text" -ForegroundColor Red
 }
 
 Write-Header "ENSEMBLE COLLAB - TRÌNH CÀI ĐẶT TỰ ĐỘNG (WINDOWS & WSL)"

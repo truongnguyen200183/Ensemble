@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Collab CLI - Windows Entrypoint
 # Seamless integration between Windows Terminal and WSL Ensemble Agents
 # ==============================================================================
@@ -44,7 +44,7 @@ if ($arg1 -eq "status") {
     Write-Host ">> Đang kiểm tra trạng thái Ensemble Server ($url)..." -ForegroundColor Cyan
     try {
         $statusJson = Invoke-RestMethod -Uri "$url/api/v1/health" -TimeoutSec 3 -ErrorAction Stop
-        Write-Host "[✓] Server đang hoạt động!" -ForegroundColor Green
+        Write-Host "[OK] Server đang hoạt động!" -ForegroundColor Green
         Write-Host "    - Trạng thái: $($statusJson.status)"
         Write-Host "    - Phiên bản : $($statusJson.version)"
         Write-Host "    - Uptime    : $($statusJson.uptimeSeconds) giây"
@@ -54,11 +54,11 @@ if ($arg1 -eq "status") {
         if ($teamList -and $teamList.Count -gt 0) {
             Write-Host "`nDANH SÁCH PHIÊN (TEAMS):" -ForegroundColor Yellow
             foreach ($t in $teamList) {
-                Write-Host "  • [$($t.id.Substring(0, 8))] $($t.description) - $($t.status)" -ForegroundColor White
+                Write-Host "  * [$($t.id.Substring(0, 8))] $($t.description) - $($t.status)" -ForegroundColor White
             }
         }
     } catch {
-        Write-Host "[✗] Server chưa chạy hoặc không phản hồi tại $url" -ForegroundColor Red
+        Write-Host "[X] Server chưa chạy hoặc không phản hồi tại $url" -ForegroundColor Red
         Write-Host "    Chạy lệnh: collab start  để khởi động server." -ForegroundColor Yellow
     }
     exit 0
@@ -83,10 +83,10 @@ if ($arg1 -eq "reactivate") {
         }
         $targetTeam = if ($arg2) { $arg2 } else { $teams[0].id }
         $res = Invoke-RestMethod -Uri "$url/api/ensemble/teams/$targetTeam/reactivate" -Method Post -TimeoutSec 5
-        Write-Host "[✓] Đã kích hoạt lại thành công phiên: $targetTeam" -ForegroundColor Green
+        Write-Host "[OK] Đã kích hoạt lại thành công phiên: $targetTeam" -ForegroundColor Green
         Start-Process "$url"
     } catch {
-        Write-Host "[✗] Lỗi khi kích hoạt lại phiên: $_" -ForegroundColor Red
+        Write-Host "[X] Lỗi khi kích hoạt lại phiên: $_" -ForegroundColor Red
     }
     exit 0
 }
@@ -107,7 +107,7 @@ if ($arg1 -eq "start") {
 if ($arg1 -eq "stop") {
     Write-Host ">> Đang dừng Ensemble Server trong WSL..." -ForegroundColor Yellow
     wsl bash -c "sudo systemctl stop ensemble 2>/dev/null || pkill -f 'server.ts' 2>/dev/null || true"
-    Write-Host "[✓] Đã gửi lệnh dừng." -ForegroundColor Green
+    Write-Host "[OK] Đã gửi lệnh dừng." -ForegroundColor Green
     exit 0
 }
 
@@ -141,11 +141,11 @@ $template = if ($arg2) { $arg2 } else { "" }
 Write-Host "========================================================================" -ForegroundColor Cyan
 Write-Host "  [Ensemble Collab] Khởi chạy nhóm Agent phối hợp tự động" -ForegroundColor White
 Write-Host "========================================================================" -ForegroundColor Cyan
-Write-Host "  • Thư mục làm việc : $currentWinDir" -ForegroundColor White
-Write-Host "  • Đường dẫn WSL    : $wslDir" -ForegroundColor White
-Write-Host "  • Nhiệm vụ         : $task" -ForegroundColor Yellow
+Write-Host "  * Thư mục làm việc : $currentWinDir" -ForegroundColor White
+Write-Host "  * Đường dẫn WSL    : $wslDir" -ForegroundColor White
+Write-Host "  * Nhiệm vụ         : $task" -ForegroundColor Yellow
 if ($template) {
-    Write-Host "  • Template         : $template" -ForegroundColor Magenta
+    Write-Host "  * Template         : $template" -ForegroundColor Magenta
 }
 Write-Host ""
 

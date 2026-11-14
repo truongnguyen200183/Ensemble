@@ -34,7 +34,7 @@
       "--permission-mode",
       "auto",
       "--model",
-      "cc-opus-medium"
+      "cc-opus-low"
     ],
     "readyMarker": "❯",
     "inputMethod": "sendKeys",
@@ -124,7 +124,7 @@
       "--permission-mode",
       "auto",
       "--model",
-      "cc-sonnet-high"
+      "cc-sonnet-medium"
     ],
     "readyMarker": "❯",
     "inputMethod": "sendKeys",

@@ -88,11 +88,16 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
     .prose-custom blockquote {
-      border-left: 3px solid #475569;
-      padding-left: 0.75rem;
-      color: #94a3b8;
-      font-style: italic;
-      margin: 0.5rem 0;
+      border-left: 3px solid #38bdf8;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.375rem;
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      margin: 0.4rem 0 0.6rem 0;
+    }
+    .prose-custom blockquote strong {
+      color: #38bdf8;
     }
     .prose-custom img {
       max-width: 100%;
@@ -397,6 +402,20 @@
   <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20">
     <div class="max-w-5xl mx-auto flex flex-col space-y-2">
 
+      <!-- Replying Quote Bar (Trích dẫn tin nhắn) -->
+      <div id="replyPreviewBar" class="hidden flex items-center justify-between px-3 py-1.5 bg-slate-800/95 border-l-4 border-l-blue-500 rounded-lg shadow-lg text-xs transition max-w-3xl">
+        <div class="flex items-center space-x-2 truncate min-w-0">
+          <span id="replyAuthorText" class="text-blue-400 font-bold shrink-0 flex items-center space-x-1">
+            <span>↩️</span>
+            <span>Đang trả lời:</span>
+          </span>
+          <span id="replyContentPreview" class="truncate text-slate-300 italic text-[11px]"></span>
+        </div>
+        <button id="cancelReplyBtn" type="button" onclick="cancelReply()" class="text-slate-400 hover:text-rose-400 text-xs px-2 py-0.5 rounded hover:bg-slate-700/60 transition shrink-0 ml-2 cursor-pointer font-bold" title="Hủy trích dẫn (Esc)">
+          ✕
+        </button>
+      </div>
+
       <!-- Attached Images Preview Bar (Supports Multiple Files) -->
       <div id="imagePreviewContainer" class="hidden flex flex-col space-y-1.5 p-2 bg-slate-800/95 border border-slate-700 rounded-xl shadow-lg transition max-w-2xl">
         <div class="flex items-center justify-between px-1 text-[11px] text-slate-300">
@@ -675,6 +694,63 @@
       hideScrollToBottomBtn()
     }
 
+    // Reply & Quoting State & Helpers
+    window.allMessagesMap = new Map()
+    let replyingMessage = null // { id, author, preview, content }
+
+    function setReplyMessage(id, author, rawContent) {
+      const clean = (rawContent || '').replace(/\s+/g, ' ').trim()
+      const preview = clean.length > 90 ? clean.substring(0, 90) + '...' : clean
+      replyingMessage = {
+        id,
+        author,
+        preview,
+        content: rawContent
+      }
+      
+      const bar = document.getElementById('replyPreviewBar')
+      const authorEl = document.getElementById('replyAuthorText')
+      const previewEl = document.getElementById('replyContentPreview')
+      if (bar && authorEl && previewEl) {
+        authorEl.textContent = `Trả lời @${author}:`
+        previewEl.textContent = preview
+        bar.classList.remove('hidden')
+      }
+
+      // Tự động chuyển target gửi đến tác tử nếu có trong danh sách
+      const targetSelect = document.getElementById('msgTarget')
+      if (targetSelect && author !== 'Bạn') {
+        const opts = Array.from(targetSelect.options)
+        const match = opts.find(o => o.value.toLowerCase() === author.toLowerCase() || o.textContent.toLowerCase().includes(author.toLowerCase()))
+        if (match) targetSelect.value = match.value
+      }
+
+      const input = document.getElementById('msgInput')
+      if (input) {
+        input.focus()
+      }
+    }
+
+    function cancelReply() {
+      replyingMessage = null
+      const bar = document.getElementById('replyPreviewBar')
+      if (bar) bar.classList.add('hidden')
+    }
+
+    window.handleReplyClick = function(msgId) {
+      const msg = window.allMessagesMap.get(msgId)
+      if (!msg) return
+      let author = 'Thành viên'
+      const from = (msg.from || '').toLowerCase().trim()
+      if (from === 'user') {
+        author = 'Bạn'
+      } else {
+        const info = getAgentRoleInfo(msg.from)
+        author = info.role || msg.from
+      }
+      setReplyMessage(msg.id, author, msg.content)
+    }
+
     // Audio synthesizer for alerts
     function playChime() {
       if (!soundEnabled) return
@@ -809,6 +885,9 @@
 
     // Build message HTML
     function buildMessageElement(msg) {
+      if (msg && msg.id) {
+        window.allMessagesMap.set(msg.id, msg)
+      }
       const from = (msg.from || '').toLowerCase().trim()
       const isSystem = from === 'ensemble' || from === 'system'
       const isUser = from === 'user'
@@ -863,7 +942,7 @@
 
       // 2. USER MESSAGE (Right side, Sky Blue accent)
       if (isUser) {
-        div.className += ' items-end'
+        div.className += ' items-end group'
         div.innerHTML = `
           <div class="max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 bg-sky-950/80 border border-sky-600/50 shadow-md">
             <div class="flex items-center justify-between space-x-3 mb-1.5 pb-1 border-b border-sky-800/40">
@@ -871,7 +950,13 @@
                 <span>👤</span>
                 <span>BẠN (USER)</span>
               </span>
-              <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+              <div class="flex items-center space-x-2">
+                <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+                <button type="button" onclick="handleReplyClick('${msg.id}')" title="Trích dẫn tin nhắn này" class="opacity-0 group-hover:opacity-100 transition px-1.5 py-0.5 rounded bg-sky-900/60 hover:bg-sky-800 text-[10px] text-sky-200 flex items-center space-x-1 cursor-pointer">
+                  <span>↩️</span>
+                  <span>Trích dẫn</span>
+                </button>
+              </div>
             </div>
             <div class="prose-custom text-sm text-sky-100">
               ${renderMarkdownSafe(msg.content)}
@@ -888,7 +973,7 @@
 
       if (isLead) {
         // ---------------- LEAD AGENT (BÊN TRÁI) ----------------
-        div.className += ' items-start'
+        div.className += ' items-start group'
         div.innerHTML = `
           <div class="max-w-[90%] sm:max-w-[80%] rounded-2xl rounded-tl-sm p-4 bg-[#141e33] border-l-4 border-l-blue-500 border border-slate-800/80 shadow-lg">
             <div class="flex items-center justify-between space-x-3 mb-2 pb-1.5 border-b border-slate-800">
@@ -899,7 +984,13 @@
                 </span>
                 ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
               </div>
-              <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+              <div class="flex items-center space-x-2">
+                <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+                <button type="button" onclick="handleReplyClick('${msg.id}')" title="Trích dẫn phản hồi Lead" class="opacity-0 group-hover:opacity-100 transition px-1.5 py-0.5 rounded bg-slate-800 hover:bg-blue-900/60 text-slate-300 hover:text-blue-300 text-[10px] border border-slate-700/80 flex items-center space-x-1 cursor-pointer">
+                  <span>↩️</span>
+                  <span>Trích dẫn</span>
+                </button>
+              </div>
             </div>
             <div class="prose-custom text-sm text-slate-200">
               ${isSentinelDone ? `
@@ -918,11 +1009,17 @@
         const badgeStyle = isReviewer ? 'bg-purple-600/30 text-purple-300 border-purple-500/40' : 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40'
         const icon = isReviewer ? '🔍' : '⚡'
 
-        div.className += ' items-end'
+        div.className += ' items-end group'
         div.innerHTML = `
           <div class="max-w-[90%] sm:max-w-[80%] rounded-2xl rounded-tr-sm p-4 ${borderStyle} border border-slate-800/80 shadow-lg text-left">
             <div class="flex items-center justify-between space-x-3 mb-2 pb-1.5 border-b border-slate-800/80">
-              <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="handleReplyClick('${msg.id}')" title="Trích dẫn phản hồi" class="opacity-0 group-hover:opacity-100 transition px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-900/60 text-slate-300 hover:text-emerald-300 text-[10px] border border-slate-700/80 flex items-center space-x-1 cursor-pointer">
+                  <span>↩️</span>
+                  <span>Trích dẫn</span>
+                </button>
+                <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
+              </div>
               <div class="flex items-center space-x-2">
                 ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
                 <span class="px-2 py-0.5 rounded-md ${badgeStyle} border font-bold text-xs flex items-center space-x-1">
@@ -932,6 +1029,16 @@
               </div>
             </div>
             <div class="prose-custom text-sm text-slate-200">
+              ${isSentinelDone ? `
+                <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-semibold">
+                  <span>✨</span>
+                  <span><<COLLAB_DONE>> — Báo cáo hoàn thành nhiệm vụ</span>
+                </div>
+              ` : renderMarkdownSafe(cleanContent)}
+            </div>
+          </div>
+        `
+      }
               ${isSentinelDone ? `
                 <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-semibold">
                   <span>✨</span>
@@ -1742,6 +1849,8 @@
       // OPTIMISTIC CLEAR: Xóa nội dung input và ảnh ngay lập tức để người dùng không phải chờ!
       const textToSend = textContent
       const filesToSend = [...pendingFiles]
+      const currentReply = replyingMessage
+      cancelReply()
       input.value = ''
       input.style.height = '42px'
       removeAllPendingFiles()
@@ -1752,6 +1861,12 @@
 
       try {
         let finalContent = textToSend
+
+        // 0. Prepend quote block if replying
+        if (currentReply) {
+          const quotePrefix = `> **[Trích dẫn @${currentReply.author}]**: *${currentReply.preview}*\n\n`
+          finalContent = quotePrefix + (finalContent || '(Phản hồi)')
+        }
 
         // 1. Upload all attached images (if any)
         if (filesToSend.length > 0) {
@@ -1838,6 +1953,12 @@
     
     const msgInputEl = document.getElementById('msgInput')
     msgInputEl.addEventListener('keydown', (e) => {
+      // Escape cancels reply quoting if active
+      if (e.key === 'Escape' && replyingMessage) {
+        e.preventDefault()
+        cancelReply()
+        return
+      }
       // Enter alone (without Ctrl / Shift / Meta) sends the message
       if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
         e.preventDefault()
