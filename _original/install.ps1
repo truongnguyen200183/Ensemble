@@ -145,6 +145,13 @@ if (-not $wslInstalled) {
 
 Write-Success "WSL đã sẵn sàng."
 
+# Cấu hình vmIdleTimeout=-1 để WSL không tự tắt ngầm khi đóng terminal
+$wslConfigPath = Join-Path $env:USERPROFILE ".wslconfig"
+if (-not (Test-Path $wslConfigPath)) {
+    [System.IO.File]::WriteAllText($wslConfigPath, "[wsl2]`r`nvmIdleTimeout=-1`r`n", [System.Text.Encoding]::ASCII)
+    Write-Success "Đã tối ưu cấu hình WSL duy trì server ngầm liên tục (vmIdleTimeout=-1)."
+}
+
 # Tìm distro phù hợp
 $wslDistroFound = ""
 $rawDistros = & wsl -l -q 2>$null
