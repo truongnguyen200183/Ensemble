@@ -673,6 +673,7 @@ export function buildPromptPreview(params: {
       `You own the entire task: planning, implementation or analysis, verification, and reporting.`,
       `COMMUNICATION RULES:`,
       `Send your plan, progress, findings, and blockers via: ${teamSayCmd} "your message"`,
+      `- FORMATTING RULES (BẮT BUỘC): Trình bày nội dung tin nhắn sạch đẹp bằng Markdown/HTML. BẮT BUỘC xuống dòng rõ ràng, phân tách các ý bằng danh sách gạch đầu dòng (bullet points: - hoặc *) hoặc đánh số (1., 2., 3.) để dễ nhìn. BÔI ĐẬM (**từ khóa quan trọng**, <b>từ khóa</b>, <strong>từ khóa</strong>) đối với các thông tin cốt lõi (tên file, hàm, lỗi, trạng thái, kết quả).`,
       `After EVERY analysis or implementation step, run team-say to record what you found or changed.`,
       `Read the feed for user instructions: ${teamReadCmd}`,
       `DONE PROTOCOL:`,
@@ -725,16 +726,20 @@ export function buildPromptPreview(params: {
     ...(taskPreamble ? [`Task preamble: ${taskPreamble}`] : []),
     `Task: ${params.description}`,
     ...roleInstructions,
-    `COMMUNICATION RULES:`,
+    `COMMUNICATION & FORMATTING RULES:`,
     `1. Send findings: ${teamSayCmd} "your message"`,
     `2. Read teammate messages: ${teamReadCmd}`,
     `3. After EVERY analysis step, run team-say to share what you found`,
     `4. After EVERY team-say, run team-read to check for responses`,
     `5. If teammate shared findings, RESPOND to them`,
     `6. Keep alternating: analyze, share, read, respond, analyze`,
+    `7. FORMATTING RULES (BẮT BUỘC): Trình bày nội dung tin nhắn sạch đẹp, trực quan bằng định dạng Markdown / HTML:`,
+    `   - BẮT BUỘC xuống dòng rõ ràng, phân tách từng ý theo danh sách gạch đầu dòng (bullet points: - hoặc *) hoặc số thứ tự (1., 2., 3.) để người dùng và đồng đội dễ đọc.`,
+    `   - BÔI ĐẬM (**từ khóa quan trọng**, <b>từ khóa</b>, <strong>từ khóa</strong>) đối với các nội dung then chốt: tên file, tên hàm, trạng thái, lỗi phát hiện, quyết định kỹ thuật và kết quả.`,
+    `   - Tuyệt đối KHÔNG viết một đoạn văn dài dính liền mà không ngắt dòng.`,
     `DONE PROTOCOL:`,
-    `7. Khi hoan thanh cong viec cua nhiem vu hien tai, hay dung team-say bao cao chi tiet ket qua cho dong doi va nguoi dung. Sau do luon giu trang thai san sang va lang nghe yeu cau chi dao tiep theo tu nguoi dung (User).`,
-    `8. KHONG tu y dong phien hay gui lenh ket thuc. Phien lam viec se tiep tuc mo cho den khi nguoi dung chu dong bam nut Ket thuc tren Web UI.`,
+    `8. Khi hoan thanh cong viec cua nhiem vu hien tai, hay dung team-say bao cao chi tiet ket qua cho dong doi va nguoi dung. Sau do luon giu trang thai san sang va lang nghe yeu cau chi dao tiep theo tu nguoi dung (User).`,
+    `9. KHONG tu y dong phien hay gui lenh ket thuc. Phien lam viec se tiep tuc mo cho den khi nguoi dung chu dong bam nut Ket thuc tren Web UI.`,
     `Start NOW: greet your teammate with team-say, then begin.`,
   ].join(' ')
 }
@@ -1213,7 +1218,7 @@ export async function sendTeamMessage(
       // Wrap message with sender context + response nudge
       const deliveryText = [
         `[Team message from ${sender}]: ${content}`,
-        `→ Respond with team-say. Then run team-read to check for more messages.`,
+        `→ Respond with team-say (định dạng Markdown/HTML: xuống dòng danh sách gạch đầu dòng rõ ràng, bôi đậm từ khóa quan trọng). Then run team-read to check for more messages.`,
       ].join('\n')
 
       if (targetAgent.hostId && !isSelf(targetAgent.hostId)) {
@@ -1627,6 +1632,7 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
         `1. Send findings/chat: /home/truong/ensemble/scripts/team-say.sh ${team.id} ${agentSpec.name} ${teammateNames[0] || 'team'} "your message"`,
         `2. Read teammate messages: /home/truong/ensemble/scripts/team-read.sh ${team.id}`,
         `3. Keep alternating: analyze, share, read, respond.`,
+        `4. FORMATTING RULES (BẮT BUỘC): Trình bày định dạng Markdown/HTML: xuống dòng theo danh sách gạch đầu dòng rõ ràng (- hoặc *), bôi đậm (**từ khóa quan trọng**) đối với file, hàm, kết quả và trạng thái.`,
         recentHistory ? `--- RECENT HISTORY ---\n${recentHistory}\n--- END HISTORY ---` : '',
         `ACTION: Run team-say to notify your teammate and user that you are back online and ready for instructions.`,
       ].filter(Boolean).join('\n\n')
