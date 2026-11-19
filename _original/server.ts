@@ -450,18 +450,27 @@ const server = http.createServer(async (req, res) => {
       const exhaustedFile = nodePath.join(process.env.HOME || '/home/truong', '.ensemble', 'exhausted-models.txt')
 
       const availableModels = [
-        // 1. Gemini 4 Argon
+        // 1. Gemini 4 Neon (New)
+        { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', tier: 1, group: 'Gemini 4 Neon', desc: 'Bậc 1: Siêu tư duy cực hạn (XHigh)' },
+        { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', tier: 1, group: 'Gemini 4 Neon', desc: 'Bậc 1: Tư duy cao nhất' },
+        { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', tier: 2, group: 'Gemini 4 Neon', desc: 'Bậc 2: Cân bằng tốc độ & trí tuệ' },
+        { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', tier: 3, group: 'Gemini 4 Neon', desc: 'Bậc 3: Tốc độ cao & tiết kiệm token' },
+
+        // 1b. Orchestrator (Neon) (New)
+        { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', tier: 1, group: 'Orchestrator (Neon)', desc: 'Bậc 1: Chuyên điều phối tác tử thế hệ mới' },
+
+        // 1c. Gemini 4 Argon
         { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Tư duy cao nhất' },
         { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Tư duy tiêu chuẩn' },
         { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Nhanh & Nhẹ' },
 
-        // 1b. Gemini 4 Hydrogen (New)
+        // 1d. Gemini 4 Hydrogen
         { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Siêu tư duy cực hạn (XHigh)' },
         { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Tư duy nâng cao' },
         { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Cân bằng thế hệ mới' },
         { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Tốc độ cao & tiết kiệm' },
 
-        // 1c. Orchestrator (Argon) (New)
+        // 1e. Orchestrator (Argon)
         { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', tier: 1, group: 'Orchestrator (Argon)', desc: 'Bậc 1: Chuyên điều phối nhóm tác tử' },
 
         // 2. Claude Opus 5.5

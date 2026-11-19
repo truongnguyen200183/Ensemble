@@ -580,7 +580,7 @@
           </p>
           <p class="text-slate-300 leading-relaxed text-[11px]">
             Hệ thống sắp xếp Model theo cấp độ: 
-            <strong class="text-indigo-300">Bậc 1 (Argon)</strong> ➔ 
+            <strong class="text-indigo-300">Bậc 1 (Neon / Argon)</strong> ➔ 
             <strong class="text-sky-300">Bậc 2 (Claude Sonnet 5.5 / Flash High)</strong> ➔ 
             <strong class="text-amber-300">Bậc 3 (Flash Low)</strong>. 
             Nếu Bậc 1 bị khóa hạn mức (Quota reached), hệ thống sẽ <strong>tự động hạ xuống 1 cấp</strong> để phiên làm việc không bao giờ bị dừng!
@@ -863,7 +863,9 @@
       }
 
       if (model.includes('hydrogen')) model = 'Gemini 4 Hydrogen'
+      else if (model.includes('orchestrator-neon')) model = 'Orchestrator (Neon)'
       else if (model.includes('orchestrator')) model = 'Orchestrator (Argon)'
+      else if (model.includes('neon')) model = 'Gemini 4 Neon'
       else if (model.includes('cc-opus')) model = 'Claude Opus (Pro)'
       else if (model.includes('cc-sonnet')) model = 'Claude Sonnet (Pro)'
       else if (model.includes('argon')) model = 'Gemini 4 Argon'

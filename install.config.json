@@ -59,6 +59,22 @@
         "tier": 2
       },
       {
+        "id": "gemini-4-neon",
+        "name": "Gemini 4 Neon",
+        "badge": "New / High Speed",
+        "description": "Thế hệ Gemini 4 mới với tốc độ vượt trội, tư duy sắc bén cho lập trình và tác tử",
+        "category": "gemini",
+        "tier": 2
+      },
+      {
+        "id": "gemini-pro-orchestrator-neon",
+        "name": "Orchestrator (Neon)",
+        "badge": "New / Ultra Fast",
+        "description": "Mô hình chuyên dụng tối ưu cho tác vụ điều phối nhóm tác tử tốc độ cao",
+        "category": "gemini",
+        "tier": 2
+      },
+      {
         "id": "gemini-4-argon",
         "name": "Gemini 4 Argon",
         "badge": "Heavy / Quota Sensitive",
