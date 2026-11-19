@@ -493,16 +493,16 @@
         <textarea 
           id="msgInput" 
           rows="1" 
-          placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V)... (Enter để gửi, Ctrl + Enter xuống hàng)" 
-          class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none max-h-36 overflow-y-auto leading-relaxed"
-          style="min-height: 42px; height: 42px;"
+          placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V)... (Enter gửi • Shift+Enter hoặc Ctrl+Enter xuống hàng)" 
+          class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-[44px] max-h-[500px] overflow-y-auto leading-relaxed"
+          style="min-height: 44px; height: 44px;"
         ></textarea>
 
         <!-- Send Button -->
         <button 
           id="sendBtn" 
           class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0 self-end"
-          style="height: 42px;"
+          style="height: 44px;"
         >
           <span>Gửi</span>
           <span>🚀</span>
@@ -512,7 +512,7 @@
       <!-- Quick Hint -->
       <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
         <span>💡 <b>Hỗ trợ ảnh:</b> Chụp màn hình (Windows+Shift+S) rồi bấm <b>Ctrl + V</b> để dán ảnh trực tiếp cho Agent phân tích.</span>
-        <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd> gửi • <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Ctrl + Enter</kbd> xuống hàng</span>
+        <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd> gửi • <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Shift + Enter</kbd> hoặc <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Ctrl + Enter</kbd> xuống hàng</span>
       </div>
     </div>
   </footer>
@@ -2024,7 +2024,7 @@
       const currentReply = replyingMessage
       cancelReply()
       input.value = ''
-      input.style.height = '42px'
+      input.style.height = '44px'
       removeAllPendingFiles()
 
       const sendBtn = document.getElementById('sendBtn')
@@ -2124,6 +2124,14 @@
     document.getElementById('sendBtn').addEventListener('click', sendMessage)
     
     const msgInputEl = document.getElementById('msgInput')
+    
+    function adjustInputHeight() {
+      if (!msgInputEl) return
+      msgInputEl.style.height = 'auto'
+      const newHeight = Math.max(44, Math.min(msgInputEl.scrollHeight, 450))
+      msgInputEl.style.height = newHeight + 'px'
+    }
+
     msgInputEl.addEventListener('keydown', (e) => {
       // Escape cancels reply quoting if active
       if (e.key === 'Escape' && replyingMessage) {
@@ -2131,18 +2139,30 @@
         cancelReply()
         return
       }
-      // Enter alone (without Ctrl / Shift / Meta) sends the message
-      if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
+
+      // Ctrl + Enter hoặc Shift + Enter: Luôn luôn chèn xuống dòng (\n)
+      if (e.key === 'Enter' && (e.ctrlKey || e.shiftKey)) {
+        e.preventDefault()
+        const start = msgInputEl.selectionStart
+        const end = msgInputEl.selectionEnd
+        const val = msgInputEl.value
+        msgInputEl.value = val.substring(0, start) + "\n" + val.substring(end)
+        msgInputEl.selectionStart = msgInputEl.selectionEnd = start + 1
+        adjustInputHeight()
+        return
+      }
+
+      // Enter một mình (không bấm kèm Ctrl / Shift / Alt / Meta): Gửi tin nhắn
+      if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.altKey) {
         e.preventDefault()
         sendMessage()
       }
-      // Ctrl + Enter or Shift + Enter lets the default behavior insert a newline!
     })
 
-    // Auto-grow textarea height
-    msgInputEl.addEventListener('input', () => {
-      msgInputEl.style.height = '42px'
-      msgInputEl.style.height = Math.min(msgInputEl.scrollHeight, 144) + 'px'
+    // Auto-grow textarea height on input & paste
+    msgInputEl.addEventListener('input', adjustInputHeight)
+    msgInputEl.addEventListener('paste', () => {
+      setTimeout(adjustInputHeight, 50)
     })
 
     // Image Upload Events (Multiple)
