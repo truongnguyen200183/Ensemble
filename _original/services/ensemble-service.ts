@@ -1602,7 +1602,13 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
 
   team.status = 'active'
   team.createdAt = new Date().toISOString()
-  updateTeam(team.id, { status: 'active', createdAt: team.createdAt })
+  updateTeam(team.id, { status: 'active', createdAt: team.createdAt, completedAt: undefined })
+
+  // Remove .finished marker so bridge and poller continue running
+  const finishedMarker = collabFinishedMarker(team.id)
+  if (fs.existsSync(finishedMarker)) {
+    try { fs.unlinkSync(finishedMarker) } catch {}
+  }
 
   appendMessage(team.id, {
     id: uuidv4(), teamId: team.id, from: 'ensemble', to: 'team',
