@@ -512,6 +512,22 @@ const server = http.createServer(async (req, res) => {
           }
         }
 
+        // Notify team feed if any agent role has changed
+        for (const up of updatedAgents) {
+          const prev = previousAgents.find(p => p.name.toLowerCase() === up.name.toLowerCase())
+          if (prev && prev.role && prev.role.toLowerCase() !== up.role.toLowerCase()) {
+            appendMessage(teamId, {
+              id: uuidv4(),
+              teamId,
+              from: 'ensemble',
+              to: 'team',
+              type: 'chat',
+              timestamp: new Date().toISOString(),
+              content: `🔄 Vai trò của **${up.name}** đã được cập nhật từ **${prev.role.toUpperCase()}** sang **${up.role.toUpperCase()}**. Các thành viên vui lòng điều chỉnh phân công và phối hợp theo vai trò mới.`,
+            })
+          }
+        }
+
         const updated = updateTeam(teamId, { agents: updatedAgents })
 
         // If team is active and new agents were added, spin them up
