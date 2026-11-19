@@ -1640,6 +1640,17 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
 
   updateTeam(team.id, { agents: team.agents })
 
+  // Ensure ensemble-bridge.sh is running for this team to bridge messages between CLI and Web API
+  try {
+    const scriptsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'scripts')
+    const bridgeScript = path.join(scriptsDir, 'ensemble-bridge.sh')
+    const api = `http://localhost:${process.env.ENSEMBLE_PORT || 23000}`
+    const { exec } = await import('child_process')
+    exec(`nohup "${bridgeScript}" "${team.id}" "${api}" >/dev/null 2>&1 &`)
+  } catch (err) {
+    console.warn('[Reactivate] Failed to start ensemble-bridge:', err)
+  }
+
   // Inject resume prompt in background
   setTimeout(async () => {
     // Grace period for agent CLI TUI initialization
