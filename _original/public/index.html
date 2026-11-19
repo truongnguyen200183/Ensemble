@@ -378,6 +378,18 @@
         <span>👥</span>
         <span>Quản lý Agent</span>
       </button>
+
+      <!-- Toggle Agent Status Sidebar Button in Header -->
+      <button 
+        id="toggleAgentSidebarBtn" 
+        type="button" 
+        onclick="toggleAgentStatusSidebar()"
+        title="Đóng / Mở Panel Trạng thái Agent (Phím tắt: Alt+S)" 
+        class="ml-1.5 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 text-[11px] font-medium flex items-center space-x-1 transition cursor-pointer shrink-0"
+      >
+        <span>🤖</span>
+        <span id="toggleAgentSidebarText">Ẩn trạng thái</span>
+      </button>
     </div>
     <div class="hidden sm:flex items-center space-x-2 text-slate-400 shrink-0 text-[11px]">
       <span id="taskDir" class="truncate max-w-xs text-slate-400"></span>
@@ -448,6 +460,15 @@
           >
             <span class="text-xs">🔄</span>
           </button>
+          <button 
+            id="closeAgentSidebarBtn" 
+            type="button" 
+            onclick="toggleAgentStatusSidebar(true)" 
+            title="Đóng panel trạng thái (Alt+S)"
+            class="p-1 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded border border-slate-700 transition cursor-pointer ml-0.5"
+          >
+            <span class="text-xs">◀</span>
+          </button>
         </div>
       </div>
 
@@ -479,8 +500,19 @@
       </div>
     </aside>
 
-    <!-- COL-9: FULL CHAT FEED & FULL WIDTH INPUT BAR (flex-1 lg:w-9/12) -->
-    <section class="flex-1 lg:w-9/12 flex flex-col h-full min-w-0 bg-[#0b0f19] relative overflow-hidden">
+    <!-- COL-9: FULL CHAT FEED & FULL WIDTH INPUT BAR (flex-1) -->
+    <section class="flex-1 flex flex-col h-full min-w-0 bg-[#0b0f19] relative overflow-hidden">
+      <!-- Floating Reopen Sidebar Button (when sidebar is closed) -->
+      <button 
+        id="floatingOpenSidebarBtn" 
+        type="button" 
+        onclick="toggleAgentStatusSidebar(false)" 
+        class="hidden absolute top-2.5 left-2.5 z-20 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-blue-300 font-medium px-2 py-1 rounded-md border border-slate-700 shadow-xl backdrop-blur text-[11px] flex items-center space-x-1 cursor-pointer transition shadow-2xl"
+        title="Mở lại Panel Trạng thái Agent (Alt+S)"
+      >
+        <span>🤖</span>
+        <span>Hiện trạng thái</span>
+      </button>
       <!-- CHAT CONTAINER -->
       <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
         <!-- Initial empty placeholder -->
@@ -856,6 +888,51 @@
     let agentStatusTimer = null
     let allAgentDetailsOpen = false
     let lastAgentStatusData = null
+    let isAgentSidebarCollapsed = localStorage.getItem('ensemble_agent_sidebar_collapsed') === '1'
+
+    function toggleAgentStatusSidebar(explicitState) {
+      if (typeof explicitState === 'boolean') {
+        isAgentSidebarCollapsed = explicitState
+      } else {
+        isAgentSidebarCollapsed = !isAgentSidebarCollapsed
+      }
+      localStorage.setItem('ensemble_agent_sidebar_collapsed', isAgentSidebarCollapsed ? '1' : '0')
+      applyAgentSidebarState()
+    }
+
+    function applyAgentSidebarState() {
+      const sidebar = document.getElementById('agentStatusSidebar')
+      const toggleText = document.getElementById('toggleAgentSidebarText')
+      const toggleBtn = document.getElementById('toggleAgentSidebarBtn')
+      const floatingBtn = document.getElementById('floatingOpenSidebarBtn')
+
+      if (isAgentSidebarCollapsed) {
+        if (sidebar) sidebar.classList.add('hidden')
+        if (toggleText) toggleText.textContent = 'Hiện trạng thái'
+        if (toggleBtn) {
+          toggleBtn.classList.remove('bg-slate-800', 'text-slate-200')
+          toggleBtn.classList.add('bg-blue-950/80', 'text-blue-300', 'border-blue-700/60')
+        }
+        if (floatingBtn) floatingBtn.classList.remove('hidden')
+      } else {
+        if (sidebar) sidebar.classList.remove('hidden')
+        if (toggleText) toggleText.textContent = 'Ẩn trạng thái'
+        if (toggleBtn) {
+          toggleBtn.classList.add('bg-slate-800', 'text-slate-200')
+          toggleBtn.classList.remove('bg-blue-950/80', 'text-blue-300', 'border-blue-700/60')
+        }
+        if (floatingBtn) floatingBtn.classList.add('hidden')
+        fetchAgentLiveStatus()
+      }
+    }
+
+    // Keyboard shortcut: Alt + S to toggle Agent Status Sidebar
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault()
+        toggleAgentStatusSidebar()
+      }
+    })
 
     function getRoleIcon(role) {
       const r = (role || '').toLowerCase()
@@ -3620,6 +3697,9 @@
 
       // Poll current team feed every 1.5 seconds
       setInterval(fetchMessages, 1500)
+
+      // Initialize agent status sidebar state (collapsed/expanded)
+      applyAgentSidebarState()
 
       // Poll agent live status (Default 5s, configurable by user)
       initAgentStatusPolling()
