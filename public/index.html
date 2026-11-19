@@ -660,10 +660,10 @@
           <span class="text-xl">⚙️</span>
           <div>
             <div class="flex items-center space-x-2">
-              <h3 class="text-sm font-bold text-slate-100">Cấu Hình Model & Bậc Xếp Hạng</h3>
+              <h3 class="text-sm font-bold text-slate-100">Cấu Hình Model & Trạng Thái Quota</h3>
               <button type="button" onclick="openModelInfoModal()" class="w-4 h-4 rounded-full bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer transition shrink-0" title="Xem bảng so sánh & mô tả các Model [?]">?</button>
             </div>
-            <p class="text-[11px] text-slate-400">Tự động hạ cấp (Auto-fallback) khi mô hình cao cấp hết Quota</p>
+            <p class="text-[11px] text-slate-400">Kiểm tra tình trạng hạn mức API và chọn mô hình thay thế khi có cảnh báo</p>
           </div>
         </div>
         <button id="closeModelConfigBtn" type="button" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
@@ -673,67 +673,29 @@
 
       <!-- Body -->
       <div class="p-5 space-y-4 overflow-y-auto text-xs">
-        <!-- Tier Hierarchy Explainer -->
-        <div class="p-3 bg-blue-950/40 border border-blue-800/50 rounded-xl space-y-1.5">
-          <p class="font-semibold text-blue-300 flex items-center space-x-1.5">
-            <span>🛡️</span>
-            <span>Cơ chế Xếp loại & Tự động xuống cấp (Auto-fallback):</span>
-          </p>
-          <p class="text-slate-300 leading-relaxed text-[11px]">
-            Hệ thống sắp xếp Model theo cấp độ: 
-            <strong class="text-indigo-300">Bậc 1 (Neon / Argon)</strong> ➔ 
-            <strong class="text-sky-300">Bậc 2 (Claude Sonnet 5.5 / Flash High)</strong> ➔ 
-            <strong class="text-amber-300">Bậc 3 (Flash Low)</strong>. 
-            Nếu Bậc 1 bị khóa hạn mức (Quota reached), hệ thống sẽ <strong>tự động hạ xuống 1 cấp</strong> để phiên làm việc không bao giờ bị dừng!
-          </p>
-        </div>
-
-        <!-- Role Selectors -->
-        <div class="space-y-3">
-          <!-- Lead -->
-          <div class="p-3 bg-slate-800/60 border border-slate-700 rounded-xl space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="font-bold text-slate-200 flex items-center space-x-1.5">
-                <span>👑</span>
-                <span>LEAD (Kiến trúc sư trưởng / Lập kế hoạch)</span>
-              </label>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/60 text-indigo-300 border border-indigo-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
-            </div>
-            <select id="modelSelectLead" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-            </select>
+        <!-- Active Team Agents Model List (nếu đang trong phiên làm việc) -->
+        <div id="activeTeamAgentsModelSection" class="p-3 bg-slate-800/60 border border-slate-700 rounded-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-200 flex items-center space-x-1.5">
+              <span>🤖</span>
+              <span>Mô hình các Tác tử (Agents) trong Phiên:</span>
+            </span>
+            <button type="button" onclick="closeModelConfigModal(); openManageAgentsModal();" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer flex items-center space-x-1">
+              <span>Quản lý Tác tử</span>
+              <span>➔</span>
+            </button>
           </div>
-
-          <!-- Worker -->
-          <div class="p-3 bg-slate-800/60 border border-slate-700 rounded-xl space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="font-bold text-slate-200 flex items-center space-x-1.5">
-                <span>⚡</span>
-                <span>WORKER (Lập trình viên thực thi)</span>
-              </label>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-900/60 text-amber-300 border border-amber-700/60 font-semibold">Ưu tiên Bậc 2 / 3</span>
-            </div>
-            <select id="modelSelectWorker" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-            </select>
-          </div>
-
-          <!-- Reviewer -->
-          <div class="p-3 bg-slate-800/60 border border-slate-700 rounded-xl space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="font-bold text-slate-200 flex items-center space-x-1.5">
-                <span>🔍</span>
-                <span>REVIEWER (Chuyên gia phản biện)</span>
-              </label>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-900/60 text-sky-300 border border-sky-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
-            </div>
-            <select id="modelSelectReviewer" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-            </select>
+          <div id="activeTeamAgentsModelList" class="space-y-2">
           </div>
         </div>
 
         <!-- Quota Status Block -->
         <div class="p-3 bg-slate-800/40 border border-slate-700/80 rounded-xl space-y-2">
           <div class="flex items-center justify-between">
-            <span class="font-semibold text-slate-300">Tình trạng Quota hiện tại:</span>
+            <span class="font-semibold text-slate-300 flex items-center space-x-1.5">
+              <span>📊</span>
+              <span>Tình trạng Quota các Mô hình:</span>
+            </span>
             <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa đánh dấu hết Quota (Reset)</button>
           </div>
           <div id="quotaStatusList" class="space-y-1.5 text-[11px]">
@@ -2286,11 +2248,8 @@
       if (!modelConfigData) return
       const { availableModels, roles, exhaustedModels } = modelConfigData
 
-      const populateSelect = (selectId, selectedVal) => {
-        const sel = document.getElementById(selectId)
-        sel.innerHTML = ''
-        
-        // Group by model family
+      // Helper function to build model options HTML
+      const buildModelOptions = (selectedVal) => {
         const groups = {}
         availableModels.forEach(m => {
           const g = m.group || 'Khác'
@@ -2298,70 +2257,115 @@
           groups[g].push(m)
         })
 
+        let html = ''
         for (const [groupName, models] of Object.entries(groups)) {
-          const optGroup = document.createElement('optgroup')
-          optGroup.label = `─── ${groupName} ───`
+          html += `<optgroup label="─── ${groupName} ───">`
           models.forEach(m => {
-            const opt = document.createElement('option')
-            opt.value = m.id
             const isExhausted = (exhaustedModels || []).includes(m.id)
-            opt.textContent = `${m.name} [Tier ${m.tier}]${isExhausted ? ' (⚠️ Hết Quota)' : ''}`
-            if (m.id === selectedVal) opt.selected = true
-            optGroup.appendChild(opt)
+            const isSel = m.id === selectedVal ? 'selected' : ''
+            html += `<option value="${m.id}" ${isSel}>${m.name}${isExhausted ? ' (⚠️ Hết Quota)' : ''}</option>`
           })
-          sel.appendChild(optGroup)
+          html += `</optgroup>`
+        }
+        return html
+      }
+
+      // 1. Render Active Team Agents Model List
+      const teamSection = document.getElementById('activeTeamAgentsModelList')
+      if (teamSection) {
+        teamSection.innerHTML = ''
+        const curTeam = teamsList.find(t => t.id === currentTeamId)
+        const teamAgents = curTeam?.agents || currentTeamAgents || []
+
+        if (teamAgents.length > 0) {
+          teamAgents.forEach((ag, idx) => {
+            // Find current model for agent
+            let curModel = ''
+            if (ag.program && agentsConfig && agentsConfig[ag.program]?.flags) {
+              const flags = agentsConfig[ag.program].flags
+              const mIdx = flags.indexOf('--model')
+              if (mIdx !== -1 && flags[mIdx + 1]) curModel = flags[mIdx + 1]
+            }
+            if (!curModel) {
+              if (ag.role?.toLowerCase() === 'lead') curModel = roles.lead
+              else if (ag.role?.toLowerCase() === 'reviewer' || ag.role?.toLowerCase() === 'critic') curModel = roles.reviewer
+              else curModel = roles.worker
+            }
+
+            const row = document.createElement('div')
+            row.className = 'p-2.5 bg-slate-900 border border-slate-700/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2'
+            row.innerHTML = `
+              <div class="flex items-center space-x-2 min-w-0">
+                <span class="text-sm font-bold text-slate-100 truncate">${escapeHtml(ag.name)}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">${escapeHtml(ag.role.toUpperCase())}</span>
+              </div>
+              <div class="flex items-center space-x-1.5 shrink-0">
+                <select id="agentModelSelect_${idx}" data-agent-idx="${idx}" data-agent-prog="${ag.program || 'agy-worker'}" class="bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  ${buildModelOptions(curModel)}
+                </select>
+              </div>
+            `
+            teamSection.appendChild(row)
+          })
+        } else {
+          teamSection.innerHTML = `
+            <div class="text-slate-400 text-[11px] leading-relaxed p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+              💡 Bạn có thể tự do thêm, bớt, đặt tên và chọn Model cho từng tác tử trong bảng <strong>"Quản lý Tác tử"</strong> hoặc khi bấm <strong>"Nhiệm vụ mới"</strong>. Khi tác tử chạm trần hạn mức (Quota reached), hệ thống sẽ cảnh báo trực tiếp trên khung chat để bạn đổi mô hình ngay.
+            </div>
+          `
         }
       }
 
-      // keepCurrent: giữ nguyên lựa chọn user đang chỉnh trong modal (chưa lưu)
-      const pick = (selectId, savedVal) => {
-        const cur = document.getElementById(selectId)?.value
-        return keepCurrent && cur ? cur : savedVal
-      }
-      populateSelect('modelSelectLead', pick('modelSelectLead', roles.lead))
-      populateSelect('modelSelectWorker', pick('modelSelectWorker', roles.worker))
-      populateSelect('modelSelectReviewer', pick('modelSelectReviewer', roles.reviewer))
-
-      // Render Quota status list
+      // 2. Render Quota status list
       const quotaList = document.getElementById('quotaStatusList')
-      quotaList.innerHTML = ''
-      availableModels.forEach(m => {
-        const isExhausted = (exhaustedModels || []).includes(m.id)
-        const item = document.createElement('div')
-        item.className = 'flex items-center justify-between py-1 border-b border-slate-800 last:border-b-0 hover:bg-slate-800/20 px-1 rounded transition'
-        item.innerHTML = `
-          <div class="flex items-center space-x-2 min-w-0 pr-2">
-            <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
-            <span class="text-slate-200 font-medium">${m.name}</span>
-            <span class="text-[10px] text-slate-400 truncate">(${m.desc})</span>
-          </div>
-          <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
-            ${isExhausted ? 'Khóa hạn mức (Auto-fallback)' : 'Sẵn sàng'}
-          </span>
-        `
-        quotaList.appendChild(item)
-      })
+      if (quotaList) {
+        quotaList.innerHTML = ''
+        availableModels.forEach(m => {
+          const isExhausted = (exhaustedModels || []).includes(m.id)
+          const item = document.createElement('div')
+          item.className = 'flex items-center justify-between py-1.5 border-b border-slate-800/80 last:border-b-0 hover:bg-slate-800/20 px-1 rounded transition'
+          item.innerHTML = `
+            <div class="flex items-center space-x-2 min-w-0 pr-2">
+              <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
+              <span class="text-slate-200 font-medium">${m.name}</span>
+              <span class="text-[10px] text-slate-400 truncate">(${m.desc})</span>
+            </div>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
+              ${isExhausted ? 'Khóa hạn mức (Hết Quota)' : 'Sẵn sàng'}
+            </span>
+          `
+          quotaList.appendChild(item)
+        })
+      }
     }
 
     async function saveModelConfig() {
-      const lead = document.getElementById('modelSelectLead').value
-      const worker = document.getElementById('modelSelectWorker').value
-      const reviewer = document.getElementById('modelSelectReviewer').value
       const btn = document.getElementById('saveModelConfigBtn')
-
       btn.disabled = true
       btn.innerHTML = '<span>Đang lưu...</span>'
 
       try {
+        const selects = document.querySelectorAll('#activeTeamAgentsModelList select')
+        const updatedRoles = { ...(modelConfigData?.roles || {}) }
+
+        selects.forEach(sel => {
+          const prog = sel.dataset.agentProg
+          const chosenModel = sel.value
+          if (prog === 'agy') updatedRoles.lead = chosenModel
+          else if (prog === 'agy-pro') updatedRoles.reviewer = chosenModel
+          else if (prog === 'agy-worker') updatedRoles.worker = chosenModel
+        })
+
         const res = await fetch('/api/ensemble/model-config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            roles: { lead, worker, reviewer }
+            roles: updatedRoles
           })
         })
+
         if (res.ok) {
-          alert('Đã lưu cấu hình Model thành công!')
+          alert('Đã cập nhật cấu hình Model thành công!')
           closeModelConfigModal()
           await loadAgentsConfig()
         } else {

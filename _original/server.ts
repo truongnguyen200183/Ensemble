@@ -486,53 +486,53 @@ const server = http.createServer(async (req, res) => {
 
       const availableModels = [
         // 1. Gemini 4 Neon (New)
-        { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', tier: 1, group: 'Gemini 4 Neon', desc: 'Bậc 1: Siêu tư duy cực hạn (XHigh)' },
-        { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', tier: 1, group: 'Gemini 4 Neon', desc: 'Bậc 1: Tư duy cao nhất' },
-        { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', tier: 2, group: 'Gemini 4 Neon', desc: 'Bậc 2: Cân bằng tốc độ & trí tuệ' },
-        { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', tier: 3, group: 'Gemini 4 Neon', desc: 'Bậc 3: Tốc độ cao & tiết kiệm token' },
+        { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', group: 'Gemini 4 Neon', desc: 'Siêu tư duy cực hạn (XHigh)' },
+        { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', group: 'Gemini 4 Neon', desc: 'Tư duy cao nhất' },
+        { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', group: 'Gemini 4 Neon', desc: 'Cân bằng tốc độ & trí tuệ' },
+        { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', group: 'Gemini 4 Neon', desc: 'Tốc độ cao & tiết kiệm token' },
 
         // 1b. Orchestrator (Neon) (New)
-        { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', tier: 1, group: 'Orchestrator (Neon)', desc: 'Bậc 1: Chuyên điều phối tác tử thế hệ mới' },
+        { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', group: 'Orchestrator (Neon)', desc: 'Chuyên điều phối tác tử thế hệ mới' },
 
         // 1c. Gemini 4 Argon
-        { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Tư duy cao nhất' },
-        { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Tư duy tiêu chuẩn' },
-        { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', tier: 1, group: 'Gemini 4 Argon', desc: 'Bậc 1: Nhanh & Nhẹ' },
+        { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', group: 'Gemini 4 Argon', desc: 'Tư duy cao nhất' },
+        { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', group: 'Gemini 4 Argon', desc: 'Tư duy tiêu chuẩn' },
+        { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', group: 'Gemini 4 Argon', desc: 'Nhanh & Nhẹ' },
 
         // 1d. Gemini 4 Hydrogen
-        { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Siêu tư duy cực hạn (XHigh)' },
-        { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Tư duy nâng cao' },
-        { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Cân bằng thế hệ mới' },
-        { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', tier: 1, group: 'Gemini 4 Hydrogen', desc: 'Bậc 1: Tốc độ cao & tiết kiệm' },
+        { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', group: 'Gemini 4 Hydrogen', desc: 'Siêu tư duy cực hạn (XHigh)' },
+        { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', group: 'Gemini 4 Hydrogen', desc: 'Tư duy nâng cao' },
+        { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', group: 'Gemini 4 Hydrogen', desc: 'Cân bằng thế hệ mới' },
+        { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', group: 'Gemini 4 Hydrogen', desc: 'Tốc độ cao & tiết kiệm' },
 
         // 1e. Orchestrator (Argon)
-        { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', tier: 1, group: 'Orchestrator (Argon)', desc: 'Bậc 1: Chuyên điều phối nhóm tác tử' },
+        { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', group: 'Orchestrator (Argon)', desc: 'Chuyên điều phối nhóm tác tử' },
 
         // 2. Claude Opus 5.5
-        { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', tier: 1, group: 'Claude Opus 5.5', desc: 'Bậc 1: Siêu phân tích kiến trúc' },
-        { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', tier: 1, group: 'Claude Opus 5.5', desc: 'Bậc 1: Cân bằng cao cấp' },
-        { id: 'claude-opus-5-5-low', name: 'Claude Opus 5.5 (Low)', tier: 1, group: 'Claude Opus 5.5', desc: 'Bậc 1: Phản hồi nhanh' },
+        { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', group: 'Claude Opus 5.5', desc: 'Siêu phân tích kiến trúc' },
+        { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', group: 'Claude Opus 5.5', desc: 'Cân bằng cao cấp' },
+        { id: 'claude-opus-5-5-low', name: 'Claude Opus 5.5 (Low)', group: 'Claude Opus 5.5', desc: 'Phản hồi nhanh' },
 
         // 3. Claude Sonnet 5.5
-        { id: 'claude-sonnet-5-5-high', name: 'Claude Sonnet 5.5 (High)', tier: 2, group: 'Claude Sonnet 5.5', desc: 'Bậc 2: Lập trình chuyên sâu' },
-        { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', tier: 2, group: 'Claude Sonnet 5.5', desc: 'Bậc 2: Cân bằng & code chuẩn' },
-        { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', tier: 2, group: 'Claude Sonnet 5.5', desc: 'Bậc 2: Tốc độ cao' },
+        { id: 'claude-sonnet-5-5-high', name: 'Claude Sonnet 5.5 (High)', group: 'Claude Sonnet 5.5', desc: 'Lập trình chuyên sâu' },
+        { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', group: 'Claude Sonnet 5.5', desc: 'Cân bằng & code chuẩn' },
+        { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', group: 'Claude Sonnet 5.5', desc: 'Tốc độ cao' },
 
         // 4. Claude Pro (Claude Code CLI - Gói thuê bao Claude Pro)
-        { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc' },
-        { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp' },
-        { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', tier: 1, group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh' },
-        { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Lập trình chuyên sâu' },
-        { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn' },
-        { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', tier: 2, group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao' },
+        { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc' },
+        { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp' },
+        { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh' },
+        { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Lập trình chuyên sâu' },
+        { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn' },
+        { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao' },
 
         // 5. Gemini 3.8 Flash
-        { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', tier: 2, group: 'Gemini 3.8 Flash', desc: 'Bậc 2: Suy luận cao, dồi dào Quota' },
-        { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', tier: 3, group: 'Gemini 3.8 Flash', desc: 'Bậc 3: Đa phương thức, tốc độ cao' },
-        { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', tier: 3, group: 'Gemini 3.8 Flash', desc: 'Bậc 3: Siêu nhẹ, tiết kiệm token' },
+        { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', group: 'Gemini 3.8 Flash', desc: 'Suy luận cao, dồi dào Quota' },
+        { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash', desc: 'Đa phương thức, tốc độ cao' },
+        { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash', desc: 'Siêu nhẹ, tiết kiệm token' },
 
         // 6. GPT-OSS 120B
-        { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', tier: 2, group: 'GPT-OSS 120B', desc: 'Bậc 2: Mô hình mở 120B' },
+        { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B', desc: 'Mô hình mã nguồn mở 120B' },
       ]
 
       if (method === 'GET') {

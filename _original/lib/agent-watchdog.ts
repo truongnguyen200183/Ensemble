@@ -224,6 +224,73 @@ export class AgentWatchdog {
       // Already given up on this agent: never nudge or log again.
       if (currentState.unreachableAt) continue
 
+      // Nhận biết sớm khi mô hình chạm trần Quota (Individual quota reached) để cảnh báo ngay
+      if (idleMs >= 10_000) {
+        const quotaKey = `${stateKey}:quotaAlert`
+        if (!this.state.has(quotaKey)) {
+          try {
+            const sessionName = `${team.name}-${agent.name}`
+            const runtime = this.deps.getRuntime()
+            if (typeof (runtime as any).capturePane === 'function') {
+              const pane = await (runtime as any).capturePane(sessionName)
+              if (pane && (pane.includes('Individual quota reached') || pane.includes('quota reached'))) {
+                this.state.set(quotaKey, { lastMessageAt: new Date(nowMs).toISOString() })
+                let exhaustedModel = ''
+                try {
+                  const fs = await import('fs')
+                  const os = await import('os')
+                  const path = await import('path')
+                  const { fileURLToPath } = await import('url')
+
+                  const candidates = [
+                    fileURLToPath(new URL('../agents.json', import.meta.url)),
+                    path.join(process.cwd(), 'agents.json'),
+                  ]
+                  for (const agentsPath of candidates) {
+                    if (!fs.existsSync(agentsPath)) continue
+                    try {
+                      const cfg = JSON.parse(fs.readFileSync(agentsPath, 'utf8'))
+                      const flags: string[] = cfg?.[agent.program]?.flags ?? []
+                      const idx = flags.indexOf('--model')
+                      if (idx !== -1 && flags[idx + 1]) exhaustedModel = flags[idx + 1]
+                    } catch {}
+                    if (exhaustedModel) break
+                  }
+
+                  if (exhaustedModel) {
+                    const base = exhaustedModel.replace(/-(low|medium|high|xhigh)$/, '')
+                    const family = base !== exhaustedModel
+                      ? (base.includes('hydrogen') || base.includes('neon')
+                          ? [`${base}-xhigh`, `${base}-high`, `${base}-medium`, `${base}-low`]
+                          : [`${base}-high`, `${base}-medium`, `${base}-low`])
+                      : [exhaustedModel]
+
+                    const p = path.join(os.homedir(), '.ensemble', 'exhausted-models.txt')
+                    const dir = path.dirname(p)
+                    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+                    const curr = fs.existsSync(p)
+                      ? fs.readFileSync(p, 'utf8').split('\n').map(s => s.trim()).filter(Boolean)
+                      : []
+                    const merged = Array.from(new Set([...curr, ...family]))
+                    fs.writeFileSync(p, merged.join('\n') + '\n', 'utf8')
+                  }
+                } catch {}
+
+                this.deps.appendMessage(team.id, {
+                  id: uuidv4(),
+                  teamId: team.id,
+                  from: 'ensemble',
+                  to: 'team',
+                  content: `⚠️ CẢNH BÁO: Tác tử **${agent.name}**${exhaustedModel ? ` (model \`${exhaustedModel}\`)` : ''} đã chạm trần hạn mức Quota (*Individual quota reached*)! Vui lòng chọn mô hình thay thế để tiếp tục.`,
+                  type: 'chat',
+                  timestamp: new Date(nowMs).toISOString(),
+                })
+              }
+            }
+          } catch {}
+        }
+      }
+
       if (!currentState.nudgedAt && idleMs >= this.nudgeAfterMs) {
         const nudgeCount = currentState.nudgeCount ?? 0
 
