@@ -813,6 +813,29 @@ function teamEvent(team: EnsembleTeam, event: BrainEvent['event'], fields: Parti
 export async function createEnsembleTeam(
   request: CreateTeamRequest
 ): Promise<ServiceResult<{ team: EnsembleTeam }>> {
+  // Khi người dùng chỉ tạo Task (forming mode): Tạo phiên ở trạng thái 'forming', chưa chạy agent nào
+  if (request.forming || request.noAutoAgents || (Array.isArray(request.agents) && request.agents.length === 0 && (request.forming !== false))) {
+    const team = createTeam({
+      ...request,
+      name: request.name || `task-${Date.now().toString(36).slice(-4)}`,
+      agents: [],
+    })
+    team.status = 'forming'
+    updateTeam(team.id, { status: 'forming', agents: [] })
+
+    appendMessage(team.id, {
+      id: uuidv4(),
+      teamId: team.id,
+      from: 'ensemble',
+      to: 'team',
+      type: 'chat',
+      timestamp: new Date().toISOString(),
+      content: `📋 Nhiệm vụ đã được tạo: "${team.description}". Hãy thêm các tác tử vào đội ngũ và bấm Khởi chạy để bắt đầu.`,
+    })
+
+    return { data: { team }, status: 201 }
+  }
+
   let plan
   if (!request.agents?.length) {
     plan = await runPlan(request.description)
@@ -1624,17 +1647,22 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
       const agentName = `${team.name}-${agentSpec.name}`
       const teammateNames = team.agents.filter((_, j) => j !== i).map(a => a.name)
 
+      const isReactivation = Boolean(recentHistory)
       const resumePrompt = [
         `You are ${agentSpec.name} in team "${team.name}" with teammate(s) ${teammateNames.join(', ')}.`,
         `Task: ${team.description}.`,
-        `This session was REACTIVATED by the user to continue collaborating.`,
+        isReactivation
+          ? `This session was REACTIVATED by the user to continue collaborating.`
+          : `This team was newly created and launched by the user to execute this task.`,
         `COMMUNICATION RULES:`,
         `1. Send findings/chat: /home/truong/ensemble/scripts/team-say.sh ${team.id} ${agentSpec.name} ${teammateNames[0] || 'team'} "your message"`,
         `2. Read teammate messages: /home/truong/ensemble/scripts/team-read.sh ${team.id}`,
         `3. Keep alternating: analyze, share, read, respond.`,
         `4. FORMATTING RULES (BẮT BUỘC): Trình bày định dạng Markdown/HTML: xuống dòng theo danh sách gạch đầu dòng rõ ràng (- hoặc *), bôi đậm (**từ khóa quan trọng**) đối với file, hàm, kết quả và trạng thái.`,
         recentHistory ? `--- RECENT HISTORY ---\n${recentHistory}\n--- END HISTORY ---` : '',
-        `ACTION: Run team-say to notify your teammate and user that you are back online and ready for instructions.`,
+        isReactivation
+          ? `ACTION: Run team-say to notify your teammate and user that you are back online and ready for instructions.`
+          : `ACTION: Start analyzing the task now. Send your initial thoughts, findings, and plans to your team using team-say.`,
       ].filter(Boolean).join('\n\n')
 
       const promptFile = collabPromptFile(team.id, agentSpec.name)

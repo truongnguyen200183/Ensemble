@@ -519,14 +519,14 @@
 
   <!-- NEW TASK MODAL -->
   <div id="newTaskModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
-        <div class="flex items-center space-x-2">
-          <span class="text-xl">🚀</span>
+        <div class="flex items-center space-x-2.5">
+          <span class="text-xl">📋</span>
           <div>
-            <h3 class="text-sm font-bold text-slate-100">Tạo Nhiệm Vụ Mới</h3>
-            <p class="text-[11px] text-slate-400">Tùy chỉnh đội ngũ Agent (thêm/bớt, đổi tên, vai trò) và khởi chạy phối hợp tự động</p>
+            <h3 class="text-sm font-bold text-slate-100">Tạo Nhiệm Vụ Mới (Task)</h3>
+            <p class="text-[11px] text-slate-400">Gõ yêu cầu nhiệm vụ cần thực hiện. Bạn sẽ tự do tạo đội ngũ Agent ở bước tiếp theo.</p>
           </div>
         </div>
         <button id="closeNewTaskBtn" type="button" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
@@ -542,59 +542,23 @@
           </label>
           <textarea 
             id="newTaskDescription" 
-            rows="2" 
+            rows="3" 
             required 
             placeholder="Ví dụ: Phân tích các lỗ hổng bảo mật trong module auth và đề xuất giải pháp vá..."
             class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none leading-relaxed"
           ></textarea>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-semibold text-slate-200 mb-1">
-              Thư mục làm việc (Working Directory)
-            </label>
-            <input 
-              id="newTaskWorkingDir" 
-              type="text" 
-              placeholder="/mnt/d/Projects/..."
-              class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-            >
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-200 mb-1">
-              Chế độ / Template phối hợp
-            </label>
-            <select id="newTaskTemplate" onchange="onNewTaskTemplateChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-              <option value="">⚙️ Mặc định (Lead & Worker)</option>
-              <option value="review">🔍 Phản biện ngang hàng (Reviewer vs Critic)</option>
-              <option value="implement">⚡ Triển khai tính năng (Implement code)</option>
-              <option value="debug">🐛 Gỡ lỗi chuyên sâu (Debug bug & memory)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Custom Agents Section (Thêm, bớt, đổi tên, chỉnh sửa vai trò) -->
-        <div class="space-y-2 pt-2 border-t border-slate-800">
-          <div class="flex items-center justify-between">
-            <label class="font-semibold text-slate-200 flex items-center space-x-1.5">
-              <span>👥</span>
-              <span>Đội ngũ Tác tử (Agents) thực hiện:</span>
-            </label>
-            <button 
-              id="addNewTaskAgentBtn" 
-              type="button" 
-              onclick="addNewTaskAgentItem()"
-              class="px-2.5 py-1 rounded-lg bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-700/60 font-semibold text-[11px] flex items-center space-x-1 transition cursor-pointer active:scale-95"
-            >
-              <span>➕</span>
-              <span>Thêm Agent</span>
-            </button>
-          </div>
-          <div id="newTaskAgentsContainer" class="space-y-2 max-h-56 overflow-y-auto pr-1">
-            <!-- Rendered dynamically -->
-          </div>
+        <div>
+          <label class="block font-semibold text-slate-200 mb-1">
+            Thư mục làm việc (Working Directory - tùy chọn)
+          </label>
+          <input 
+            id="newTaskWorkingDir" 
+            type="text" 
+            placeholder="/home/truong/..."
+            class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+          >
         </div>
 
         <div class="pt-3 border-t border-slate-800 flex items-center justify-end space-x-2">
@@ -602,8 +566,8 @@
             Hủy
           </button>
           <button id="submitNewTaskBtn" type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition flex items-center space-x-1.5 shadow-sm active:scale-95 cursor-pointer">
-            <span>Bắt đầu nhiệm vụ</span>
-            <span>🚀</span>
+            <span>Tạo Task & Thêm Agent</span>
+            <span>➔</span>
           </button>
         </div>
       </form>
@@ -615,11 +579,11 @@
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2.5">
           <span class="text-xl">👥</span>
           <div>
-            <h3 class="text-sm font-bold text-slate-100">Quản Lý Tác Tử (Agents) Trong Nhiệm Vụ</h3>
-            <p class="text-[11px] text-slate-400">Thêm, bớt Agent, đổi tên hoặc cập nhật vai trò phân công trong phiên này</p>
+            <h3 class="text-sm font-bold text-slate-100">Thiết Lập & Quản Lý Đội Ngũ Agent</h3>
+            <p class="text-[11px] text-slate-400">Thêm, bớt Agent, đổi tên, phân vai trò và chọn mô hình (28 mô hình AI)</p>
           </div>
         </div>
         <button id="closeManageAgentsBtn" type="button" onclick="closeManageAgentsModal()" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
@@ -629,8 +593,17 @@
 
       <!-- Modal Body -->
       <div class="p-5 space-y-4 overflow-y-auto text-xs">
+        <!-- Task Banner inside modal -->
+        <div id="manageAgentsTaskBanner" class="p-3 bg-blue-950/40 border border-blue-800/60 rounded-xl space-y-1">
+          <div class="text-[11px] font-bold text-blue-300 flex items-center space-x-1.5">
+            <span>📋</span>
+            <span>Nhiệm vụ cần thực hiện:</span>
+          </div>
+          <div id="manageAgentsTaskDesc" class="text-xs text-slate-200 font-medium whitespace-pre-wrap leading-relaxed"></div>
+        </div>
+
         <div class="flex items-center justify-between">
-          <span class="font-semibold text-slate-300">Danh sách Agent tham gia phiên này:</span>
+          <span class="font-semibold text-slate-300">Danh sách Agent tham gia:</span>
           <button id="addRunningTeamAgentBtn" type="button" onclick="addRunningTeamAgentItem()" class="text-[11px] px-2.5 py-1 rounded bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-700/60 font-semibold transition cursor-pointer flex items-center space-x-1">
             <span>➕</span>
             <span>Thêm Agent</span>
@@ -643,9 +616,12 @@
 
       <!-- Footer -->
       <div class="px-5 py-3 border-t border-slate-800 bg-slate-800/40 flex items-center justify-end space-x-2 shrink-0">
-        <button id="cancelManageAgentsBtn" type="button" onclick="closeManageAgentsModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 transition text-xs cursor-pointer">Hủy</button>
-        <button id="saveManageAgentsBtn" type="button" onclick="saveManageAgentsChanges()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition text-xs shadow-md cursor-pointer flex items-center space-x-1">
-          <span>Lưu Thay Đổi</span>
+        <button id="cancelManageAgentsBtn" type="button" onclick="closeManageAgentsModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 transition text-xs cursor-pointer">Đóng</button>
+        <button id="saveManageAgentsBtn" type="button" onclick="saveManageAgentsChanges()" class="px-4 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold transition text-xs shadow-md cursor-pointer flex items-center space-x-1">
+          <span>Lưu Cấu Hình</span>
+        </button>
+        <button id="launchTeamBtn" type="button" onclick="launchRunningTeamAgents()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition text-xs shadow-md cursor-pointer flex items-center space-x-1.5 active:scale-95">
+          <span>🚀 Khởi Chạy Đội Ngũ</span>
         </button>
       </div>
     </div>
@@ -1837,12 +1813,34 @@
           if (team.status === 'active') {
             statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/70 text-emerald-300 border border-emerald-600/50'
             statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse-subtle"></span><span>ĐANG CHẠY (ACTIVE)</span>'
+          } else if (team.status === 'forming') {
+            statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/70 text-amber-300 border border-amber-600/50'
+            statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5 animate-pulse"></span><span>CHỜ THIẾT LẬP AGENT</span>'
           } else if (team.status === 'completed') {
             statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-950/70 text-blue-300 border border-blue-600/50'
             statusBadge.innerHTML = '<span class="mr-1.5">🏁</span><span>HOÀN THÀNH</span>'
           } else {
             statusBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700'
             statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-500 mr-1.5"></span><span>${(team.status || 'KẾT THÚC').toUpperCase()}</span>`
+          }
+
+          // If forming, show helper banner in feed
+          if (team.status === 'forming') {
+            const formingDiv = document.createElement('div')
+            formingDiv.id = 'formingTeamBanner'
+            formingDiv.className = 'p-6 bg-slate-900 border border-blue-600/40 rounded-2xl text-center space-y-4 my-8 max-w-xl mx-auto shadow-xl'
+            formingDiv.innerHTML = `
+              <div class="w-14 h-14 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-2xl flex items-center justify-center text-3xl mx-auto">👥</div>
+              <div>
+                <h4 class="text-base font-bold text-slate-100">Nhiệm Vụ Đang Chờ Thiết Lập Đội Ngũ</h4>
+                <p class="text-xs text-slate-400 mt-1">Nhiệm vụ đã được ghi nhận. Bạn hãy thêm các Agent vào đội ngũ, chọn vai trò và mô hình (trong 28 mô hình), sau đó bấm Khởi chạy để bắt đầu.</p>
+              </div>
+              <button type="button" onclick="openManageAgentsModal()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg transition cursor-pointer inline-flex items-center space-x-2 active:scale-95">
+                <span>➕</span>
+                <span>Thêm Agent & Khởi Chạy Đội Ngũ</span>
+              </button>
+            `
+            feed.appendChild(formingDiv)
           }
 
           // Update Roster Badges
@@ -2870,6 +2868,13 @@
         alert('Không tìm thấy thông tin phiên làm việc hiện tại.')
         return
       }
+
+      // Populate task description banner
+      const taskDescEl = document.getElementById('manageAgentsTaskDesc')
+      if (taskDescEl) {
+        taskDescEl.textContent = team.description || team.name || '(Chưa có mô tả)'
+      }
+
       const agents = team.agents || currentTeamAgents || []
       editingRunningAgents = agents.map(a => ({
         name: a.name || 'Agent',
@@ -2883,6 +2888,21 @@
           { name: 'Worker', role: 'WORKER', program: 'agy-worker', status: 'active' }
         ]
       }
+
+      // Tùy theo trạng thái của phiên: Nếu đang forming -> Hiển thị nút Khởi Chạy
+      const launchBtn = document.getElementById('launchTeamBtn')
+      const saveBtn = document.getElementById('saveManageAgentsBtn')
+      if (team.status === 'forming') {
+        if (launchBtn) {
+          launchBtn.classList.remove('hidden')
+          launchBtn.innerHTML = '<span>🚀 Khởi Chạy Đội Ngũ</span>'
+        }
+        if (saveBtn) saveBtn.classList.add('hidden')
+      } else {
+        if (launchBtn) launchBtn.classList.add('hidden')
+        if (saveBtn) saveBtn.classList.remove('hidden')
+      }
+
       renderRunningTeamAgentsList()
       document.getElementById('manageAgentsModal')?.classList.remove('hidden')
     }
@@ -2988,7 +3008,7 @@
           currentTeamAgents = data.team.agents || editingRunningAgents
           // Refresh team feed & UI
           await loadTeamsList()
-          await fetchTeamMessages(currentTeamId)
+          await fetchMessages()
         } else {
           alert('Lỗi cập nhật Agent: ' + (data.error || 'Lỗi không xác định'))
         }
@@ -2997,7 +3017,47 @@
       } finally {
         if (btn) {
           btn.disabled = false
-          btn.innerHTML = '<span>Lưu Thay Đổi</span>'
+          btn.innerHTML = '<span>Lưu Cấu Hình</span>'
+        }
+      }
+    }
+
+    async function launchRunningTeamAgents() {
+      if (!currentTeamId) return
+      if (!editingRunningAgents || editingRunningAgents.length === 0) {
+        alert('Vui lòng thêm ít nhất 1 Agent vào đội ngũ trước khi khởi chạy!')
+        return
+      }
+
+      const launchBtn = document.getElementById('launchTeamBtn')
+      if (launchBtn) {
+        launchBtn.disabled = true
+        launchBtn.classList.add('opacity-50')
+        launchBtn.innerHTML = '<span>Đang khởi chạy...</span><span>⏳</span>'
+      }
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agents: editingRunningAgents })
+        })
+        const data = await res.json()
+        if (res.ok && !data.error) {
+          closeManageAgentsModal()
+          // Reload teams list
+          await loadTeamsList()
+          await onTeamChanged(currentTeamId)
+        } else {
+          alert('Không thể khởi chạy đội ngũ: ' + (data.error || 'Lỗi không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi khởi chạy: ' + err.message)
+      } finally {
+        if (launchBtn) {
+          launchBtn.disabled = false
+          launchBtn.classList.remove('opacity-50')
+          launchBtn.innerHTML = '<span>🚀 Khởi Chạy Đội Ngũ</span>'
         }
       }
     }
@@ -3022,7 +3082,6 @@
         descInput.value = ''
       }
 
-      renderNewTaskAgentsList()
       modal.classList.remove('hidden')
       if (descInput) descInput.focus()
     }
@@ -3051,7 +3110,6 @@
       e.preventDefault()
       const descInput = document.getElementById('newTaskDescription')
       const dirInput = document.getElementById('newTaskWorkingDir')
-      const templateSelect = document.getElementById('newTaskTemplate')
       const submitBtn = document.getElementById('submitNewTaskBtn')
 
       const task = descInput.value.trim()
@@ -3059,37 +3117,33 @@
 
       submitBtn.disabled = true
       submitBtn.classList.add('opacity-50')
-      submitBtn.innerHTML = '<span>Đang khởi tạo...</span><span>⏳</span>'
+      submitBtn.innerHTML = '<span>Đang tạo Task...</span><span>⏳</span>'
 
       try {
-        const res = await fetch('/api/ensemble/launch', {
+        const res = await fetch('/api/ensemble/teams', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            task,
+            description: task,
             workingDirectory: dirInput.value.trim() || undefined,
-            template: templateSelect.value || undefined,
-            agents: newTaskAgents
+            forming: true,
+            noAutoAgents: true,
+            agents: []
           })
         })
 
         const data = await res.json()
-        if (res.ok && data.success) {
+        const newTeam = data.team || (data.data && data.data.team)
+        if (res.ok && newTeam) {
+          descInput.value = ''
           closeNewTaskModal()
           // Reload teams list
           await loadTeamsList()
-          if (data.teamId) {
-            currentTeamId = data.teamId
-            window.userLockedOldSession = false
-            await onTeamChanged(currentTeamId)
-          } else {
-            const latest = teamsList[0]
-            if (latest) {
-              currentTeamId = latest.id
-              window.userLockedOldSession = false
-              await onTeamChanged(currentTeamId)
-            }
-          }
+          currentTeamId = newTeam.id
+          window.userLockedOldSession = false
+          await onTeamChanged(currentTeamId)
+          // Mở modal để user thêm các Agent và tùy chỉnh mô hình
+          openManageAgentsModal()
         } else {
           alert('Không thể tạo nhiệm vụ mới: ' + (data.error || 'Lỗi không xác định'))
         }
@@ -3098,7 +3152,7 @@
       } finally {
         submitBtn.disabled = false
         submitBtn.classList.remove('opacity-50')
-        submitBtn.innerHTML = '<span>Bắt đầu nhiệm vụ</span><span>🚀</span>'
+        submitBtn.innerHTML = '<span>Tạo Task & Thêm Agent</span><span>➔</span>'
       }
     })
 

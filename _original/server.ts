@@ -355,6 +355,38 @@ const server = http.createServer(async (req, res) => {
       return json(res, { error: 'Danh sách Agent không được để trống' }, 400, origin)
     }
 
+    // Start/Launch team: POST /api/ensemble/teams/:id/start
+    const startTeamMatch = path.match(/^\/api\/ensemble\/teams\/([^/]+)\/start$/)
+    if (startTeamMatch && method === 'POST') {
+      const teamId = startTeamMatch[1]
+      let body: Record<string, unknown> = {}
+      try {
+        const raw = await readBody(req)
+        if (raw) body = JSON.parse(raw)
+      } catch {}
+
+      const team = getTeam(teamId)
+      if (!team) return json(res, { error: 'Team không tồn tại' }, 404, origin)
+
+      if (Array.isArray(body.agents) && body.agents.length > 0) {
+        const updatedAgents = body.agents.map((a: any, idx: number) => ({
+          agentId: a.agentId || '',
+          name: (a.name || (idx === 0 ? 'Lead' : `Worker-${idx}`)).trim(),
+          program: (a.program || (idx === 0 ? 'agy' : 'agy-worker')).trim(),
+          role: (a.role || (idx === 0 ? 'lead' : 'worker')).trim(),
+          hostId: a.hostId || '',
+          status: 'active',
+        }))
+        updateTeam(teamId, { agents: updatedAgents })
+      } else if (!team.agents || team.agents.length === 0) {
+        return json(res, { error: 'Vui lòng thêm ít nhất 1 Agent vào đội ngũ trước khi khởi chạy.' }, 400, origin)
+      }
+
+      const result = await reactivateTeam(teamId)
+      if (result.error) return json(res, { error: result.error }, result.status, origin)
+      return json(res, result.data, result.status, origin)
+    }
+
     // Upload image attachment: POST /api/ensemble/teams/:id/upload-image
     const uploadMatch = path.match(/^\/api\/ensemble\/teams\/([^/]+)\/upload-image$/)
     if (uploadMatch && method === 'POST') {

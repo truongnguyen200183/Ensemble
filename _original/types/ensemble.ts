@@ -63,6 +63,8 @@ export interface CreateTeamRequest {
   useWorktrees?: boolean
   staged?: boolean
   stagedConfig?: StagedWorkflowConfig
+  forming?: boolean
+  noAutoAgents?: boolean
 }
 
 export type StagedPhase = 'plan' | 'exec' | 'verify'
