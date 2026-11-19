@@ -52,6 +52,7 @@ export interface CreateTeamRequest {
   description: string
   agents?: Array<{
     program: string
+    name?: string
     role?: string
     hostId?: string
   }>

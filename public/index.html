@@ -366,6 +366,18 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
         </svg>
       </button>
+
+      <!-- Manage Agents Button in Header -->
+      <button 
+        id="openManageAgentsBtn" 
+        type="button" 
+        onclick="openManageAgentsModal()"
+        title="Quản lý Agent: Thêm, bớt, đổi tên hoặc sửa vai trò Agent trong nhiệm vụ này" 
+        class="ml-1.5 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 text-[11px] font-medium flex items-center space-x-1 transition cursor-pointer shrink-0"
+      >
+        <span>👥</span>
+        <span>Quản lý Agent</span>
+      </button>
     </div>
     <div class="hidden sm:flex items-center space-x-2 text-slate-400 shrink-0 text-[11px]">
       <span id="taskDir" class="truncate max-w-xs text-slate-400"></span>
@@ -507,14 +519,14 @@
 
   <!-- NEW TASK MODAL -->
   <div id="newTaskModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
         <div class="flex items-center space-x-2">
           <span class="text-xl">🚀</span>
           <div>
             <h3 class="text-sm font-bold text-slate-100">Tạo Nhiệm Vụ Mới</h3>
-            <p class="text-[11px] text-slate-400">Khởi chạy nhóm 2 Agent (Lead & Worker) phân tích tự động</p>
+            <p class="text-[11px] text-slate-400">Tùy chỉnh đội ngũ Agent (thêm/bớt, đổi tên, vai trò) và khởi chạy phối hợp tự động</p>
           </div>
         </div>
         <button id="closeNewTaskBtn" type="button" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
@@ -523,46 +535,69 @@
       </div>
 
       <!-- Modal Body -->
-      <form id="newTaskForm" class="p-5 space-y-4 text-xs">
+      <form id="newTaskForm" class="p-5 space-y-4 text-xs overflow-y-auto">
         <div>
           <label class="block font-semibold text-slate-200 mb-1">
             Yêu cầu / Nhiệm vụ phân tích <span class="text-rose-400">*</span>
           </label>
           <textarea 
             id="newTaskDescription" 
-            rows="3" 
+            rows="2" 
             required 
             placeholder="Ví dụ: Phân tích các lỗ hổng bảo mật trong module auth và đề xuất giải pháp vá..."
             class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none leading-relaxed"
           ></textarea>
         </div>
 
-        <div>
-          <label class="block font-semibold text-slate-200 mb-1">
-            Thư mục làm việc (Working Directory)
-          </label>
-          <input 
-            id="newTaskWorkingDir" 
-            type="text" 
-            placeholder="/mnt/d/Projects/..."
-            class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-          >
-          <p class="text-[10px] text-slate-500 mt-1">Đường dẫn thư mục dự án trong WSL / Linux để Agent đọc và sửa file.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-200 mb-1">
+              Thư mục làm việc (Working Directory)
+            </label>
+            <input 
+              id="newTaskWorkingDir" 
+              type="text" 
+              placeholder="/mnt/d/Projects/..."
+              class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+            >
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-200 mb-1">
+              Chế độ / Template phối hợp
+            </label>
+            <select id="newTaskTemplate" onchange="onNewTaskTemplateChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+              <option value="">⚙️ Mặc định (Lead & Worker)</option>
+              <option value="review">🔍 Phản biện ngang hàng (Reviewer vs Critic)</option>
+              <option value="implement">⚡ Triển khai tính năng (Implement code)</option>
+              <option value="debug">🐛 Gỡ lỗi chuyên sâu (Debug bug & memory)</option>
+            </select>
+          </div>
         </div>
 
-        <div>
-          <label class="block font-semibold text-slate-200 mb-1">
-            Chế độ / Template phối hợp
-          </label>
-          <select id="newTaskTemplate" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-            <option value="">⚙️ Mặc định (Lead hoạch định + Worker thực thi)</option>
-            <option value="review">🔍 Phản biện ngang hàng (Reviewer vs Critic)</option>
-            <option value="implement">⚡ Triển khai tính năng (Implement code)</option>
-            <option value="debug">🐛 Gỡ lỗi chuyên sâu (Debug bug & memory)</option>
-          </select>
+        <!-- Custom Agents Section (Thêm, bớt, đổi tên, chỉnh sửa vai trò) -->
+        <div class="space-y-2 pt-2 border-t border-slate-800">
+          <div class="flex items-center justify-between">
+            <label class="font-semibold text-slate-200 flex items-center space-x-1.5">
+              <span>👥</span>
+              <span>Đội ngũ Tác tử (Agents) thực hiện:</span>
+            </label>
+            <button 
+              id="addNewTaskAgentBtn" 
+              type="button" 
+              onclick="addNewTaskAgentItem()"
+              class="px-2.5 py-1 rounded-lg bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-700/60 font-semibold text-[11px] flex items-center space-x-1 transition cursor-pointer active:scale-95"
+            >
+              <span>➕</span>
+              <span>Thêm Agent</span>
+            </button>
+          </div>
+          <div id="newTaskAgentsContainer" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
 
-        <div class="pt-2 flex items-center justify-end space-x-2">
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-end space-x-2">
           <button id="cancelNewTaskBtn" type="button" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition cursor-pointer">
             Hủy
           </button>
@@ -575,15 +610,59 @@
     </div>
   </div>
 
+  <!-- MANAGE AGENTS MODAL (Quản lý Agent trong phiên hiện tại) -->
+  <div id="manageAgentsModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">👥</span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-100">Quản Lý Tác Tử (Agents) Trong Nhiệm Vụ</h3>
+            <p class="text-[11px] text-slate-400">Thêm, bớt Agent, đổi tên hoặc cập nhật vai trò phân công trong phiên này</p>
+          </div>
+        </div>
+        <button id="closeManageAgentsBtn" type="button" onclick="closeManageAgentsModal()" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 space-y-4 overflow-y-auto text-xs">
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-slate-300">Danh sách Agent tham gia phiên này:</span>
+          <button id="addRunningTeamAgentBtn" type="button" onclick="addRunningTeamAgentItem()" class="text-[11px] px-2.5 py-1 rounded bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-700/60 font-semibold transition cursor-pointer flex items-center space-x-1">
+            <span>➕</span>
+            <span>Thêm Agent</span>
+          </button>
+        </div>
+        <div id="currentTeamAgentsContainer" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-3 border-t border-slate-800 bg-slate-800/40 flex items-center justify-end space-x-2 shrink-0">
+        <button id="cancelManageAgentsBtn" type="button" onclick="closeManageAgentsModal()" class="px-3.5 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 transition text-xs cursor-pointer">Hủy</button>
+        <button id="saveManageAgentsBtn" type="button" onclick="saveManageAgentsChanges()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition text-xs shadow-md cursor-pointer flex items-center space-x-1">
+          <span>Lưu Thay Đổi</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODEL CONFIG MODAL -->
   <div id="modelConfigModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2.5">
           <span class="text-xl">⚙️</span>
           <div>
-            <h3 class="text-sm font-bold text-slate-100">Cấu Hình Model & Bậc Xếp Hạng</h3>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-sm font-bold text-slate-100">Cấu Hình Model & Bậc Xếp Hạng</h3>
+              <button type="button" onclick="openModelInfoModal()" class="w-4 h-4 rounded-full bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[10px] font-bold cursor-pointer transition shrink-0" title="Xem bảng so sánh & mô tả các Model [?]">?</button>
+            </div>
             <p class="text-[11px] text-slate-400">Tự động hạ cấp (Auto-fallback) khi mô hình cao cấp hết Quota</p>
           </div>
         </div>
@@ -596,16 +675,10 @@
       <div class="p-5 space-y-4 overflow-y-auto text-xs">
         <!-- Tier Hierarchy Explainer -->
         <div class="p-3 bg-blue-950/40 border border-blue-800/50 rounded-xl space-y-1.5">
-          <div class="flex items-center justify-between">
-            <p class="font-semibold text-blue-300 flex items-center space-x-1.5">
-              <span>🛡️</span>
-              <span>Cơ chế Xếp loại & Tự động xuống cấp (Auto-fallback):</span>
-            </p>
-            <button type="button" onclick="openModelInfoModal()" class="inline-flex items-center space-x-1 px-2 py-0.5 bg-blue-900/60 hover:bg-blue-800 text-blue-200 rounded text-[10px] font-medium border border-blue-700/50 transition cursor-pointer" title="Xem bảng so sánh & mô tả các mô hình [?]">
-              <span>Mô tả Model</span>
-              <span class="w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold">?</span>
-            </button>
-          </div>
+          <p class="font-semibold text-blue-300 flex items-center space-x-1.5">
+            <span>🛡️</span>
+            <span>Cơ chế Xếp loại & Tự động xuống cấp (Auto-fallback):</span>
+          </p>
           <p class="text-slate-300 leading-relaxed text-[11px]">
             Hệ thống sắp xếp Model theo cấp độ: 
             <strong class="text-indigo-300">Bậc 1 (Neon / Argon)</strong> ➔ 
@@ -623,7 +696,6 @@
               <label class="font-bold text-slate-200 flex items-center space-x-1.5">
                 <span>👑</span>
                 <span>LEAD (Kiến trúc sư trưởng / Lập kế hoạch)</span>
-                <button type="button" onclick="openModelInfoModal('gemini-pro-orchestrator-neon')" class="w-3.5 h-3.5 rounded-full bg-slate-700 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Xem mô tả model Lead [?]">?</button>
               </label>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/60 text-indigo-300 border border-indigo-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
             </div>
@@ -637,7 +709,6 @@
               <label class="font-bold text-slate-200 flex items-center space-x-1.5">
                 <span>⚡</span>
                 <span>WORKER (Lập trình viên thực thi)</span>
-                <button type="button" onclick="openModelInfoModal('gemini-4-neon')" class="w-3.5 h-3.5 rounded-full bg-slate-700 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Xem mô tả model Worker [?]">?</button>
               </label>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-900/60 text-amber-300 border border-amber-700/60 font-semibold">Ưu tiên Bậc 2 / 3</span>
             </div>
@@ -651,7 +722,6 @@
               <label class="font-bold text-slate-200 flex items-center space-x-1.5">
                 <span>🔍</span>
                 <span>REVIEWER (Chuyên gia phản biện)</span>
-                <button type="button" onclick="openModelInfoModal('claude-opus-5-5')" class="w-3.5 h-3.5 rounded-full bg-slate-700 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Xem mô tả model Reviewer [?]">?</button>
               </label>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-900/60 text-sky-300 border border-sky-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
             </div>
@@ -2257,14 +2327,12 @@
       quotaList.innerHTML = ''
       availableModels.forEach(m => {
         const isExhausted = (exhaustedModels || []).includes(m.id)
-        const groupKey = getModelGroupKey(m.id)
         const item = document.createElement('div')
         item.className = 'flex items-center justify-between py-1 border-b border-slate-800 last:border-b-0 hover:bg-slate-800/20 px-1 rounded transition'
         item.innerHTML = `
-          <div class="flex items-center space-x-1.5 min-w-0 pr-2">
+          <div class="flex items-center space-x-2 min-w-0 pr-2">
             <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
             <span class="text-slate-200 font-medium">${m.name}</span>
-            <button type="button" onclick="openModelInfoModal('${groupKey}')" class="w-3.5 h-3.5 rounded-full bg-slate-700/80 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Bấm để xem mô tả chi tiết [?]">?</button>
             <span class="text-[10px] text-slate-400 truncate">(${m.desc})</span>
           </div>
           <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
@@ -2588,6 +2656,261 @@
       if (e.target.id === 'modelInfoModal') closeModelInfoModal()
     })
 
+    // Agent Customization in New Task (Thêm, bớt, đổi tên, chỉnh sửa vai trò)
+    let newTaskAgents = [
+      { name: 'Lead', role: 'LEAD', program: 'agy' },
+      { name: 'Worker', role: 'WORKER', program: 'agy-worker' }
+    ]
+
+    function renderNewTaskAgentsList() {
+      const container = document.getElementById('newTaskAgentsContainer')
+      if (!container) return
+      container.innerHTML = ''
+      
+      const roleIcons = {
+        'LEAD': '👑', 'WORKER': '⚡', 'REVIEWER': '🔍', 'CRITIC': '🧐',
+        'ARCHITECT': '📐', 'DEVELOPER': '💻', 'TESTER': '🧪', 'RESEARCHER': '🔬'
+      }
+
+      newTaskAgents.forEach((ag, idx) => {
+        const canDelete = newTaskAgents.length > 1
+        const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
+        const div = document.createElement('div')
+        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs'
+        div.innerHTML = `
+          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold">
+            <span>${icon}</span>
+            <span>#${idx + 1}</span>
+          </div>
+          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
+              <input type="text" value="${ag.name}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
+              <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
+                <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
+                <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
+                <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
+                <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
+                <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
+                <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
+                <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
+              <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <option value="agy" ${ag.program === 'agy' ? 'selected' : ''}>agy (Lead / Neon / Argon)</option>
+                <option value="agy-worker" ${ag.program === 'agy-worker' ? 'selected' : ''}>agy-worker (Worker / Flash)</option>
+                <option value="agy-pro" ${ag.program === 'agy-pro' ? 'selected' : ''}>agy-pro (Pro / Opus / Reviewer)</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" onclick="removeNewTaskAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0" title="Bớt Agent này">
+            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>
+        `
+        container.appendChild(div)
+      })
+    }
+
+    function addNewTaskAgentItem() {
+      const idx = newTaskAgents.length + 1
+      let prog = 'agy-worker'
+      let role = 'WORKER'
+      let name = `Worker-${idx - 1}`
+      if (idx === 3) {
+        prog = 'agy-pro'
+        role = 'REVIEWER'
+        name = 'Reviewer'
+      }
+      newTaskAgents.push({ name, role, program: prog })
+      renderNewTaskAgentsList()
+    }
+
+    function removeNewTaskAgentItem(idx) {
+      if (newTaskAgents.length <= 1) return
+      newTaskAgents.splice(idx, 1)
+      renderNewTaskAgentsList()
+    }
+
+    function updateNewTaskAgentItem(idx, field, value) {
+      if (newTaskAgents[idx]) {
+        newTaskAgents[idx][field] = value
+      }
+    }
+
+    function onNewTaskTemplateChange(template) {
+      if (template === 'review') {
+        newTaskAgents = [
+          { name: 'Reviewer', role: 'REVIEWER', program: 'agy' },
+          { name: 'Critic', role: 'CRITIC', program: 'agy-pro' }
+        ]
+      } else if (template === 'implement') {
+        newTaskAgents = [
+          { name: 'Architect', role: 'ARCHITECT', program: 'agy' },
+          { name: 'Developer', role: 'DEVELOPER', program: 'agy-worker' }
+        ]
+      } else if (template === 'debug') {
+        newTaskAgents = [
+          { name: 'Lead-Debugger', role: 'LEAD', program: 'agy' },
+          { name: 'Worker-Reproducer', role: 'WORKER', program: 'agy-worker' }
+        ]
+      } else {
+        newTaskAgents = [
+          { name: 'Lead', role: 'LEAD', program: 'agy' },
+          { name: 'Worker', role: 'WORKER', program: 'agy-worker' }
+        ]
+      }
+      renderNewTaskAgentsList()
+    }
+
+    // Active Running Team Agents Management
+    let editingRunningAgents = []
+
+    function openManageAgentsModal() {
+      const team = teamsList.find(t => t.id === currentTeamId)
+      if (!team) {
+        alert('Không tìm thấy thông tin phiên làm việc hiện tại.')
+        return
+      }
+      const agents = team.agents || currentTeamAgents || []
+      editingRunningAgents = agents.map(a => ({
+        name: a.name || 'Agent',
+        role: a.role || 'worker',
+        program: a.program || 'agy-worker',
+        status: a.status || 'active'
+      }))
+      if (editingRunningAgents.length === 0) {
+        editingRunningAgents = [
+          { name: 'Lead', role: 'LEAD', program: 'agy', status: 'active' },
+          { name: 'Worker', role: 'WORKER', program: 'agy-worker', status: 'active' }
+        ]
+      }
+      renderRunningTeamAgentsList()
+      document.getElementById('manageAgentsModal')?.classList.remove('hidden')
+    }
+
+    function closeManageAgentsModal() {
+      document.getElementById('manageAgentsModal')?.classList.add('hidden')
+    }
+
+    function renderRunningTeamAgentsList() {
+      const container = document.getElementById('currentTeamAgentsContainer')
+      if (!container) return
+      container.innerHTML = ''
+
+      const roleIcons = {
+        'LEAD': '👑', 'WORKER': '⚡', 'REVIEWER': '🔍', 'CRITIC': '🧐',
+        'ARCHITECT': '📐', 'DEVELOPER': '💻', 'TESTER': '🧪', 'RESEARCHER': '🔬'
+      }
+
+      editingRunningAgents.forEach((ag, idx) => {
+        const canDelete = editingRunningAgents.length > 1
+        const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
+        const div = document.createElement('div')
+        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs'
+        div.innerHTML = `
+          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold">
+            <span>${icon}</span>
+            <span>#${idx + 1}</span>
+          </div>
+          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
+              <input type="text" value="${ag.name}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
+              <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
+                <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
+                <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
+                <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
+                <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
+                <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
+                <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
+                <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
+              <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <option value="agy" ${ag.program === 'agy' ? 'selected' : ''}>agy (Lead / Neon / Argon)</option>
+                <option value="agy-worker" ${ag.program === 'agy-worker' ? 'selected' : ''}>agy-worker (Worker / Flash)</option>
+                <option value="agy-pro" ${ag.program === 'agy-pro' ? 'selected' : ''}>agy-pro (Pro / Opus / Reviewer)</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" onclick="removeRunningTeamAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0" title="Bớt Agent này">
+            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>
+        `
+        container.appendChild(div)
+      })
+    }
+
+    function addRunningTeamAgentItem() {
+      const idx = editingRunningAgents.length + 1
+      editingRunningAgents.push({
+        name: idx === 3 ? 'Reviewer' : `Worker-${idx - 1}`,
+        role: idx === 3 ? 'REVIEWER' : 'WORKER',
+        program: idx === 3 ? 'agy-pro' : 'agy-worker',
+        status: 'active'
+      })
+      renderRunningTeamAgentsList()
+    }
+
+    function removeRunningTeamAgentItem(idx) {
+      if (editingRunningAgents.length <= 1) return
+      editingRunningAgents.splice(idx, 1)
+      renderRunningTeamAgentsList()
+    }
+
+    function updateRunningTeamAgentItem(idx, field, value) {
+      if (editingRunningAgents[idx]) {
+        editingRunningAgents[idx][field] = value
+      }
+    }
+
+    async function saveManageAgentsChanges() {
+      if (!currentTeamId) return
+      const btn = document.getElementById('saveManageAgentsBtn')
+      if (btn) {
+        btn.disabled = true
+        btn.innerHTML = '<span>Đang lưu...</span>'
+      }
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/agents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agents: editingRunningAgents })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          alert('Đã cập nhật đội ngũ Agent thành công!')
+          closeManageAgentsModal()
+          currentTeamAgents = data.team.agents || editingRunningAgents
+          // Refresh team feed & UI
+          await loadTeamsList()
+          await fetchTeamMessages(currentTeamId)
+        } else {
+          alert('Lỗi cập nhật Agent: ' + (data.error || 'Lỗi không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi: ' + err.message)
+      } finally {
+        if (btn) {
+          btn.disabled = false
+          btn.innerHTML = '<span>Lưu Thay Đổi</span>'
+        }
+      }
+    }
+
     // New Task Modal Logic
     function openNewTaskModal() {
       const modal = document.getElementById('newTaskModal')
@@ -2608,6 +2931,7 @@
         descInput.value = ''
       }
 
+      renderNewTaskAgentsList()
       modal.classList.remove('hidden')
       if (descInput) descInput.focus()
     }
@@ -2654,6 +2978,7 @@
             task,
             workingDirectory: dirInput.value.trim() || undefined,
             template: templateSelect.value || undefined,
+            agents: newTaskAgents
           })
         })
 

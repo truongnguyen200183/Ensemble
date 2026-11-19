@@ -95,8 +95,20 @@ TEAM_NAME="collab-$(python3 -c 'import random,time; print(str(time.time_ns()//10
 PAYLOAD_FILE=$(mktemp)
 TNAME="$TEAM_NAME" TDESC="$TASK" TCWD="$CWD" THOST="$HOST_ID" TAGENTS="$AGENTS" TTEMPLATE="$TEMPLATE" TWORKTREE="${COLLAB_WORKTREE:-}" PFILE="$PAYLOAD_FILE" python3 -c "
 import json, os
-agents_str = os.environ.get('TAGENTS', '')
-if agents_str:
+agents_str = os.environ.get('TAGENTS', '').strip()
+agents = []
+if agents_str.startswith('[') and agents_str.endswith(']'):
+    try:
+        raw_list = json.loads(agents_str)
+        for i, a in enumerate(raw_list):
+            if isinstance(a, dict):
+                p = a.get('program', 'agy')
+                r = a.get('role', 'lead' if i == 0 else 'worker')
+                nm = a.get('name') or (f"{p.split('-')[0]}-{i+1}")
+                agents.append({'program': p, 'role': r, 'name': nm, 'hostId': os.environ['THOST']})
+    except Exception:
+        agents = []
+if not agents and agents_str:
     names = [a.strip() for a in agents_str.split(',')]
     agents = [{'program': names[0], 'role': 'lead', 'hostId': os.environ['THOST']}]
     for n in names[1:]:

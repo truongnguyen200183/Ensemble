@@ -248,7 +248,14 @@ const server = http.createServer(async (req, res) => {
         return json(res, { error: 'Không tìm thấy file collab-launch.sh trên hệ thống' }, 500, origin)
       }
 
-      const agents = (template === 'review' || template === 'review-pro') ? 'agy,agy-pro' : 'agy,agy-worker'
+      let agents = ''
+      if (Array.isArray(body.agents) && body.agents.length > 0) {
+        agents = JSON.stringify(body.agents)
+      } else if (typeof body.agents === 'string' && body.agents.trim()) {
+        agents = body.agents.trim()
+      } else {
+        agents = (template === 'review' || template === 'review-pro') ? 'agy,agy-pro' : 'agy,agy-worker'
+      }
 
       const { spawn } = await import('child_process')
       const child = spawn(scriptPath, [workingDir, task, agents, template], {
@@ -318,6 +325,34 @@ const server = http.createServer(async (req, res) => {
       const updated = updateTeam(teamId, { description: newName })
       if (!updated) return json(res, { error: 'Team not found' }, 404, origin)
       return json(res, { success: true, team: updated }, 200, origin)
+    }
+
+    // Manage team agents: POST /api/ensemble/teams/:id/agents
+    const teamAgentsMatch = path.match(/^\/api\/ensemble\/teams\/([^/]+)\/agents$/)
+    if (teamAgentsMatch && method === 'POST') {
+      const teamId = teamAgentsMatch[1]
+      let body: Record<string, unknown>
+      try {
+        body = JSON.parse(await readBody(req))
+      } catch {
+        return json(res, { error: 'Bad Request: malformed JSON' }, 400, origin)
+      }
+      const team = getTeam(teamId)
+      if (!team) return json(res, { error: 'Team not found' }, 404, origin)
+
+      if (Array.isArray(body.agents) && body.agents.length > 0) {
+        const updatedAgents = body.agents.map((a: any, idx: number) => ({
+          agentId: a.agentId || '',
+          name: (a.name || (idx === 0 ? 'Lead' : `Worker-${idx}`)).trim(),
+          program: (a.program || (idx === 0 ? 'agy' : 'agy-worker')).trim(),
+          role: (a.role || (idx === 0 ? 'lead' : 'worker')).trim(),
+          hostId: a.hostId || '',
+          status: a.status || 'active',
+        }))
+        const updated = updateTeam(teamId, { agents: updatedAgents })
+        return json(res, { success: true, team: updated }, 200, origin)
+      }
+      return json(res, { error: 'Danh sách Agent không được để trống' }, 400, origin)
     }
 
     // Upload image attachment: POST /api/ensemble/teams/:id/upload-image
