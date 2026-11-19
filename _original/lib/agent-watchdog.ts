@@ -187,7 +187,35 @@ export class AgentWatchdog {
           continue
         }
       }
-      const lastMessageAt = lastAgentMessage?.timestamp || agent.startedAt || team.createdAt
+
+      // Xác định công việc gần nhất được giao cho agent này:
+      // Bao gồm tin nhắn gửi đích danh cho agent, tin nhắn gửi tới 'team' từ user hoặc agent khác.
+      // Bỏ qua tin nhắn từ hệ thống/watchdog ('ensemble').
+      const incomingTasks = [...messages].reverse().filter(m =>
+        m.from !== agent.name &&
+        m.from !== 'ensemble' &&
+        (m.to === agent.name || m.to === 'team' || m.from === 'user')
+      )
+      const lastIncomingTask = incomingTasks[0]
+
+      // Nếu không có yêu cầu nào gửi tới agent, hoặc agent ĐÃ PHẢN HỒI sau yêu cầu đó:
+      // Tức là agent đã hoàn thành nhiệm vụ và đang ở trạng thái nghỉ / chờ lệnh tiếp theo từ user.
+      // TUYỆT ĐỐI KHÔNG NUDGE khi agent đang chờ lệnh!
+      if (!lastIncomingTask) {
+        continue
+      }
+
+      const lastTaskMs = new Date(lastIncomingTask.timestamp).getTime()
+      const lastAgentMs = lastAgentMessage ? new Date(lastAgentMessage.timestamp).getTime() : 0
+
+      if (lastAgentMs >= lastTaskMs) {
+        // Agent đã trả lời sau tin nhắn task gần nhất -> đang rảnh chờ việc
+        continue
+      }
+
+      // Nếu agent chưa trả lời task gần nhất: Thời gian chờ (idle) PHẢI TÍNH TỪ LÚC NHẬN TASK,
+      // chứ KHÔNG ĐƯỢC tính từ tin nhắn cũ của agent từ nhiều tiếng trước!
+      const lastMessageAt = lastIncomingTask.timestamp
       const previousState = this.state.get(stateKey)
       if (this.deps.replacementEnabled?.() && this.deps.sessionExists) {
         const sessionName = `${team.name}-${agent.name}`
@@ -303,7 +331,30 @@ export class AgentWatchdog {
         }
       }
 
-      if (!currentState.nudgedAt && idleMs >= this.nudgeAfterMs) {
+      // Nudge threshold: nếu là task từ user hoặc mô hình deep thinking, cho phép tối thiểu 10 phút (600,000ms)
+      const isFromUser = lastIncomingTask.from === 'user'
+      const effectiveNudgeMs = isFromUser ? Math.max(this.nudgeAfterMs, 600_000) : this.nudgeAfterMs
+
+      if (!currentState.nudgedAt && idleMs >= effectiveNudgeMs) {
+        // Kiểm tra nếu agent vẫn đang bận chạy lệnh trong tmux (spinner, running command, thinking, v.v.) thì không nudge
+        const sessionName = `${team.name}-${agent.name}`
+        const runtime = this.deps.getRuntime()
+        if (typeof (runtime as any).capturePane === 'function') {
+          try {
+            const pane = await (runtime as any).capturePane(sessionName)
+            if (pane && (
+              pane.includes('Running command') ||
+              pane.includes('Running (') ||
+              pane.includes('Thought for') ||
+              pane.includes('Explored ') ||
+              /[⣾⣽⣻⢿⡿⣟⣯⣷]/.test(pane)
+            )) {
+              // Agent vẫn đang chủ động suy nghĩ/chạy lệnh, chưa bị treo -> bỏ qua không nudge
+              continue
+            }
+          } catch {}
+        }
+
         const nudgeCount = currentState.nudgeCount ?? 0
 
         if (nudgeCount >= this.maxNudges) {

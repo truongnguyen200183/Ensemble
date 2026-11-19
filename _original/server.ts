@@ -414,7 +414,7 @@ const server = http.createServer(async (req, res) => {
           program: (a.program || (idx === 0 ? 'agy' : 'agy-worker')).trim(),
           role: (a.role || (idx === 0 ? 'lead' : 'worker')).trim(),
           hostId: a.hostId || '',
-          status: 'active',
+          status: 'active' as const,
         }))
         updateTeam(teamId, { agents: updatedAgents })
       } else if (!team.agents || team.agents.length === 0) {
