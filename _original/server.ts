@@ -10,11 +10,13 @@ import os from 'os'
 import nodePath from 'path'
 import { fileURLToPath } from 'url'
 const serverDir = nodePath.dirname(fileURLToPath(import.meta.url))
-import { deleteTeam, loadTeams, getTeam, updateTeam } from './lib/ensemble-registry'
+import { deleteTeam, loadTeams, getTeam, updateTeam, appendMessage } from './lib/ensemble-registry'
 import {
   createEnsembleTeam, getEnsembleTeam, listEnsembleTeams,
   getTeamFeed, sendTeamMessage, disbandTeam, reactivateTeam,
 } from './services/ensemble-service'
+import { getRuntime } from './lib/agent-runtime'
+import { v4 as uuidv4 } from 'uuid'
 
 const PORT = parseInt(process.env.ENSEMBLE_PORT || process.env.ORCHESTRA_PORT || '23000', 10)
 const HOST = process.env.ENSEMBLE_HOST || '0.0.0.0'
@@ -341,6 +343,7 @@ const server = http.createServer(async (req, res) => {
       if (!team) return json(res, { error: 'Team not found' }, 404, origin)
 
       if (Array.isArray(body.agents) && body.agents.length > 0) {
+        const previousAgents = team.agents || []
         const updatedAgents = body.agents.map((a: any, idx: number) => ({
           agentId: a.agentId || '',
           name: (a.name || (idx === 0 ? 'Lead' : `Worker-${idx}`)).trim(),
@@ -349,7 +352,43 @@ const server = http.createServer(async (req, res) => {
           hostId: a.hostId || '',
           status: a.status || 'active',
         }))
+
+        // Kill tmux sessions for any removed agents
+        const updatedNames = new Set(updatedAgents.map(a => a.name.toLowerCase()))
+        const removedAgents = previousAgents.filter(a => !updatedNames.has(a.name.toLowerCase()))
+        
+        if (removedAgents.length > 0) {
+          const runtime = getRuntime()
+          for (const rem of removedAgents) {
+            const sessionName = `${team.name}-${rem.name}`
+            try {
+              await runtime.killSession(sessionName)
+            } catch (err) {
+              console.warn(`[Agents] Could not kill session ${sessionName}:`, err)
+            }
+            appendMessage(teamId, {
+              id: uuidv4(),
+              teamId,
+              from: 'ensemble',
+              to: 'team',
+              type: 'chat',
+              timestamp: new Date().toISOString(),
+              content: `🗑️ Tác tử **${rem.name}** (${(rem.role || 'worker').toUpperCase()}) đã được xóa khỏi đội ngũ.`,
+            })
+          }
+        }
+
         const updated = updateTeam(teamId, { agents: updatedAgents })
+
+        // If team is active and new agents were added, spin them up
+        if (team.status === 'active') {
+          const prevNames = new Set(previousAgents.map(a => a.name.toLowerCase()))
+          const newlyAdded = updatedAgents.filter(a => !prevNames.has(a.name.toLowerCase()))
+          if (newlyAdded.length > 0) {
+            await reactivateTeam(teamId)
+          }
+        }
+
         return json(res, { success: true, team: updated }, 200, origin)
       }
       return json(res, { error: 'Danh sách Agent không được để trống' }, 400, origin)

@@ -656,10 +656,16 @@
               <span>🤖</span>
               <span>Mô hình các Tác tử (Agents) trong Phiên:</span>
             </span>
-            <button type="button" onclick="closeModelConfigModal(); openManageAgentsModal();" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer flex items-center space-x-1">
-              <span>Quản lý Tác tử</span>
-              <span>➔</span>
-            </button>
+            <div class="flex items-center space-x-2">
+              <button type="button" onclick="quickAddAgentToTeam()" class="text-[11px] px-2.5 py-1 rounded bg-blue-900/60 hover:bg-blue-800 text-blue-200 border border-blue-700/60 font-semibold transition cursor-pointer flex items-center space-x-1">
+                <span>➕</span>
+                <span>Thêm Agent</span>
+              </button>
+              <button type="button" onclick="closeModelConfigModal(); openManageAgentsModal();" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer flex items-center space-x-1">
+                <span>Chi tiết Tác tử</span>
+                <span>➔</span>
+              </button>
+            </div>
           </div>
           <div id="activeTeamAgentsModelList" class="space-y-2">
           </div>
@@ -2295,6 +2301,7 @@
                 else curModel = roles?.worker
               }
 
+              const canDelete = teamAgents.length > 1
               const row = document.createElement('div')
               row.className = 'p-2.5 bg-slate-900 border border-slate-700/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2'
               row.innerHTML = `
@@ -2302,10 +2309,14 @@
                   <span class="text-sm font-bold text-slate-100 truncate">${escapeHtml(ag.name)}</span>
                   <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">${escapeHtml(ag.role.toUpperCase())}</span>
                 </div>
-                <div class="flex items-center space-x-1.5 shrink-0">
+                <div class="flex items-center space-x-2 shrink-0">
                   <select id="agentModelSelect_${idx}" data-agent-idx="${idx}" data-agent-prog="${ag.program || 'agy-worker'}" class="bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                     ${buildModelOptions(curModel)}
                   </select>
+                  <button type="button" onclick="deleteAgentFromTeam('${escapeHtml(ag.name)}')" ${canDelete ? '' : 'disabled'} class="px-2.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900 border border-rose-800/50 hover:border-rose-600 text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer flex items-center space-x-1 text-xs shrink-0" title="${canDelete ? 'Xóa tác tử này khỏi team' : 'Đội ngũ cần tối thiểu 1 tác tử'}">
+                    <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    <span class="text-[11px] font-semibold">Xóa</span>
+                  </button>
                 </div>
               `
               teamSection.appendChild(row)
@@ -2350,23 +2361,102 @@
       }
     }
 
+    async function deleteAgentFromTeam(agentName) {
+      const curTeam = teamsList.find(t => t.id === currentTeamId)
+      if (!curTeam) return
+      const agents = curTeam.agents || currentTeamAgents || []
+      if (agents.length <= 1) {
+        alert('Đội ngũ phải có ít nhất 1 Agent để hoạt động!')
+        return
+      }
+      if (!confirm(`Bạn có chắc muốn xóa tác tử "${agentName}" khỏi đội ngũ không?`)) {
+        return
+      }
+
+      const updatedAgents = agents.filter(a => a.name.toLowerCase() !== agentName.toLowerCase())
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/agents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agents: updatedAgents })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          currentTeamAgents = data.team.agents || updatedAgents
+          curTeam.agents = currentTeamAgents
+          renderModelConfigUI()
+          await loadTeamsList()
+          await onTeamChanged(currentTeamId)
+        } else {
+          alert('Không thể xóa Agent: ' + (data.error || 'Lỗi không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối: ' + err.message)
+      }
+    }
+
+    async function quickAddAgentToTeam() {
+      const curTeam = teamsList.find(t => t.id === currentTeamId)
+      if (!curTeam) return
+      const agents = curTeam.agents || currentTeamAgents || []
+      const idx = agents.length + 1
+      const newAgent = {
+        name: idx === 3 ? 'Reviewer' : `Worker-${idx}`,
+        role: idx === 3 ? 'reviewer' : 'worker',
+        program: idx === 3 ? 'agy-pro' : 'agy-worker',
+        status: 'active'
+      }
+      const updatedAgents = [...agents, newAgent]
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/agents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agents: updatedAgents })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          currentTeamAgents = data.team.agents || updatedAgents
+          curTeam.agents = currentTeamAgents
+          renderModelConfigUI()
+          await loadTeamsList()
+          await onTeamChanged(currentTeamId)
+        } else {
+          alert('Không thể thêm Agent: ' + (data.error || 'Lỗi không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối: ' + err.message)
+      }
+    }
+
     async function saveModelConfig() {
       const btn = document.getElementById('saveModelConfigBtn')
       btn.disabled = true
       btn.innerHTML = '<span>Đang lưu...</span>'
 
       try {
+        const curTeam = teamsList.find(t => t.id === currentTeamId)
+        const teamAgents = curTeam?.agents || currentTeamAgents || []
+
         const selects = document.querySelectorAll('#activeTeamAgentsModelList select')
         const updatedRoles = { ...(modelConfigData?.roles || {}) }
 
+        let teamAgentsModified = false
         selects.forEach(sel => {
-          const prog = sel.dataset.agentProg
+          const idx = parseInt(sel.dataset.agentIdx, 10)
           const chosenModel = sel.value
+          const prog = sel.dataset.agentProg
+
           if (prog === 'agy') updatedRoles.lead = chosenModel
           else if (prog === 'agy-pro') updatedRoles.reviewer = chosenModel
           else if (prog === 'agy-worker') updatedRoles.worker = chosenModel
+
+          if (teamAgents[idx] && teamAgents[idx].program !== chosenModel) {
+            teamAgents[idx].program = chosenModel
+            teamAgentsModified = true
+          }
         })
 
+        // 1. Cập nhật role config toàn cục
         const res = await fetch('/api/ensemble/model-config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2375,10 +2465,21 @@
           })
         })
 
+        // 2. Cập nhật model trực tiếp cho các tác tử trong phiên hiện tại
+        if (curTeam && teamAgentsModified) {
+          await fetch(`/api/ensemble/teams/${currentTeamId}/agents`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agents: teamAgents })
+          })
+        }
+
         if (res.ok) {
           alert('Đã cập nhật cấu hình Model thành công!')
           closeModelConfigModal()
           await loadAgentsConfig()
+          await loadTeamsList()
+          await onTeamChanged(currentTeamId)
         } else {
           alert('Lỗi lưu cấu hình.')
         }
