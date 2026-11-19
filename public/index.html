@@ -574,10 +574,16 @@
       <div class="p-5 space-y-4 overflow-y-auto text-xs">
         <!-- Tier Hierarchy Explainer -->
         <div class="p-3 bg-blue-950/40 border border-blue-800/50 rounded-xl space-y-1.5">
-          <p class="font-semibold text-blue-300 flex items-center space-x-1.5">
-            <span>🛡️</span>
-            <span>Cơ chế Xếp loại & Tự động xuống cấp (Auto-fallback):</span>
-          </p>
+          <div class="flex items-center justify-between">
+            <p class="font-semibold text-blue-300 flex items-center space-x-1.5">
+              <span>🛡️</span>
+              <span>Cơ chế Xếp loại & Tự động xuống cấp (Auto-fallback):</span>
+            </p>
+            <button type="button" onclick="openModelInfoModal()" class="inline-flex items-center space-x-1 px-2 py-0.5 bg-blue-900/60 hover:bg-blue-800 text-blue-200 rounded text-[10px] font-medium border border-blue-700/50 transition cursor-pointer" title="Xem bảng so sánh & mô tả các mô hình [?]">
+              <span>Mô tả Model</span>
+              <span class="w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-bold">?</span>
+            </button>
+          </div>
           <p class="text-slate-300 leading-relaxed text-[11px]">
             Hệ thống sắp xếp Model theo cấp độ: 
             <strong class="text-indigo-300">Bậc 1 (Neon / Argon)</strong> ➔ 
@@ -595,6 +601,7 @@
               <label class="font-bold text-slate-200 flex items-center space-x-1.5">
                 <span>👑</span>
                 <span>LEAD (Kiến trúc sư trưởng / Lập kế hoạch)</span>
+                <button type="button" onclick="openModelInfoModal('gemini-pro-orchestrator-neon')" class="w-3.5 h-3.5 rounded-full bg-slate-700 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Xem mô tả model Lead [?]">?</button>
               </label>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/60 text-indigo-300 border border-indigo-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
             </div>
@@ -608,6 +615,7 @@
               <label class="font-bold text-slate-200 flex items-center space-x-1.5">
                 <span>⚡</span>
                 <span>WORKER (Lập trình viên thực thi)</span>
+                <button type="button" onclick="openModelInfoModal('gemini-4-neon')" class="w-3.5 h-3.5 rounded-full bg-slate-700 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Xem mô tả model Worker [?]">?</button>
               </label>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-900/60 text-amber-300 border border-amber-700/60 font-semibold">Ưu tiên Bậc 2 / 3</span>
             </div>
@@ -621,6 +629,7 @@
               <label class="font-bold text-slate-200 flex items-center space-x-1.5">
                 <span>🔍</span>
                 <span>REVIEWER (Chuyên gia phản biện)</span>
+                <button type="button" onclick="openModelInfoModal('claude-opus-5-5')" class="w-3.5 h-3.5 rounded-full bg-slate-700 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Xem mô tả model Reviewer [?]">?</button>
               </label>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-sky-900/60 text-sky-300 border border-sky-700/60 font-semibold">Ưu tiên Bậc 1 / 2</span>
             </div>
@@ -646,6 +655,70 @@
         <button id="saveModelConfigBtn" type="button" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold transition text-xs shadow-md cursor-pointer flex items-center space-x-1">
           <span>Lưu Cấu Hình</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODEL INFO MODAL (Tra cứu mô tả & bảng so sánh Model) -->
+  <div id="modelInfoModal" class="hidden fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150">
+      <!-- Header -->
+      <div class="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-800/70 shrink-0">
+        <div class="flex items-center space-x-2.5">
+          <span class="w-6 h-6 rounded-full bg-blue-600/30 text-blue-400 border border-blue-500/40 flex items-center justify-center text-xs font-bold">?</span>
+          <div>
+            <h3 id="modelInfoTitle" class="text-sm font-bold text-slate-100 flex items-center space-x-2">
+              <span>Mô Tả & So Sánh Mô Hình</span>
+            </h3>
+            <p class="text-[10.5px] text-slate-400">Đặc tính kỹ thuật, mức Quota và vai trò đề xuất trong nhóm Ensemble</p>
+          </div>
+        </div>
+        <button id="closeModelInfoBtn" type="button" class="p-1 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Quick Switch Tabs -->
+      <div id="modelInfoTabs" class="px-5 py-2.5 bg-slate-950/70 border-b border-slate-800 flex items-center space-x-1.5 overflow-x-auto scrollbar-thin text-[11px] shrink-0">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Content (Matching Image 2 exact table structure) -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs">
+        <div class="overflow-hidden border border-slate-700/80 rounded-xl bg-slate-950/50 shadow-inner">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-800/80 border-b border-slate-700 text-slate-300 font-bold text-[11px]">
+                <th class="p-3 w-5/12">Điểm mạnh cốt lõi</th>
+                <th class="p-3 w-3/12 border-l border-slate-700/60">Tốc độ & Quota</th>
+                <th class="p-3 w-4/12 border-l border-slate-700/60">Khuyên dùng trong Ensemble</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="align-top divide-x divide-slate-800 text-[11.5px] leading-relaxed text-slate-200">
+                <td id="modelInfoCoreStrengths" class="p-3.5 space-y-2 bg-slate-900/40">
+                  <!-- Bullet points -->
+                </td>
+                <td id="modelInfoSpeedQuota" class="p-3.5 space-y-2 bg-slate-900/50">
+                  <!-- Speed & Quota -->
+                </td>
+                <td id="modelInfoEnsembleRec" class="p-3.5 space-y-2 bg-slate-900/40">
+                  <!-- Ensemble Recommendations -->
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Quick Switch Helper note -->
+        <div class="p-2.5 bg-blue-950/30 border border-blue-900/40 rounded-lg text-[11px] text-blue-300/90 flex items-center justify-between">
+          <span>💡 Bấm các tab phía trên hoặc biểu tượng <span class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-blue-600 text-white font-bold text-[9px]">?</span> cạnh mỗi mô hình để chuyển đổi thông tin tức thì.</span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-3 border-t border-slate-800 bg-slate-800/40 flex items-center justify-end shrink-0">
+        <button id="closeModelInfoBtn2" type="button" class="px-4 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-medium text-xs transition cursor-pointer">Đóng</button>
       </div>
     </div>
   </div>
@@ -2154,15 +2227,17 @@
       quotaList.innerHTML = ''
       availableModels.forEach(m => {
         const isExhausted = (exhaustedModels || []).includes(m.id)
+        const groupKey = getModelGroupKey(m.id)
         const item = document.createElement('div')
-        item.className = 'flex items-center justify-between py-1 border-b border-slate-800 last:border-b-0'
+        item.className = 'flex items-center justify-between py-1 border-b border-slate-800 last:border-b-0 hover:bg-slate-800/20 px-1 rounded transition'
         item.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <span class="w-2 h-2 rounded-full ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
+          <div class="flex items-center space-x-1.5 min-w-0 pr-2">
+            <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
             <span class="text-slate-200 font-medium">${m.name}</span>
-            <span class="text-[10px] text-slate-400">(${m.desc})</span>
+            <button type="button" onclick="openModelInfoModal('${groupKey}')" class="w-3.5 h-3.5 rounded-full bg-slate-700/80 hover:bg-blue-600 text-blue-300 hover:text-white flex items-center justify-center text-[9px] font-bold cursor-pointer transition shrink-0" title="Bấm để xem mô tả chi tiết [?]">?</button>
+            <span class="text-[10px] text-slate-400 truncate">(${m.desc})</span>
           </div>
-          <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
             ${isExhausted ? 'Khóa hạn mức (Auto-fallback)' : 'Sẵn sàng'}
           </span>
         `
@@ -2234,6 +2309,254 @@
     document.getElementById('cancelModelConfigBtn').addEventListener('click', closeModelConfigModal)
     document.getElementById('saveModelConfigBtn').addEventListener('click', saveModelConfig)
     document.getElementById('resetQuotaBtn').addEventListener('click', resetExhaustedQuota)
+
+    // Close Model Config Modal on background click
+    document.getElementById('modelConfigModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modelConfigModal') closeModelConfigModal()
+    })
+
+    // MODEL CATALOG INFO (Mô tả chi tiết & bảng so sánh các Model)
+    const MODEL_CATALOG_INFO = {
+      'gemini-4-neon': {
+        name: 'Gemini 4 Neon',
+        badge: 'Mới nhất / Tốc độ cao',
+        coreStrengths: [
+          'Thế hệ Gemini 4 mới nhất, tối ưu đặc biệt cho <strong>tác vụ lập trình & chu trình trao đổi tác tử (agentic loop)</strong>.',
+          'Khả năng tư duy logic sâu tiệm cận Argon nhưng <strong>độ trễ (latency) thấp hơn đáng kể</strong> và ít bị nghẽn thời gian chờ.'
+        ],
+        speedQuota: [
+          '<strong>Nhanh & Mượt</strong>',
+          'Quota tính chung cho toàn bộ họ Neon (XHigh / High / Med / Low).'
+        ],
+        ensembleRec: [
+          '<strong>XHigh / High:</strong> Vị trí <strong>LEAD</strong> hoặc <strong>REVIEWER</strong>.',
+          '<strong>Medium:</strong> Vị trí <strong>WORKER</strong> cho các bài toán phức tạp.',
+          '<strong>Low:</strong> <strong>WORKER</strong> chạy nhanh, tiết kiệm token.'
+        ]
+      },
+      'gemini-pro-orchestrator-neon': {
+        name: 'Orchestrator (Neon)',
+        badge: 'Mới nhất / Điều phối viên',
+        coreStrengths: [
+          'Mô hình chuyên dụng được Google huấn luyện riêng cho vai trò <strong>Điều phối tác tử (Swarm Coordinator / Orchestrator)</strong> trên nền kiến trúc Neon.',
+          'Phân tích yêu cầu, bóc tách nhiệm vụ con (subtasks) và tổng hợp kết quả giữa các tác tử với tốc độ tức thì.'
+        ],
+        speedQuota: [
+          '<strong>Rất nhanh & Tức thì</strong>',
+          'Tối ưu hóa độ trễ phản hồi turn-by-turn trong các phiên cộng tác dài.'
+        ],
+        ensembleRec: [
+          'Cực kỳ lý tưởng cho vị trí <strong>LEAD (Kiến trúc sư trưởng / Lập kế hoạch)</strong>.'
+        ]
+      },
+      'gemini-pro-orchestrator-g1-pro': {
+        name: 'Orchestrator (Argon)',
+        badge: 'Điều phối viên Argon',
+        coreStrengths: [
+          'Mô hình chuyên dụng điều phối nhóm tác tử xây dựng trên nền tảng Gemini 4 Argon.',
+          'Phân tích yêu cầu cẩn trọng, suy luận chặt chẽ từng bước triển khai kế hoạch.'
+        ],
+        speedQuota: [
+          '<strong>Trung bình / Nặng</strong>',
+          'Cần chú ý hạn mức Quota tuần của họ Argon.'
+        ],
+        ensembleRec: [
+          'Vị trí <strong>LEAD</strong>: Phù hợp khi điều phối các dự án đòi hỏi kiến trúc chuẩn mực cao.'
+        ]
+      },
+      'gemini-4-argon': {
+        name: 'Gemini 4 Argon',
+        badge: 'Siêu tư duy',
+        coreStrengths: [
+          'Mô hình suy luận và tính toán mạnh mẽ nhất của Google.',
+          'Khả năng giải quyết các thuật toán phức tạp, suy luận trừu tượng và kiến trúc sâu rộng.'
+        ],
+        speedQuota: [
+          '<strong>Chậm hơn & Quota nghiêm ngặt</strong>',
+          'Dễ chạm trần hạn mức nếu gọi liên tục nhiều lượt.'
+        ],
+        ensembleRec: [
+          '<strong>LEAD</strong> hoặc <strong>REVIEWER</strong> cho các dự án quy mô lớn cần độ chính xác tối đa.'
+        ]
+      },
+      'gemini-4-hydrogen': {
+        name: 'Gemini 4 Hydrogen',
+        badge: 'Thế hệ mới cân bằng',
+        coreStrengths: [
+          'Thế hệ mô hình thế hệ 4 cân bằng giữa suy luận nâng cao và hiệu năng xử lý.',
+          'Khả năng duy trì mạch logic xuyên suốt trong các phiên làm việc dài.'
+        ],
+        speedQuota: [
+          '<strong>Nhanh hơn Argon</strong>',
+          'Quota tính chung cho họ Hydrogen (XHigh / High / Med / Low).'
+        ],
+        ensembleRec: [
+          '<strong>XHigh / High:</strong> LEAD / REVIEWER.',
+          '<strong>Medium / Low:</strong> WORKER hiệu năng cao.'
+        ]
+      },
+      'claude-opus-5-5': {
+        name: 'Claude Opus 5.5',
+        badge: 'Kiến trúc & Phản biện',
+        coreStrengths: [
+          'Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.',
+          'Phát hiện lỗi tiềm ẩn và thiết kế module rất xuất sắc.'
+        ],
+        speedQuota: [
+          '<strong>Trung bình</strong>',
+          'Hạn mức tiêu thụ theo gói Claude Pro / Claude Code.'
+        ],
+        ensembleRec: [
+          'Lựa chọn hàng đầu cho <strong>REVIEWER (Chuyên gia phản biện)</strong> hoặc <strong>LEAD</strong>.'
+        ]
+      },
+      'claude-sonnet-5-5': {
+        name: 'Claude Sonnet 5.5',
+        badge: 'Lập trình chuyên sâu',
+        coreStrengths: [
+          'Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.',
+          'Hiểu ngữ cảnh mã nguồn cực tốt, sinh code sạch và hoàn chỉnh.'
+        ],
+        speedQuota: [
+          '<strong>Rất nhanh & Ổn định</strong>',
+          'Theo hạn mức gói Claude Pro / Claude Code.'
+        ],
+        ensembleRec: [
+          'Lựa chọn hoàn hảo nhất cho <strong>WORKER (Lập trình viên thực thi)</strong>.'
+        ]
+      },
+      'gemini-3.8-flash': {
+        name: 'Gemini 3.8 Flash',
+        badge: 'Siêu tốc & Quota dồi dào',
+        coreStrengths: [
+          'Tốc độ phản hồi cực kỳ nhanh, đa phương thức (multimodal), xử lý context lớn nhẹ nhàng.',
+          'Chi phí token thấp và hạn mức gọi API cực kỳ hào phóng.'
+        ],
+        speedQuota: [
+          '<strong>Siêu nhanh & Dồi dào Quota nhất</strong>',
+          'Hầu như không bao giờ lo bị nghẽn hoặc hết Quota.'
+        ],
+        ensembleRec: [
+          '<strong>WORKER</strong> tiêu chuẩn xử lý các tác vụ thực thi nhanh chóng.',
+          '<strong>Trạm cứu sinh (Auto-fallback)</strong> an toàn khi các model Bậc 1 & 2 hết hạn mức.'
+        ]
+      },
+      'gpt-oss-120b': {
+        name: 'GPT-OSS 120B',
+        badge: 'Mã nguồn mở 120B',
+        coreStrengths: [
+          'Mô hình mã nguồn mở kích thước lớn 120B tham số, phục vụ nghiên cứu và đa dạng hóa góc nhìn.',
+          'Tạo góc nhìn đối chiếu độc lập không phụ thuộc nhà cung cấp duy nhất.'
+        ],
+        speedQuota: [
+          '<strong>Khá nhanh</strong>',
+          'Phụ thuộc vào máy chủ cộng đồng.'
+        ],
+        ensembleRec: [
+          '<strong>WORKER</strong> hoặc <strong>REVIEWER</strong> dự phòng để tạo góc nhìn đối chiếu độc lập.'
+        ]
+      }
+    }
+
+    function getModelGroupKey(modelId) {
+      if (!modelId) return 'gemini-4-neon'
+      const id = String(modelId).toLowerCase()
+      if (id.includes('orchestrator-neon')) return 'gemini-pro-orchestrator-neon'
+      if (id.includes('orchestrator')) return 'gemini-pro-orchestrator-g1-pro'
+      if (id.includes('neon')) return 'gemini-4-neon'
+      if (id.includes('hydrogen')) return 'gemini-4-hydrogen'
+      if (id.includes('argon')) return 'gemini-4-argon'
+      if (id.includes('opus')) return 'claude-opus-5-5'
+      if (id.includes('sonnet')) return 'claude-sonnet-5-5'
+      if (id.includes('flash')) return 'gemini-3.8-flash'
+      if (id.includes('gpt-oss') || id.includes('120b')) return 'gpt-oss-120b'
+      return 'gemini-4-neon'
+    }
+
+    let currentModelInfoKey = 'gemini-4-neon'
+
+    function openModelInfoModal(key) {
+      currentModelInfoKey = key ? getModelGroupKey(key) : (currentModelInfoKey || 'gemini-4-neon')
+      renderModelInfoModal()
+      const modal = document.getElementById('modelInfoModal')
+      if (modal) modal.classList.remove('hidden')
+    }
+
+    function closeModelInfoModal() {
+      const modal = document.getElementById('modelInfoModal')
+      if (modal) modal.classList.add('hidden')
+    }
+
+    function renderModelInfoModal() {
+      const data = MODEL_CATALOG_INFO[currentModelInfoKey] || MODEL_CATALOG_INFO['gemini-4-neon']
+      
+      const titleEl = document.getElementById('modelInfoTitle')
+      if (titleEl) {
+        titleEl.innerHTML = `
+          <span>${data.name}</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/60 font-semibold">${data.badge}</span>
+        `
+      }
+
+      // Render Tabs
+      const tabsEl = document.getElementById('modelInfoTabs')
+      if (tabsEl) {
+        tabsEl.innerHTML = ''
+        Object.keys(MODEL_CATALOG_INFO).forEach(k => {
+          const item = MODEL_CATALOG_INFO[k]
+          const isActive = k === currentModelInfoKey
+          const tabBtn = document.createElement('button')
+          tabBtn.type = 'button'
+          tabBtn.className = `px-2.5 py-1 rounded-lg font-medium transition cursor-pointer whitespace-nowrap shrink-0 flex items-center space-x-1 ${
+            isActive 
+              ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-400' 
+              : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300'
+          }`
+          tabBtn.innerHTML = `<span>${item.name}</span>`
+          tabBtn.onclick = () => {
+            currentModelInfoKey = k
+            renderModelInfoModal()
+          }
+          tabsEl.appendChild(tabBtn)
+        })
+      }
+
+      // Render Core Strengths (Bullet points)
+      const coreEl = document.getElementById('modelInfoCoreStrengths')
+      if (coreEl) {
+        coreEl.innerHTML = data.coreStrengths.map(pt => `
+          <div class="flex items-start space-x-2">
+            <span class="text-blue-400 font-bold shrink-0 mt-0.5">•</span>
+            <span class="leading-relaxed">${pt}</span>
+          </div>
+        `).join('')
+      }
+
+      // Render Speed & Quota
+      const speedEl = document.getElementById('modelInfoSpeedQuota')
+      if (speedEl) {
+        speedEl.innerHTML = data.speedQuota.map(pt => `
+          <div class="leading-relaxed py-0.5">${pt}</div>
+        `).join('')
+      }
+
+      // Render Ensemble Recommendations
+      const recEl = document.getElementById('modelInfoEnsembleRec')
+      if (recEl) {
+        recEl.innerHTML = data.ensembleRec.map(pt => `
+          <div class="flex items-start space-x-2">
+            <span class="text-emerald-400 font-bold shrink-0 mt-0.5">•</span>
+            <span class="leading-relaxed">${pt}</span>
+          </div>
+        `).join('')
+      }
+    }
+
+    document.getElementById('closeModelInfoBtn')?.addEventListener('click', closeModelInfoModal)
+    document.getElementById('closeModelInfoBtn2')?.addEventListener('click', closeModelInfoModal)
+    document.getElementById('modelInfoModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'modelInfoModal') closeModelInfoModal()
+    })
 
     // New Task Modal Logic
     function openNewTaskModal() {
