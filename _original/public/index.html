@@ -1527,10 +1527,10 @@
               <div class="flex items-center space-x-2">
                 <span class="px-2 py-0.5 rounded-md bg-blue-600/30 text-blue-300 border border-blue-500/40 font-bold text-xs flex items-center space-x-1">
                   <span>👑</span>
-                  <span>${role}</span>
+                  <span>${role} (${escapeHtml(msg.from)})</span>
                 </span>
+                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs font-bold">➔</span><span class="text-[10px] text-purple-300 font-semibold px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-800/60">${escapeHtml(msg.to)}</span>` : ''}
                 ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
-                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs">➔</span><span class="text-[10px] text-blue-300 font-semibold px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800/60">${escapeHtml(msg.to)}</span>` : ''}
               </div>
               <div class="flex items-center space-x-2">
                 <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
@@ -1569,12 +1569,12 @@
                 <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
               </div>
               <div class="flex items-center space-x-2">
-                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-[10px] text-purple-300 font-semibold px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-800/60">${escapeHtml(msg.to)}</span><span class="text-slate-400 text-xs">➔</span>` : ''}
-                ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
                 <span class="px-2 py-0.5 rounded-md ${badgeStyle} border font-bold text-xs flex items-center space-x-1">
                   <span>${icon}</span>
-                  <span>${role}</span>
+                  <span>${role} (${escapeHtml(msg.from)})</span>
                 </span>
+                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs font-bold">➔</span><span class="text-[10px] text-blue-300 font-semibold px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800/60">${escapeHtml(msg.to)}</span>` : ''}
+                ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
               </div>
             </div>
             <div class="prose-custom text-sm text-slate-200">
