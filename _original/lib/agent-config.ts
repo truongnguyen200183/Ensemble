@@ -64,8 +64,40 @@ export function clearAgentsConfigCache(): void {
 }
 
 /** Agent keys that actually exist, for error messages and pickers. */
+export const KNOWN_MODELS = [
+  'gemini-4-neon-xhigh',
+  'gemini-4-neon-high',
+  'gemini-4-neon-medium',
+  'gemini-4-neon-low',
+  'gemini-pro-orchestrator-neon',
+  'gemini-4-argon-high',
+  'gemini-4-argon-medium',
+  'gemini-4-argon-low',
+  'gemini-4-hydrogen-xhigh',
+  'gemini-4-hydrogen-high',
+  'gemini-4-hydrogen-medium',
+  'gemini-4-hydrogen-low',
+  'gemini-pro-orchestrator-g1-pro',
+  'claude-opus-5-5-high',
+  'claude-opus-5-5-medium',
+  'claude-opus-5-5-low',
+  'claude-sonnet-5-5-high',
+  'claude-sonnet-5-5-medium',
+  'claude-sonnet-5-5-low',
+  'cc-opus-high',
+  'cc-opus-medium',
+  'cc-opus-low',
+  'cc-sonnet-high',
+  'cc-sonnet-medium',
+  'cc-sonnet-low',
+  'gemini-3.8-flash-high',
+  'gemini-3.8-flash-medium',
+  'gemini-3.8-flash-low',
+  'gpt-oss-120b-medium',
+]
+
 export function availableAgentKeys(): string[] {
-  return Object.keys(loadAgentsConfig())
+  return Array.from(new Set([...Object.keys(loadAgentsConfig()), ...KNOWN_MODELS]))
 }
 
 /** Thrown when an explicitly requested agent does not exist. */
@@ -97,6 +129,24 @@ export function resolveAgentProgramDetailed(program: string): AgentResolution {
   const p = program.toLowerCase()
 
   if (config[p]) return { agent: config[p], how: 'exact', requested: program }
+
+  // Check if program is a known model or model-like ID
+  if (KNOWN_MODELS.includes(p) || p.startsWith('gemini-') || p.startsWith('claude-') || p.startsWith('cc-') || p.startsWith('gpt-')) {
+    const isClaudePro = p.startsWith('cc-')
+    const agent: AgentProgram = {
+      name: program,
+      command: isClaudePro ? 'claude-smart' : 'agy-smart',
+      flags: isClaudePro
+        ? ['--permission-mode', 'auto', '--model', program]
+        : ['--dangerously-skip-permissions', '--model', program],
+      readyMarker: isClaudePro ? '❯' : '? for shortcuts',
+      inputMethod: 'sendKeys' as const,
+      color: isClaudePro ? 'green' : (p.includes('flash') ? 'yellow' : 'blue'),
+      icon: isClaudePro ? '●' : '▲',
+      unsetEnv: isClaudePro ? ['ANTHROPIC_API_KEY'] : ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+    }
+    return { agent, how: 'exact', requested: program }
+  }
 
   // Substring match (e.g. "claude code" matches "claude")
   for (const [key, agent] of Object.entries(config)) {

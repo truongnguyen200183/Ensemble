@@ -2666,6 +2666,84 @@
       { name: 'Worker', role: 'WORKER', program: 'agy-worker' }
     ]
 
+    function renderAgentProgramOptions(currentProg) {
+      const fallbackModels = [
+        { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', group: 'Gemini 4 Neon' },
+        { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', group: 'Gemini 4 Neon' },
+        { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', group: 'Gemini 4 Neon' },
+        { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', group: 'Gemini 4 Neon' },
+        { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', group: 'Orchestrator (Neon)' },
+        { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', group: 'Gemini 4 Argon' },
+        { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', group: 'Gemini 4 Argon' },
+        { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', group: 'Gemini 4 Argon' },
+        { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', group: 'Gemini 4 Hydrogen' },
+        { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', group: 'Gemini 4 Hydrogen' },
+        { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', group: 'Gemini 4 Hydrogen' },
+        { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', group: 'Gemini 4 Hydrogen' },
+        { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', group: 'Orchestrator (Argon)' },
+        { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', group: 'Claude Opus 5.5' },
+        { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', group: 'Claude Opus 5.5' },
+        { id: 'claude-opus-5-5-low', name: 'Claude Opus 5.5 (Low)', group: 'Claude Opus 5.5' },
+        { id: 'claude-sonnet-5-5-high', name: 'Claude Sonnet 5.5 (High)', group: 'Claude Sonnet 5.5' },
+        { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', group: 'Claude Sonnet 5.5' },
+        { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', group: 'Claude Sonnet 5.5' },
+        { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', group: 'Claude Opus (Pro)' },
+        { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', group: 'Claude Opus (Pro)' },
+        { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', group: 'Claude Opus (Pro)' },
+        { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', group: 'Claude Sonnet (Pro)' },
+        { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', group: 'Claude Sonnet (Pro)' },
+        { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', group: 'Claude Sonnet (Pro)' },
+        { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', group: 'Gemini 3.8 Flash' },
+        { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash' },
+        { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash' },
+        { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B' },
+      ]
+
+      const models = (modelConfigData && modelConfigData.availableModels && modelConfigData.availableModels.length > 0)
+        ? modelConfigData.availableModels
+        : fallbackModels
+      const exhausted = modelConfigData?.exhaustedModels || []
+
+      const groups = {}
+      models.forEach(m => {
+        const g = m.group || 'Khác'
+        if (!groups[g]) groups[g] = []
+        groups[g].push(m)
+      })
+
+      let html = ''
+
+      // 1. Toàn bộ danh mục Models
+      for (const [groupName, groupModels] of Object.entries(groups)) {
+        html += `<optgroup label="─── ${groupName} ───">`
+        groupModels.forEach(m => {
+          const isEx = exhausted.includes(m.id)
+          const isSel = (currentProg === m.id) ? 'selected' : ''
+          html += `<option value="${m.id}" ${isSel}>${m.name}${isEx ? ' (⚠️ Hết Quota)' : ''}</option>`
+        })
+        html += `</optgroup>`
+      }
+
+      // 2. Nhóm CLI & Cấu hình mặc định
+      html += `<optgroup label="─── CLI & Cấu hình mặc định ───">`
+      const defaultClis = [
+        { id: 'agy', name: 'agy (Cấu hình mặc định Lead)' },
+        { id: 'agy-worker', name: 'agy-worker (Cấu hình mặc định Worker)' },
+        { id: 'agy-pro', name: 'agy-pro (Cấu hình mặc định Reviewer)' },
+        { id: 'claude', name: 'Claude Code CLI' },
+        { id: 'codex', name: 'Codex CLI' },
+        { id: 'gemini', name: 'Gemini CLI' },
+        { id: 'opencode', name: 'OpenCode CLI' },
+      ]
+      defaultClis.forEach(cli => {
+        const isSel = (currentProg === cli.id) ? 'selected' : ''
+        html += `<option value="${cli.id}" ${isSel}>${cli.name}</option>`
+      })
+      html += `</optgroup>`
+
+      return html
+    }
+
     function renderNewTaskAgentsList() {
       const container = document.getElementById('newTaskAgentsContainer')
       if (!container) return
@@ -2707,9 +2785,7 @@
             <div>
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
               <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                <option value="agy" ${ag.program === 'agy' ? 'selected' : ''}>agy (Lead / Neon / Argon)</option>
-                <option value="agy-worker" ${ag.program === 'agy-worker' ? 'selected' : ''}>agy-worker (Worker / Flash)</option>
-                <option value="agy-pro" ${ag.program === 'agy-pro' ? 'selected' : ''}>agy-pro (Pro / Opus / Reviewer)</option>
+                ${renderAgentProgramOptions(ag.program)}
               </select>
             </div>
           </div>
@@ -2843,9 +2919,7 @@
             <div>
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
               <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                <option value="agy" ${ag.program === 'agy' ? 'selected' : ''}>agy (Lead / Neon / Argon)</option>
-                <option value="agy-worker" ${ag.program === 'agy-worker' ? 'selected' : ''}>agy-worker (Worker / Flash)</option>
-                <option value="agy-pro" ${ag.program === 'agy-pro' ? 'selected' : ''}>agy-pro (Pro / Opus / Reviewer)</option>
+                ${renderAgentProgramOptions(ag.program)}
               </select>
             </div>
           </div>
