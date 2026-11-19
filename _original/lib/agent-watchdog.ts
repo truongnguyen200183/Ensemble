@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { isShellCommand, type AgentRuntime } from './agent-runtime'
 import type { EnsembleMessage, EnsembleTeam, EnsembleTeamAgent } from '../types/ensemble'
 
-const DEFAULT_POLL_INTERVAL_MS = 30_000
-const DEFAULT_NUDGE_MS = 90_000
-const DEFAULT_STALL_MS = 180_000
+const DEFAULT_POLL_INTERVAL_MS = 60_000
+const DEFAULT_NUDGE_MS = 600_000 // 10 phút thay vì 90 giây để tránh làm phiền Agent
+const DEFAULT_STALL_MS = 900_000 // 15 phút
 const WATCHDOG_NUDGE_TEXT = 'Are you still working? Share your progress with team-say.'
 
 /**
@@ -117,6 +117,9 @@ export class AgentWatchdog {
   }
 
   async poll(): Promise<void> {
+    if (process.env.ENSEMBLE_DISABLE_WATCHDOG === '1' || process.env.COLLAB_MONITOR === 'none') {
+      return
+    }
     if (this.polling) return
     this.polling = true
     try {
@@ -174,6 +177,15 @@ export class AgentWatchdog {
         this.state.delete(stateKey)
         this.remoteAbsences.delete(stateKey)
         continue
+      }
+
+      // Nếu Agent đã báo cáo đang trực tuyến, sẵn sàng hoặc đang chờ chỉ đạo -> Không giục (nudge)
+      if (lastAgentMessage?.content) {
+        const text = lastAgentMessage.content.toLowerCase()
+        const isWaiting = /(chờ chỉ đạo|chờ yêu cầu|chờ lệnh|sẵn sàng|đang trực tuyến|waiting for|ready for|hoàn thành 100%|túc trực)/i.test(text)
+        if (isWaiting) {
+          continue
+        }
       }
       const lastMessageAt = lastAgentMessage?.timestamp || agent.startedAt || team.createdAt
       const previousState = this.state.get(stateKey)
