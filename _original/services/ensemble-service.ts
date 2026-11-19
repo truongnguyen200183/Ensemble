@@ -1238,10 +1238,12 @@ export async function sendTeamMessage(
       const paneAlive = await runtime.sessionExists(sessionName)
       if (!paneAlive) continue
 
-      // Wrap message with sender context + response nudge
+      // Wrap message with sender context + explicit bash command to post back to feed
       const deliveryText = [
         `[Team message from ${sender}]: ${content}`,
-        `→ Respond with team-say (định dạng Markdown/HTML: xuống dòng danh sách gạch đầu dòng rõ ràng, bôi đậm từ khóa quan trọng). Then run team-read to check for more messages.`,
+        `→ BẮT BUỘC: Để câu trả lời của bạn xuất hiện trên khung chat cho người dùng và nhóm, bạn PHẢI CHẠY LỆNH BASH:`,
+        `/home/truong/ensemble/scripts/team-say.sh ${teamId} ${targetAgent.name} team "nội dung phản hồi của bạn"`,
+        `Quy định trình bày: định dạng Markdown/HTML, xuống dòng gạch đầu dòng rõ ràng (- hoặc *), bôi đậm (**từ khóa quan trọng**). Tuyệt đối không chỉ in ra terminal mà phải chạy team-say.sh!`,
       ].join('\n')
 
       if (targetAgent.hostId && !isSelf(targetAgent.hostId)) {
