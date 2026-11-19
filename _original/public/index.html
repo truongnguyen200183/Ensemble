@@ -409,113 +409,188 @@
     </div>
   </div>
 
-  <!-- CHAT CONTAINER (GOM 2 PANEL THÀNH 1 GROUP CHAT DUY NHẤT) -->
-  <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
-    <!-- Initial empty placeholder -->
-    <div id="emptyFeed" class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3">
-      <div class="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
-        💬
-      </div>
-      <p class="text-sm">Chưa có tin nhắn trong phiên này. Hãy đợi các agent bắt đầu trò chuyện...</p>
-    </div>
-  </main>
-
-  <!-- FLOATING SCROLL TO BOTTOM BUTTON (Sticky scroll / New messages indicator) -->
-  <button 
-    id="scrollToBottomBtn" 
-    type="button" 
-    onclick="scrollToBottom()" 
-    class="hidden absolute bottom-24 right-6 z-30 bg-blue-600/90 hover:bg-blue-500 active:scale-95 text-white font-medium px-4 py-2 rounded-full shadow-2xl border border-blue-400/50 backdrop-blur text-xs flex items-center space-x-2 cursor-pointer transition-all duration-200 animate-bounce"
-    title="Bấm để cuộn xuống tin nhắn mới nhất"
-  >
-    <span class="text-sm">⬇️</span>
-    <span id="unreadNoticeText" class="font-semibold tracking-wide">Tin nhắn mới</span>
-  </button>
-
-  <!-- BOTTOM INPUT BAR & IMAGE PREVIEW -->
-  <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20">
-    <div class="max-w-5xl mx-auto flex flex-col space-y-2">
-
-      <!-- Replying Quote Bar (Trích dẫn tin nhắn) -->
-      <div id="replyPreviewBar" class="hidden flex items-center justify-between px-3 py-1.5 bg-slate-800/95 border-l-4 border-l-blue-500 rounded-lg shadow-lg text-xs transition max-w-3xl">
-        <div class="flex items-center space-x-2 truncate min-w-0">
-          <span id="replyAuthorText" class="text-blue-400 font-bold shrink-0 flex items-center space-x-1">
-            <span>↩️</span>
-            <span>Đang trả lời:</span>
-          </span>
-          <span id="replyContentPreview" class="truncate text-slate-300 italic text-[11px]"></span>
+  <!-- MAIN WORKSPACE: COL-3 (AGENT LIVE STATUS) + COL-9 (CHAT FEED & FULL INPUT) -->
+  <div class="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden w-full relative">
+    
+    <!-- COL-3: LIVE AGENT STATUS (w-full md:w-80 lg:w-3/12 shrink-0) -->
+    <aside id="agentStatusSidebar" class="w-full md:w-80 lg:w-3/12 shrink-0 bg-[#0c121e] border-r border-slate-800/90 flex flex-col h-full overflow-hidden z-10 transition-all duration-200">
+      <!-- Header -->
+      <div class="p-2.5 sm:p-3 bg-[#0f172a] border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="text-base">🤖</span>
+          <div>
+            <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+              <span>Trạng thái Agent</span>
+              <span id="agentCountBadge" class="bg-blue-900/60 text-blue-300 text-[10px] px-1.5 py-0.2 rounded border border-blue-700/50 font-mono">0</span>
+            </h2>
+            <p id="agentStatusLastUpdated" class="text-[10px] text-slate-400">Đang đồng bộ...</p>
+          </div>
         </div>
-        <button id="cancelReplyBtn" type="button" onclick="cancelReply()" class="text-slate-400 hover:text-rose-400 text-xs px-2 py-0.5 rounded hover:bg-slate-700/60 transition shrink-0 ml-2 cursor-pointer font-bold" title="Hủy trích dẫn (Esc)">
-          ✕
-        </button>
-      </div>
 
-      <!-- Attached Images Preview Bar (Supports Multiple Files) -->
-      <div id="imagePreviewContainer" class="hidden flex flex-col space-y-1.5 p-2 bg-slate-800/95 border border-slate-700 rounded-xl shadow-lg transition max-w-2xl">
-        <div class="flex items-center justify-between px-1 text-[11px] text-slate-300">
-          <span class="font-semibold flex items-center space-x-1.5 text-blue-300">
-            <span>📎</span>
-            <span id="imagePreviewCount">Đã đính kèm 0 tệp</span>
-          </span>
-          <button id="clearAllImagesBtn" type="button" class="text-rose-400 hover:text-rose-300 text-[11px] hover:underline cursor-pointer">
-            Xóa tất cả
+        <!-- Interval & Refresh Controls -->
+        <div class="flex items-center space-x-1.5">
+          <div class="relative flex items-center bg-slate-800 rounded border border-slate-700 px-1 py-0.5" title="Định kỳ làm mới trạng thái">
+            <span class="text-[10px] text-slate-400 mr-1">⏱️</span>
+            <select id="agentStatusIntervalSelect" onchange="onAgentStatusIntervalChange(this.value)" class="bg-transparent text-slate-200 text-[11px] font-medium focus:outline-none cursor-pointer">
+              <option value="2000">2s</option>
+              <option value="5000" selected>5s (Chuẩn)</option>
+              <option value="10000">10s</option>
+              <option value="30000">30s</option>
+              <option value="0">Tắt (Dừng)</option>
+            </select>
+          </div>
+          <button 
+            id="refreshAgentStatusBtn" 
+            type="button" 
+            onclick="fetchAgentLiveStatus(true)" 
+            title="Làm mới trạng thái ngay bây giờ"
+            class="p-1 hover:bg-slate-700 text-slate-300 hover:text-blue-300 rounded border border-slate-700 transition cursor-pointer"
+          >
+            <span class="text-xs">🔄</span>
           </button>
         </div>
-        <div id="imagePreviewList" class="flex items-center space-x-2 overflow-x-auto pb-1 max-w-full">
-          <!-- Dynamic thumbnails rendered here -->
-        </div>
       </div>
 
-      <div class="flex items-center space-x-2">
-        <!-- Target Selection -->
-        <div class="relative shrink-0">
-          <select id="msgTarget" class="bg-slate-800 text-slate-200 text-xs rounded-lg border border-slate-700 px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-            <option value="team">👥 Cả nhóm (Team)</option>
-            <option value="lead">👑 Chỉ gửi LEAD</option>
-            <option value="worker">⚡ Chỉ gửi WORKER</option>
-          </select>
+      <!-- Quick Summary Stats Bar -->
+      <div class="px-3 py-1 bg-[#0a0f18] border-b border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="flex items-center space-x-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="activeAgentCount">0 Trực tuyến</span>
+          </span>
+          <span class="flex items-center space-x-1">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span id="busyAgentCount">0 Bận</span>
+          </span>
         </div>
-
-        <!-- Image Attachment Button (multiple) -->
-        <input type="file" id="imageFileInput" accept="image/*" multiple class="hidden">
         <button 
-          id="attachImageBtn" 
+          id="toggleAllPaneDetailsBtn" 
           type="button" 
-          title="Đính kèm hoặc chụp ảnh gửi Agent (Có thể bấm Ctrl + V dán ảnh trực tiếp)"
-          class="p-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 hover:text-blue-400 rounded-lg border border-slate-700 transition flex items-center justify-center shrink-0"
+          onclick="toggleAllAgentDetails()" 
+          class="text-[10px] text-slate-400 hover:text-blue-300 transition underline cursor-pointer"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
-        </button>
-
-        <!-- Input Box (Textarea) -->
-        <textarea 
-          id="msgInput" 
-          rows="1" 
-          placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V)... (Enter gửi • Shift+Enter hoặc Ctrl+Enter xuống hàng)" 
-          class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-[44px] max-h-[500px] overflow-y-auto leading-relaxed"
-          style="min-height: 44px; height: 44px;"
-        ></textarea>
-
-        <!-- Send Button -->
-        <button 
-          id="sendBtn" 
-          class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0 self-end"
-          style="height: 44px;"
-        >
-          <span>Gửi</span>
-          <span>🚀</span>
+          Hiện/ẩn log
         </button>
       </div>
 
-      <!-- Quick Hint -->
-      <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
-        <span>💡 <b>Hỗ trợ ảnh:</b> Chụp màn hình (Windows+Shift+S) rồi bấm <b>Ctrl + V</b> để dán ảnh trực tiếp cho Agent phân tích.</span>
-        <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd> gửi • <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Shift + Enter</kbd> hoặc <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Ctrl + Enter</kbd> xuống hàng</span>
+      <!-- Scrollable Agent Cards List -->
+      <div id="agentStatusCardsContainer" class="flex-1 overflow-y-auto p-2.5 space-y-2.5">
+        <!-- Rendered dynamically by JS -->
       </div>
-    </div>
-  </footer>
+    </aside>
+
+    <!-- COL-9: FULL CHAT FEED & FULL WIDTH INPUT BAR (flex-1 lg:w-9/12) -->
+    <section class="flex-1 lg:w-9/12 flex flex-col h-full min-w-0 bg-[#0b0f19] relative overflow-hidden">
+      <!-- CHAT CONTAINER -->
+      <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Initial empty placeholder -->
+        <div id="emptyFeed" class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3">
+          <div class="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
+            💬
+          </div>
+          <p class="text-sm">Chưa có tin nhắn trong phiên này. Hãy đợi các agent bắt đầu trò chuyện...</p>
+        </div>
+      </main>
+
+      <!-- FLOATING SCROLL TO BOTTOM BUTTON (Sticky scroll / New messages indicator) -->
+      <button 
+        id="scrollToBottomBtn" 
+        type="button" 
+        onclick="scrollToBottom()" 
+        class="hidden absolute bottom-24 right-6 z-30 bg-blue-600/90 hover:bg-blue-500 active:scale-95 text-white font-medium px-4 py-2 rounded-full shadow-2xl border border-blue-400/50 backdrop-blur text-xs flex items-center space-x-2 cursor-pointer transition-all duration-200 animate-bounce"
+        title="Bấm để cuộn xuống tin nhắn mới nhất"
+      >
+        <span class="text-sm">⬇️</span>
+        <span id="unreadNoticeText" class="font-semibold tracking-wide">Tin nhắn mới</span>
+      </button>
+
+      <!-- BOTTOM INPUT BAR & IMAGE PREVIEW (FULL WIDTH COL-9) -->
+      <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20 w-full">
+        <div class="w-full flex flex-col space-y-2">
+
+          <!-- Replying Quote Bar (Trích dẫn tin nhắn) -->
+          <div id="replyPreviewBar" class="hidden flex items-center justify-between px-3 py-1.5 bg-slate-800/95 border-l-4 border-l-blue-500 rounded-lg shadow-lg text-xs transition max-w-3xl">
+            <div class="flex items-center space-x-2 truncate min-w-0">
+              <span id="replyAuthorText" class="text-blue-400 font-bold shrink-0 flex items-center space-x-1">
+                <span>↩️</span>
+                <span>Đang trả lời:</span>
+              </span>
+              <span id="replyContentPreview" class="truncate text-slate-300 italic text-[11px]"></span>
+            </div>
+            <button id="cancelReplyBtn" type="button" onclick="cancelReply()" class="text-slate-400 hover:text-rose-400 text-xs px-2 py-0.5 rounded hover:bg-slate-700/60 transition shrink-0 ml-2 cursor-pointer font-bold" title="Hủy trích dẫn (Esc)">
+              ✕
+            </button>
+          </div>
+
+          <!-- Attached Images Preview Bar (Supports Multiple Files) -->
+          <div id="imagePreviewContainer" class="hidden flex flex-col space-y-1.5 p-2 bg-slate-800/95 border border-slate-700 rounded-xl shadow-lg transition max-w-2xl">
+            <div class="flex items-center justify-between px-1 text-[11px] text-slate-300">
+              <span class="font-semibold flex items-center space-x-1.5 text-blue-300">
+                <span>📎</span>
+                <span id="imagePreviewCount">Đã đính kèm 0 tệp</span>
+              </span>
+              <button id="clearAllImagesBtn" type="button" class="text-rose-400 hover:text-rose-300 text-[11px] hover:underline cursor-pointer">
+                Xóa tất cả
+              </button>
+            </div>
+            <div id="imagePreviewList" class="flex items-center space-x-2 overflow-x-auto pb-1 max-w-full">
+              <!-- Dynamic thumbnails rendered here -->
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 w-full">
+            <!-- Target Selection -->
+            <div class="relative shrink-0">
+              <select id="msgTarget" class="bg-slate-800 text-slate-200 text-xs rounded-lg border border-slate-700 px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <option value="team">👥 Cả nhóm (Team)</option>
+                <option value="lead">👑 Chỉ gửi LEAD</option>
+                <option value="worker">⚡ Chỉ gửi WORKER</option>
+              </select>
+            </div>
+
+            <!-- Image Attachment Button (multiple) -->
+            <input type="file" id="imageFileInput" accept="image/*" multiple class="hidden">
+            <button 
+              id="attachImageBtn" 
+              type="button" 
+              title="Đính kèm hoặc chụp ảnh gửi Agent (Có thể bấm Ctrl + V dán ảnh trực tiếp)"
+              class="p-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 hover:text-blue-400 rounded-lg border border-slate-700 transition flex items-center justify-center shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </button>
+
+            <!-- Input Box (Textarea) -->
+            <textarea 
+              id="msgInput" 
+              rows="1" 
+              placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V)... (Enter gửi • Shift+Enter hoặc Ctrl+Enter xuống hàng)" 
+              class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-[44px] max-h-[500px] overflow-y-auto leading-relaxed"
+              style="min-height: 44px; height: 44px;"
+            ></textarea>
+
+            <!-- Send Button -->
+            <button 
+              id="sendBtn" 
+              class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0 self-end"
+              style="height: 44px;"
+            >
+              <span>Gửi</span>
+              <span>🚀</span>
+            </button>
+          </div>
+
+          <!-- Quick Hint -->
+          <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
+            <span>💡 <b>Hỗ trợ ảnh:</b> Chụp màn hình (Windows+Shift+S) rồi bấm <b>Ctrl + V</b> để dán ảnh trực tiếp cho Agent phân tích.</span>
+            <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd> gửi • <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Shift + Enter</kbd> hoặc <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Ctrl + Enter</kbd> xuống hàng</span>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+  </div>
 
   <!-- NEW TASK MODAL -->
   <div id="newTaskModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
@@ -775,6 +850,222 @@
     let consecutiveErrors = 0
     let isDropdownOpen = false
     let pendingFiles = []    // Array of { id: string, data: base64, filename: string, sizeText: string, sizeKb: number }
+
+    // Agent Live Status State (Col-3)
+    let agentStatusPollInterval = parseInt(localStorage.getItem('ensemble_agent_status_interval') || '5000', 10)
+    let agentStatusTimer = null
+    let allAgentDetailsOpen = false
+    let lastAgentStatusData = null
+
+    function getRoleIcon(role) {
+      const r = (role || '').toLowerCase()
+      if (r.includes('lead')) return '👑'
+      if (r.includes('review')) return '🔍'
+      return '⚡'
+    }
+
+    function getRoleBadgeClass(role) {
+      const r = (role || '').toLowerCase()
+      if (r.includes('lead')) return 'bg-amber-950/80 text-amber-300 border border-amber-600/50'
+      if (r.includes('review')) return 'bg-indigo-950/80 text-indigo-300 border border-indigo-600/50'
+      return 'bg-emerald-950/80 text-emerald-300 border border-emerald-600/50'
+    }
+
+    function getStateBadgeHtml(state, detail) {
+      if (state === 'thinking') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950/90 text-purple-300 border border-purple-500/60 shadow-sm animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-purple-400 mr-1 animate-ping"></span>Suy luận</span>`
+      }
+      if (state === 'running') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-950/90 text-blue-300 border border-blue-500/60 shadow-sm animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-blue-400 mr-1"></span>Chạy lệnh</span>`
+      }
+      if (state === 'quota_exceeded') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/90 text-rose-300 border border-rose-600/70 shadow-sm animate-bounce"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1"></span>Hết Quota</span>`
+      }
+      if (state === 'offline') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700"><span class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1"></span>Ngoại tuyến</span>`
+      }
+      return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1"></span>Sẵn sàng</span>`
+    }
+
+    function getStateIcon(state) {
+      if (state === 'thinking') return '🧠'
+      if (state === 'running') return '⚡'
+      if (state === 'quota_exceeded') return '⚠️'
+      if (state === 'offline') return '⚪'
+      return '💤'
+    }
+
+    function toggleAllAgentDetails() {
+      allAgentDetailsOpen = !allAgentDetailsOpen
+      const container = document.getElementById('agentStatusCardsContainer')
+      if (container) {
+        container.querySelectorAll('details').forEach(d => {
+          d.open = allAgentDetailsOpen
+        })
+      }
+      const btn = document.getElementById('toggleAllPaneDetailsBtn')
+      if (btn) {
+        btn.textContent = allAgentDetailsOpen ? 'Ẩn log' : 'Hiện log'
+      }
+    }
+
+    function onAgentStatusIntervalChange(val) {
+      agentStatusPollInterval = parseInt(val, 10) || 0
+      localStorage.setItem('ensemble_agent_status_interval', agentStatusPollInterval.toString())
+      initAgentStatusPolling()
+    }
+
+    function initAgentStatusPolling() {
+      if (agentStatusTimer) {
+        clearInterval(agentStatusTimer)
+        agentStatusTimer = null
+      }
+      const sel = document.getElementById('agentStatusIntervalSelect')
+      if (sel) {
+        sel.value = agentStatusPollInterval.toString()
+      }
+      if (agentStatusPollInterval > 0) {
+        agentStatusTimer = setInterval(() => {
+          fetchAgentLiveStatus()
+        }, agentStatusPollInterval)
+      }
+      fetchAgentLiveStatus()
+    }
+
+    async function fetchAgentLiveStatus(manual = false) {
+      if (!currentTeamId) {
+        const container = document.getElementById('agentStatusCardsContainer')
+        if (container) {
+          container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500">Chưa chọn phiên hoạt động</div>`
+        }
+        return
+      }
+
+      const refreshBtn = document.getElementById('refreshAgentStatusBtn')
+      if (manual && refreshBtn) {
+        refreshBtn.classList.add('animate-spin')
+        setTimeout(() => refreshBtn.classList.remove('animate-spin'), 600)
+      }
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/agents-status`)
+        if (!res.ok) return
+        const data = await res.json()
+        lastAgentStatusData = data
+
+        const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        const updateText = document.getElementById('agentStatusLastUpdated')
+        if (updateText) {
+          updateText.textContent = `Cập nhật lúc ${timeStr}`
+        }
+
+        renderAgentStatusCards(data.agents || [], data.teamStatus)
+      } catch (err) {
+        console.warn('[AgentStatus] Failed to fetch:', err)
+      }
+    }
+
+    function renderAgentStatusCards(agents, teamStatus) {
+      const container = document.getElementById('agentStatusCardsContainer')
+      if (!container) return
+
+      const countBadge = document.getElementById('agentCountBadge')
+      if (countBadge) countBadge.textContent = agents.length.toString()
+
+      let activeCount = 0
+      let busyCount = 0
+
+      agents.forEach(a => {
+        if (a.alive && a.state !== 'offline') activeCount++
+        if (a.state === 'running' || a.state === 'thinking') busyCount++
+      })
+
+      const activeEl = document.getElementById('activeAgentCount')
+      if (activeEl) activeEl.textContent = `${activeCount} Trực tuyến`
+
+      const busyEl = document.getElementById('busyAgentCount')
+      if (busyEl) busyEl.textContent = `${busyCount} Bận`
+
+      if (agents.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 text-center text-xs text-slate-500 space-y-2">
+            <span class="text-2xl block">👥</span>
+            <span>Chưa có Agent nào trong phiên này.</span>
+          </div>
+        `
+        return
+      }
+
+      let html = ''
+      agents.forEach(agent => {
+        const borderClass = agent.state === 'thinking' 
+          ? 'border-purple-600/50 bg-slate-900/95 ring-1 ring-purple-500/20' 
+          : agent.state === 'running'
+            ? 'border-blue-600/50 bg-slate-900/95 ring-1 ring-blue-500/20'
+            : agent.state === 'quota_exceeded'
+              ? 'border-rose-600/60 bg-rose-950/20'
+              : 'border-slate-800 bg-slate-900/80 hover:border-slate-700'
+
+        html += `
+          <div class="border rounded-xl p-2.5 shadow-md transition-all duration-150 space-y-2 ${borderClass}">
+            <!-- Header -->
+            <div class="flex items-start justify-between gap-1">
+              <div class="flex items-center space-x-2 min-w-0">
+                <div class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-sm shrink-0 shadow-sm">
+                  ${getRoleIcon(agent.role)}
+                </div>
+                <div class="truncate min-w-0">
+                  <div class="flex items-center space-x-1.5 truncate">
+                    <span class="font-bold text-xs text-slate-100 truncate">${escapeHtml(agent.name)}</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase shrink-0 ${getRoleBadgeClass(agent.role)}">
+                      ${escapeHtml(agent.role)}
+                    </span>
+                  </div>
+                  <div class="text-[10px] text-blue-400 font-medium truncate" title="${escapeHtml(agent.modelDisplay)}">
+                    ${escapeHtml(agent.modelDisplay)}
+                  </div>
+                </div>
+              </div>
+              <div class="shrink-0">
+                ${getStateBadgeHtml(agent.state, agent.detail)}
+              </div>
+            </div>
+
+            <!-- Current Action Box -->
+            <div class="bg-slate-950/80 rounded-lg p-2 border border-slate-800/80 text-[11px] space-y-1">
+              <div class="flex items-start space-x-1.5">
+                <span class="text-xs shrink-0 select-none">${getStateIcon(agent.state)}</span>
+                <span class="font-medium text-slate-200 leading-snug break-words flex-1">${escapeHtml(agent.detail)}</span>
+              </div>
+              ${agent.thinkingTime ? `
+                <div class="text-[10px] text-purple-300 font-mono flex items-center space-x-1 pt-0.5">
+                  <span>⏱️</span>
+                  <span>Thời gian suy nghĩ: <b>${escapeHtml(agent.thinkingTime)}</b></span>
+                </div>
+              ` : ''}
+              ${agent.lastMessageSnippet ? `
+                <div class="text-[10px] text-slate-400 pt-1 border-t border-slate-800/60 truncate" title="${escapeHtml(agent.lastMessageSnippet)}">
+                  <span class="text-slate-500 font-semibold">Tin nhắn:</span> "${escapeHtml(agent.lastMessageSnippet)}"
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Terminal Log Preview (details) -->
+            ${agent.paneTail ? `
+              <details class="text-[10px] text-slate-400 group" ${allAgentDetailsOpen ? 'open' : ''}>
+                <summary class="cursor-pointer select-none text-slate-500 hover:text-slate-300 transition flex items-center justify-between font-mono py-0.5 text-[10px]">
+                  <span>Log terminal gần nhất</span>
+                  <span class="text-[8px] group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <pre class="mt-1 p-2 bg-black/90 rounded border border-slate-800/80 font-mono text-[9px] text-slate-300 overflow-x-auto whitespace-pre-wrap leading-tight max-h-32 select-text">${escapeHtml(agent.paneTail)}</pre>
+              </details>
+            ` : ''}
+          </div>
+        `
+      })
+
+      container.innerHTML = html
+    }
 
     // Scroll helpers for Smart Auto-scroll (Sticky scroll UX)
     function showScrollToBottomBtn(count) {
@@ -1846,6 +2137,7 @@
           const data = await res.json()
           const team = data.team || {}
           currentTeamAgents = team.agents || []
+          fetchAgentLiveStatus(true)
 
           // Update Task Banner
           document.getElementById('taskDescription').textContent = team.description || team.name || 'Không có mô tả'
@@ -3328,6 +3620,9 @@
 
       // Poll current team feed every 1.5 seconds
       setInterval(fetchMessages, 1500)
+
+      // Poll agent live status (Default 5s, configurable by user)
+      initAgentStatusPolling()
     }
 
     window.addEventListener('DOMContentLoaded', init)

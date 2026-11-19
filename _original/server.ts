@@ -10,7 +10,7 @@ import os from 'os'
 import nodePath from 'path'
 import { fileURLToPath } from 'url'
 const serverDir = nodePath.dirname(fileURLToPath(import.meta.url))
-import { deleteTeam, loadTeams, getTeam, updateTeam, appendMessage } from './lib/ensemble-registry'
+import { deleteTeam, loadTeams, getTeam, updateTeam, appendMessage, getMessages } from './lib/ensemble-registry'
 import {
   createEnsembleTeam, getEnsembleTeam, listEnsembleTeams,
   getTeamFeed, sendTeamMessage, disbandTeam, reactivateTeam,
@@ -165,7 +165,7 @@ const server = http.createServer(async (req, res) => {
     // collab-poller.sh pingt het team-detail-endpoint eens per minuut, en
     // team-read.sh raakt de feed op het tempo van de agent. De lijst-route
     // (GET /api/ensemble/teams) en alle mutaties blijven gewoon gelimiteerd.
-    const isTeamPoll = method === 'GET' && /^\/api\/ensemble\/teams\/[^/]+(?:\/feed)?$/.test(path)
+    const isTeamPoll = method === 'GET' && /^\/api\/ensemble\/teams\/[^/]+(?:\/feed|\/agents-status)?$/.test(path)
     if (!isTeamPoll && isRateLimited(getClientIp(req))) {
       return json(res, { error: 'Rate limit exceeded' }, 429, origin)
     }
@@ -214,6 +214,115 @@ const server = http.createServer(async (req, res) => {
         if (result.error) return json(res, { error: result.error }, result.status, origin)
         return json(res, result.data, result.status, origin)
       }
+    }
+
+    // Agent Live Status: GET /api/ensemble/teams/:id/agents-status
+    const agentStatusMatch = path.match(/^\/api\/ensemble\/teams\/([^/]+)\/agents-status$/)
+    if (agentStatusMatch && method === 'GET') {
+      const teamId = agentStatusMatch[1]
+      const team = getTeam(teamId)
+      if (!team) return json(res, { error: 'Team not found' }, 404, origin)
+
+      const runtime = getRuntime()
+      const messages = getMessages(teamId)
+      const agents = team.agents || []
+
+      const modelMap: Record<string, string> = {
+        'agy': 'Orchestrator (Argon)',
+        'agy-worker': 'Gemini 3.8 Flash (Medium)',
+        'agy-pro': 'Claude Sonnet (Pro)',
+        'gemini-pro-orchestrator-g1-pro': 'Orchestrator (Argon)',
+        'gemini-pro-orchestrator-neon': 'Orchestrator (Neon)',
+        'gemini-3.8-flash-medium': 'Gemini 3.8 Flash (Medium)',
+        'gemini-3.8-flash-high': 'Gemini 3.8 Flash (High)',
+        'gemini-3.8-flash-low': 'Gemini 3.8 Flash (Low)',
+        'cc-sonnet-medium': 'Claude Sonnet (Pro)',
+        'cc-sonnet-high': 'Claude Sonnet (Pro) (High)',
+        'cc-opus-medium': 'Claude Opus (Pro)',
+        'gemini-4-argon-high': 'Gemini 4 Argon (High)',
+        'gemini-4-argon-medium': 'Gemini 4 Argon (Medium)',
+        'gemini-4-argon-low': 'Gemini 4 Argon (Low)',
+        'gemini-4-neon-high': 'Gemini 4 Neon (High)',
+        'gemini-4-neon-medium': 'Gemini 4 Neon (Medium)',
+        'gemini-4-neon-low': 'Gemini 4 Neon (Low)',
+      }
+
+      const results = await Promise.all(agents.map(async (agent) => {
+        const sessionName = `${team.name}-${agent.name}`
+        let exists = false
+        try {
+          exists = await runtime.sessionExists(sessionName)
+        } catch {}
+
+        let paneContent = ''
+        if (exists && typeof (runtime as any).capturePane === 'function') {
+          try {
+            paneContent = await (runtime as any).capturePane(sessionName, 60)
+          } catch {}
+        }
+
+        let state: 'running' | 'thinking' | 'idle' | 'quota_exceeded' | 'offline' = 'idle'
+        let detail = ''
+        let thinkingTime = ''
+
+        if (!exists) {
+          state = 'offline'
+          detail = 'Chưa bật / Ngoại tuyến'
+        } else if (paneContent.includes('Individual quota reached') || paneContent.includes('quota reached')) {
+          state = 'quota_exceeded'
+          detail = '⚠️ Chạm trần Quota'
+        } else {
+          const thoughtMatch = paneContent.match(/Thought for ([0-9m s]+)/i)
+          if (thoughtMatch) {
+            thinkingTime = thoughtMatch[1].trim()
+          }
+
+          if (paneContent.includes('Thought for') && (/[⣾⣽⣻⢿⡿⣟⣯⣷]/.test(paneContent) || paneContent.includes('Thinking'))) {
+            state = 'thinking'
+            detail = `🧠 Đang suy luận (${thinkingTime || 'Thinking...'})`
+          } else if (paneContent.includes('Running command') || paneContent.includes('Running (') || /[⣾⣽⣻⢿⡿⣟⣯⣷]/.test(paneContent)) {
+            state = 'running'
+            const cmdMatch = paneContent.match(/Running command:? ([^\n\r]+)/i) || paneContent.match(/Ran \(([^)]+)\)/i)
+            detail = cmdMatch ? `⚡ Chạy lệnh: ${cmdMatch[1].slice(0, 45)}...` : '⚡ Đang thực thi lệnh...'
+          } else if (paneContent.includes('Explored ') || paneContent.includes('Explored 1 file') || paneContent.includes('Explored 2 files')) {
+            state = 'running'
+            const fileMatch = paneContent.match(/Explored [0-9]+ files? \(([^)]+)\)/i)
+            detail = fileMatch ? `📁 Đọc file: ${fileMatch[1].slice(0, 40)}...` : '📁 Đang duyệt mã nguồn'
+          } else if (paneContent.includes('Press up to edit queued messages') || paneContent.trim().endsWith('>') || paneContent.includes('? for shortcuts')) {
+            state = 'idle'
+            detail = '💤 Đang trực tuyến (chờ việc)'
+          } else {
+            state = 'idle'
+            detail = '🟢 Đang trực tuyến'
+          }
+        }
+
+        const lastMsg = [...messages].reverse().find(m => m.from === agent.name)
+        const modelDisplay = modelMap[agent.program] || agent.program || 'Auto'
+
+        return {
+          agentId: agent.agentId,
+          name: agent.name,
+          role: agent.role,
+          program: agent.program,
+          modelDisplay,
+          status: agent.status,
+          alive: exists,
+          state,
+          detail,
+          thinkingTime,
+          lastMessageSnippet: lastMsg ? (lastMsg.content.length > 80 ? lastMsg.content.slice(0, 80) + '...' : lastMsg.content) : null,
+          lastMessageAt: lastMsg?.timestamp || null,
+          paneTail: paneContent ? paneContent.trim().split('\n').slice(-8).join('\n') : '',
+        }
+      }))
+
+      return json(res, {
+        teamId: team.id,
+        teamStatus: team.status,
+        agents: results,
+        timestamp: new Date().toISOString()
+      }, 200, origin)
     }
 
     // Reactivate: /api/ensemble/teams/:id/reactivate
