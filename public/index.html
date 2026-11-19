@@ -518,8 +518,8 @@
   </footer>
 
   <!-- NEW TASK MODAL -->
-  <div id="newTaskModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+  <div id="newTaskModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
         <div class="flex items-center space-x-2">
@@ -611,8 +611,8 @@
   </div>
 
   <!-- MANAGE AGENTS MODAL (Quản lý Agent trong phiên hiện tại) -->
-  <div id="manageAgentsModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div id="manageAgentsModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Modal Header -->
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
         <div class="flex items-center space-x-2">
@@ -652,8 +652,8 @@
   </div>
 
   <!-- MODEL CONFIG MODAL -->
-  <div id="modelConfigModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div id="modelConfigModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
       <!-- Header -->
       <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-800/50 shrink-0">
         <div class="flex items-center space-x-2.5">
@@ -698,7 +698,7 @@
             </span>
             <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa đánh dấu hết Quota (Reset)</button>
           </div>
-          <div id="quotaStatusList" class="space-y-1.5 text-[11px]">
+          <div id="quotaStatusList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] max-h-72 overflow-y-auto pr-1">
           </div>
         </div>
       </div>
@@ -2251,16 +2251,17 @@
       // Helper function to build model options HTML
       const buildModelOptions = (selectedVal) => {
         const groups = {}
-        availableModels.forEach(m => {
+        const models = (availableModels && availableModels.length > 0) ? availableModels : []
+        models.forEach(m => {
           const g = m.group || 'Khác'
           if (!groups[g]) groups[g] = []
           groups[g].push(m)
         })
 
         let html = ''
-        for (const [groupName, models] of Object.entries(groups)) {
+        for (const [groupName, grpModels] of Object.entries(groups)) {
           html += `<optgroup label="─── ${groupName} ───">`
-          models.forEach(m => {
+          grpModels.forEach(m => {
             const isExhausted = (exhaustedModels || []).includes(m.id)
             const isSel = m.id === selectedVal ? 'selected' : ''
             html += `<option value="${m.id}" ${isSel}>${m.name}${isExhausted ? ' (⚠️ Hết Quota)' : ''}</option>`
@@ -2271,71 +2272,83 @@
       }
 
       // 1. Render Active Team Agents Model List
-      const teamSection = document.getElementById('activeTeamAgentsModelList')
-      if (teamSection) {
-        teamSection.innerHTML = ''
-        const curTeam = teamsList.find(t => t.id === currentTeamId)
-        const teamAgents = curTeam?.agents || currentTeamAgents || []
+      try {
+        const teamSection = document.getElementById('activeTeamAgentsModelList')
+        if (teamSection) {
+          teamSection.innerHTML = ''
+          const curTeam = teamsList.find(t => t.id === currentTeamId)
+          const teamAgents = curTeam?.agents || currentTeamAgents || []
 
-        if (teamAgents.length > 0) {
-          teamAgents.forEach((ag, idx) => {
-            // Find current model for agent
-            let curModel = ''
-            if (ag.program && agentsConfig && agentsConfig[ag.program]?.flags) {
-              const flags = agentsConfig[ag.program].flags
-              const mIdx = flags.indexOf('--model')
-              if (mIdx !== -1 && flags[mIdx + 1]) curModel = flags[mIdx + 1]
-            }
-            if (!curModel) {
-              if (ag.role?.toLowerCase() === 'lead') curModel = roles.lead
-              else if (ag.role?.toLowerCase() === 'reviewer' || ag.role?.toLowerCase() === 'critic') curModel = roles.reviewer
-              else curModel = roles.worker
-            }
+          if (teamAgents.length > 0) {
+            teamAgents.forEach((ag, idx) => {
+              // Find current model for agent
+              let curModel = ''
+              if (ag.program && typeof knownAgents !== 'undefined' && knownAgents && knownAgents[ag.program]?.flags) {
+                const flags = knownAgents[ag.program].flags
+                const mIdx = flags.indexOf('--model')
+                if (mIdx !== -1 && flags[mIdx + 1]) curModel = flags[mIdx + 1]
+              }
+              if (!curModel && ag.program) {
+                curModel = ag.program
+              }
+              if (!curModel) {
+                if (ag.role?.toLowerCase() === 'lead') curModel = roles?.lead
+                else if (ag.role?.toLowerCase() === 'reviewer' || ag.role?.toLowerCase() === 'critic') curModel = roles?.reviewer
+                else curModel = roles?.worker
+              }
 
-            const row = document.createElement('div')
-            row.className = 'p-2.5 bg-slate-900 border border-slate-700/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2'
-            row.innerHTML = `
-              <div class="flex items-center space-x-2 min-w-0">
-                <span class="text-sm font-bold text-slate-100 truncate">${escapeHtml(ag.name)}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">${escapeHtml(ag.role.toUpperCase())}</span>
-              </div>
-              <div class="flex items-center space-x-1.5 shrink-0">
-                <select id="agentModelSelect_${idx}" data-agent-idx="${idx}" data-agent-prog="${ag.program || 'agy-worker'}" class="bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                  ${buildModelOptions(curModel)}
-                </select>
+              const row = document.createElement('div')
+              row.className = 'p-2.5 bg-slate-900 border border-slate-700/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2'
+              row.innerHTML = `
+                <div class="flex items-center space-x-2 min-w-0">
+                  <span class="text-sm font-bold text-slate-100 truncate">${escapeHtml(ag.name)}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono font-semibold border border-slate-700">${escapeHtml(ag.role.toUpperCase())}</span>
+                </div>
+                <div class="flex items-center space-x-1.5 shrink-0">
+                  <select id="agentModelSelect_${idx}" data-agent-idx="${idx}" data-agent-prog="${ag.program || 'agy-worker'}" class="bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                    ${buildModelOptions(curModel)}
+                  </select>
+                </div>
+              `
+              teamSection.appendChild(row)
+            })
+          } else {
+            teamSection.innerHTML = `
+              <div class="text-slate-400 text-[11px] leading-relaxed p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+                💡 Bạn có thể tự do thêm, bớt, đặt tên và chọn Model cho từng tác tử trong bảng <strong>"Quản lý Tác tử"</strong> hoặc khi bấm <strong>"Nhiệm vụ mới"</strong>. Khi tác tử chạm trần hạn mức (Quota reached), hệ thống sẽ cảnh báo trực tiếp trên khung chat để bạn đổi mô hình ngay.
               </div>
             `
-            teamSection.appendChild(row)
-          })
-        } else {
-          teamSection.innerHTML = `
-            <div class="text-slate-400 text-[11px] leading-relaxed p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-              💡 Bạn có thể tự do thêm, bớt, đặt tên và chọn Model cho từng tác tử trong bảng <strong>"Quản lý Tác tử"</strong> hoặc khi bấm <strong>"Nhiệm vụ mới"</strong>. Khi tác tử chạm trần hạn mức (Quota reached), hệ thống sẽ cảnh báo trực tiếp trên khung chat để bạn đổi mô hình ngay.
-            </div>
-          `
+          }
         }
+      } catch (err) {
+        console.warn('Error rendering teamSection:', err)
       }
 
       // 2. Render Quota status list
-      const quotaList = document.getElementById('quotaStatusList')
-      if (quotaList) {
-        quotaList.innerHTML = ''
-        availableModels.forEach(m => {
-          const isExhausted = (exhaustedModels || []).includes(m.id)
-          const item = document.createElement('div')
-          item.className = 'flex items-center justify-between py-1.5 border-b border-slate-800/80 last:border-b-0 hover:bg-slate-800/20 px-1 rounded transition'
-          item.innerHTML = `
-            <div class="flex items-center space-x-2 min-w-0 pr-2">
-              <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
-              <span class="text-slate-200 font-medium">${m.name}</span>
-              <span class="text-[10px] text-slate-400 truncate">(${m.desc})</span>
-            </div>
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
-              ${isExhausted ? 'Khóa hạn mức (Hết Quota)' : 'Sẵn sàng'}
-            </span>
-          `
-          quotaList.appendChild(item)
-        })
+      try {
+        const quotaList = document.getElementById('quotaStatusList')
+        if (quotaList) {
+          quotaList.innerHTML = ''
+          const modelsToRender = (availableModels && availableModels.length > 0) ? availableModels : []
+          modelsToRender.forEach(m => {
+            const isExhausted = (exhaustedModels || []).includes(m.id)
+            const item = document.createElement('div')
+            item.className = 'flex items-center justify-between py-1.5 px-2 bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg transition'
+            item.innerHTML = `
+              <div class="flex items-center space-x-2 min-w-0 pr-2">
+                <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
+                <span class="text-slate-200 font-medium truncate">${escapeHtml(m.name)}</span>
+                ${m.desc ? `<span class="text-[10px] text-slate-400 truncate hidden md:inline">(${escapeHtml(m.desc)})</span>` : ''}
+              </div>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
+                ${isExhausted ? 'Khóa hạn mức' : 'Sẵn sàng'}
+              </span>
+            `
+            quotaList.appendChild(item)
+          })
+        }
+      } catch (err) {
+        console.warn('Error rendering quotaList:', err)
       }
     }
 
@@ -2764,14 +2777,14 @@
             <span>${icon}</span>
             <span>#${idx + 1}</span>
           </div>
-          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
+          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-3">
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
-              <input type="text" value="${ag.name}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+              <input type="text" value="${ag.name}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
-            <div>
+            <div class="sm:col-span-4">
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-              <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+              <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                 <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
                 <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
                 <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
@@ -2782,9 +2795,9 @@
                 <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
               </select>
             </div>
-            <div>
+            <div class="sm:col-span-5">
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-              <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+              <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                 ${renderAgentProgramOptions(ag.program)}
               </select>
             </div>
@@ -2898,14 +2911,14 @@
             <span>${icon}</span>
             <span>#${idx + 1}</span>
           </div>
-          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
+          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="sm:col-span-3">
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
-              <input type="text" value="${ag.name}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+              <input type="text" value="${ag.name}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
-            <div>
+            <div class="sm:col-span-4">
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-              <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+              <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                 <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
                 <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
                 <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
@@ -2916,9 +2929,9 @@
                 <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
               </select>
             </div>
-            <div>
+            <div class="sm:col-span-5">
               <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-              <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+              <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                 ${renderAgentProgramOptions(ag.program)}
               </select>
             </div>
