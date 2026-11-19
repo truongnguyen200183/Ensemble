@@ -142,6 +142,22 @@
     .animate-pulse-subtle {
       animation: pulse-subtle 1.8s infinite ease-in-out;
     }
+    /* Dark theme select dropdown options */
+    select option {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    #agentStatusIntervalSelect,
+    #agentStatusIntervalSelect option {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    #agentStatusIntervalSelect option:hover,
+    #agentStatusIntervalSelect option:focus,
+    #agentStatusIntervalSelect option:checked {
+      background-color: #1e293b !important;
+      color: #38bdf8 !important;
+    }
   </style>
 </head>
 <body class="bg-[#0b0f19] text-slate-100 flex flex-col h-screen overflow-hidden font-sans antialiased relative">
@@ -441,14 +457,19 @@
 
         <!-- Interval & Refresh Controls -->
         <div class="flex items-center space-x-1.5">
-          <div class="relative flex items-center bg-slate-800 rounded border border-slate-700 px-1 py-0.5" title="Định kỳ làm mới trạng thái">
-            <span class="text-[10px] text-slate-400 mr-1">⏱️</span>
-            <select id="agentStatusIntervalSelect" onchange="onAgentStatusIntervalChange(this.value)" class="bg-transparent text-slate-200 text-[11px] font-medium focus:outline-none cursor-pointer">
-              <option value="2000">2s</option>
-              <option value="5000" selected>5s (Chuẩn)</option>
-              <option value="10000">10s</option>
-              <option value="30000">30s</option>
-              <option value="0">Tắt (Dừng)</option>
+          <div class="relative flex items-center bg-slate-900 rounded-lg border border-slate-700 px-1.5 py-0.5 shadow-inner" title="Định kỳ làm mới trạng thái">
+            <span class="text-[11px] mr-1 select-none">⏱️</span>
+            <select 
+              id="agentStatusIntervalSelect" 
+              onchange="onAgentStatusIntervalChange(this.value)" 
+              class="bg-[#0f172a] text-slate-100 text-[11px] font-semibold focus:outline-none cursor-pointer py-0.5 pr-1 rounded"
+              style="background-color: #0f172a; color: #f8fafc;"
+            >
+              <option value="2000" style="background-color: #0f172a; color: #f8fafc;">2s</option>
+              <option value="5000" selected style="background-color: #0f172a; color: #f8fafc;">5s (Chuẩn)</option>
+              <option value="10000" style="background-color: #0f172a; color: #f8fafc;">10s</option>
+              <option value="30000" style="background-color: #0f172a; color: #f8fafc;">30s</option>
+              <option value="0" style="background-color: #0f172a; color: #fda4af;">Tắt (Dừng)</option>
             </select>
           </div>
           <button 
