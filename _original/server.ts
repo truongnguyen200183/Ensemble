@@ -277,17 +277,22 @@ const server = http.createServer(async (req, res) => {
             thinkingTime = thoughtMatch[1].trim()
           }
 
-          if (paneContent.includes('Thought for') && (/[⣾⣽⣻⢿⡿⣟⣯⣷]/.test(paneContent) || paneContent.includes('Thinking'))) {
-            state = 'thinking'
-            detail = `🧠 Đang suy luận (${thinkingTime || 'Thinking...'})`
-          } else if (paneContent.includes('Running command') || paneContent.includes('Running (') || /[⣾⣽⣻⢿⡿⣟⣯⣷]/.test(paneContent)) {
-            state = 'running'
-            const cmdMatch = paneContent.match(/Running command:? ([^\n\r]+)/i) || paneContent.match(/Ran \(([^)]+)\)/i)
-            detail = cmdMatch ? `⚡ Chạy lệnh: ${cmdMatch[1].slice(0, 45)}...` : '⚡ Đang thực thi lệnh...'
-          } else if (paneContent.includes('Explored ') || paneContent.includes('Explored 1 file') || paneContent.includes('Explored 2 files')) {
-            state = 'running'
-            const fileMatch = paneContent.match(/Explored [0-9]+ files? \(([^)]+)\)/i)
-            detail = fileMatch ? `📁 Đọc file: ${fileMatch[1].slice(0, 40)}...` : '📁 Đang duyệt mã nguồn'
+          const actionsMatch = paneContent.match(/([0-9]+\s+more\s+actions[^\n\r]*|\d+\s+actions[^\n\r]*)/i)
+          const actionsStr = actionsMatch ? ` • ${actionsMatch[1].replace(/[…\(\)]/g, '').trim()}` : ''
+
+          const isBusy = paneContent.includes('esc to cancel') || /[⣾⣽⣻⢿⡿⣟⣯⣷]/.test(paneContent) || paneContent.includes('Running command') || paneContent.includes('Running (')
+
+          if (isBusy) {
+            if (paneContent.includes('Running command') || paneContent.includes('Running (') || paneContent.includes('Edited 1 file') || paneContent.includes('Edited ')) {
+              state = 'running'
+              detail = `⚡ Đang chạy lệnh & sửa code${actionsStr}${thinkingTime ? ` [Đã suy luận ${thinkingTime}]` : ''}`
+            } else if (paneContent.includes('Explored ') || paneContent.includes('Explored 1 file')) {
+              state = 'running'
+              detail = `📁 Đang duyệt & đọc code${actionsStr}${thinkingTime ? ` [Đã suy luận ${thinkingTime}]` : ''}`
+            } else {
+              state = 'thinking'
+              detail = `🧠 Đang suy luận chuyên sâu (${thinkingTime || 'Thinking...'})`
+            }
           } else if (paneContent.includes('Press up to edit queued messages') || paneContent.trim().endsWith('>') || paneContent.includes('? for shortcuts')) {
             state = 'idle'
             detail = '💤 Đang trực tuyến (chờ việc)'
@@ -299,6 +304,26 @@ const server = http.createServer(async (req, res) => {
 
         const lastMsg = [...messages].reverse().find(m => m.from === agent.name)
         const modelDisplay = modelMap[agent.program] || agent.program || 'Auto'
+
+        // Trích xuất các dòng tiến trình thực tế (Thought for, Ran, Explored, Edited, Running)
+        let meaningfulTail = ''
+        if (paneContent) {
+          const lines = paneContent.split('\n')
+          const progressLines = lines.filter(l => 
+            l.includes('Thought for') || 
+            l.includes('Ran ') || 
+            l.includes('Explored ') || 
+            l.includes('Edited ') || 
+            l.includes('Running ') ||
+            l.includes('actions') ||
+            l.includes('esc to cancel')
+          )
+          if (progressLines.length >= 2) {
+            meaningfulTail = progressLines.slice(-7).join('\n')
+          } else {
+            meaningfulTail = lines.slice(-8).join('\n')
+          }
+        }
 
         return {
           agentId: agent.agentId,
@@ -313,7 +338,7 @@ const server = http.createServer(async (req, res) => {
           thinkingTime,
           lastMessageSnippet: lastMsg ? (lastMsg.content.length > 80 ? lastMsg.content.slice(0, 80) + '...' : lastMsg.content) : null,
           lastMessageAt: lastMsg?.timestamp || null,
-          paneTail: paneContent ? paneContent.trim().split('\n').slice(-8).join('\n') : '',
+          paneTail: meaningfulTail,
         }
       }))
 
