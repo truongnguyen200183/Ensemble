@@ -1066,14 +1066,49 @@
       // 2. USER MESSAGE (Right side, Sky Blue accent)
       if (isUser) {
         div.className += ' items-end group'
+
+        let targetBadgeHtml = ''
+        if (msg.to && msg.to.toLowerCase() !== 'team') {
+          const targetAgent = (currentTeamAgents || []).find(a => a.name.toLowerCase() === (msg.to || '').toLowerCase())
+          let targetLabel = escapeHtml(msg.to)
+          if (targetAgent) {
+            const r = (targetAgent.role || 'WORKER').toUpperCase()
+            const roleIcons = {
+              'LEAD': '👑', 'WORKER': '⚡', 'REVIEWER': '🔍', 'CRITIC': '🧐',
+              'ARCHITECT': '📐', 'DEVELOPER': '💻', 'TESTER': '🧪', 'RESEARCHER': '🔬'
+            }
+            const icon = roleIcons[r] || '🤖'
+            targetLabel = `${icon} ${r} (${targetAgent.name})`
+          } else {
+            const targetLower = (msg.to || '').toLowerCase()
+            if (targetLower.includes('lead')) targetLabel = `👑 LEAD (${escapeHtml(msg.to)})`
+            else if (targetLower.includes('review')) targetLabel = `🔍 REVIEWER (${escapeHtml(msg.to)})`
+            else if (targetLower.includes('worker')) targetLabel = `⚡ WORKER (${escapeHtml(msg.to)})`
+          }
+          targetBadgeHtml = `
+            <span class="text-sky-400 font-bold mx-1">➔</span>
+            <span class="px-2 py-0.5 rounded-md bg-sky-900/90 border border-sky-400/60 text-sky-100 text-[11px] font-bold shadow-sm inline-flex items-center space-x-1">
+              <span>${targetLabel}</span>
+            </span>
+          `
+        } else {
+          targetBadgeHtml = `
+            <span class="text-sky-400/80 font-normal mx-0.5">➔</span>
+            <span class="px-1.5 py-0.5 rounded text-[11px] text-sky-300 font-medium bg-sky-950/60 border border-sky-800/40">👥 Cả nhóm</span>
+          `
+        }
+
         div.innerHTML = `
           <div class="max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 bg-sky-950/80 border border-sky-600/50 shadow-md">
             <div class="flex items-center justify-between space-x-3 mb-1.5 pb-1 border-b border-sky-800/40">
-              <span class="font-bold text-xs text-sky-300 flex items-center space-x-1">
-                <span>👤</span>
-                <span>BẠN (USER)</span>
-              </span>
-              <div class="flex items-center space-x-2">
+              <div class="font-bold text-xs text-sky-300 flex items-center flex-wrap gap-1">
+                <span class="flex items-center space-x-1">
+                  <span>👤</span>
+                  <span>BẠN (USER)</span>
+                </span>
+                ${targetBadgeHtml}
+              </div>
+              <div class="flex items-center space-x-2 shrink-0">
                 <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
                 <button type="button" onclick="handleReplyClick('${msg.id}')" title="Trích dẫn tin nhắn này" class="opacity-0 group-hover:opacity-100 transition px-1.5 py-0.5 rounded bg-sky-900/60 hover:bg-sky-800 text-[10px] text-sky-200 flex items-center space-x-1 cursor-pointer">
                   <span>↩️</span>
@@ -1106,6 +1141,7 @@
                   <span>${role}</span>
                 </span>
                 ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
+                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs">➔</span><span class="text-[10px] text-blue-300 font-semibold px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800/60">${escapeHtml(msg.to)}</span>` : ''}
               </div>
               <div class="flex items-center space-x-2">
                 <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
@@ -1144,6 +1180,7 @@
                 <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
               </div>
               <div class="flex items-center space-x-2">
+                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-[10px] text-purple-300 font-semibold px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-800/60">${escapeHtml(msg.to)}</span><span class="text-slate-400 text-xs">➔</span>` : ''}
                 ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
                 <span class="px-2 py-0.5 rounded-md ${badgeStyle} border font-bold text-xs flex items-center space-x-1">
                   <span>${icon}</span>
