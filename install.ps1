@@ -145,17 +145,22 @@ if (-not $wslInstalled) {
 
 Write-Success "WSL đã sẵn sàng."
 
-# Cấu hình .wslconfig tối ưu RAM và duy trì server ngầm liên tục
+# Cấu hình .wslconfig tối ưu RAM, mạng mirrored và duy trì server ngầm liên tục
 $wslConfigPath = Join-Path $env:USERPROFILE ".wslconfig"
 $wslConfigContent = @"
 [wsl2]
-memory=8GB
+memory=10GB
+networkingMode=mirrored
+dnsTunneling=true
+autoProxy=true
 vmIdleTimeout=-1
+
+[experimental]
 autoMemoryReclaim=gradual
 "@
 try {
     [System.IO.File]::WriteAllText($wslConfigPath, $wslConfigContent, [System.Text.Encoding]::ASCII)
-    Write-Success "Đã tối ưu .wslconfig (memory=8GB, autoMemoryReclaim=gradual, vmIdleTimeout=-1)."
+    Write-Success "Đã tối ưu .wslconfig (memory=10GB, networkingMode=mirrored, autoMemoryReclaim=gradual, vmIdleTimeout=-1)."
 } catch {
     Write-Warn "Không thể ghi tệp .wslconfig: $_"
 }
