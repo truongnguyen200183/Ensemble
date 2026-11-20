@@ -145,11 +145,30 @@ if (-not $wslInstalled) {
 
 Write-Success "WSL đã sẵn sàng."
 
-# Cấu hình vmIdleTimeout=-1 để WSL không tự tắt ngầm khi đóng terminal
+# Cấu hình .wslconfig tối ưu RAM và duy trì server ngầm liên tục
 $wslConfigPath = Join-Path $env:USERPROFILE ".wslconfig"
-if (-not (Test-Path $wslConfigPath)) {
-    [System.IO.File]::WriteAllText($wslConfigPath, "[wsl2]`r`nvmIdleTimeout=-1`r`n", [System.Text.Encoding]::ASCII)
-    Write-Success "Đã tối ưu cấu hình WSL duy trì server ngầm liên tục (vmIdleTimeout=-1)."
+$wslConfigContent = @"
+[wsl2]
+memory=8GB
+vmIdleTimeout=-1
+autoMemoryReclaim=gradual
+"@
+try {
+    [System.IO.File]::WriteAllText($wslConfigPath, $wslConfigContent, [System.Text.Encoding]::ASCII)
+    Write-Success "Đã tối ưu .wslconfig (memory=8GB, autoMemoryReclaim=gradual, vmIdleTimeout=-1)."
+} catch {
+    Write-Warn "Không thể ghi tệp .wslconfig: $_"
+}
+
+# Tự động loại trừ D:\Projects khỏi Windows Defender để tăng tốc I/O cho Agent
+if (Test-Path "D:\Projects") {
+    try {
+        Write-Info "Đang cấu hình Windows Defender loại trừ D:\Projects để tăng tốc I/O..."
+        Add-MpPreference -ExclusionPath "D:\Projects" -ErrorAction SilentlyContinue
+        Write-Success "Đã thêm D:\Projects vào danh sách loại trừ của Windows Defender."
+    } catch {
+        Write-Warn "Chưa thể tự động thêm Windows Defender Exclusion (cần quyền Administrator, có thể cấu hình sau)."
+    }
 }
 
 # Tìm distro phù hợp
@@ -169,6 +188,23 @@ if (-not $wslDistroFound) { $wslDistroFound = "Ubuntu" }
 
 Write-Success "Sử dụng WSL Distro: $wslDistroFound"
 
+# Cấu hình /etc/wsl.conf trong WSL: kích hoạt systemd và tối ưu mount phân quyền metadata
+Write-Info "Đang cấu hình /etc/wsl.conf (kích hoạt systemd=true & automount metadata)..."
+$wslConfContent = @"
+[boot]
+systemd=true
+
+[automount]
+enabled = true
+options = "metadata,umask=22,fmask=11"
+"@
+try {
+    $wslConfContent | & wsl -d $wslDistroFound -u root tee /etc/wsl.conf | Out-Null
+    Write-Success "Đã cấu hình /etc/wsl.conf thành công: [boot] systemd=true & [automount] metadata."
+} catch {
+    Write-Warn "Không thể ghi /etc/wsl.conf qua wsl root: $_"
+}
+
 # Kiểm tra kết nối vào WSL
 $wslUser = (& wsl -d $wslDistroFound -e whoami).Trim()
 Write-Success "WSL User: $wslUser"
@@ -176,7 +212,7 @@ Write-Success "WSL User: $wslUser"
 # ------------------------------------------------------------------------------
 # 4. Cài đặt các gói phụ thuộc bên trong WSL
 # ------------------------------------------------------------------------------
-Write-Header "Bước 3/6: Cài đặt gói công cụ trong WSL (curl, git, tmux, jq, nodejs)"
+Write-Header "Bước 3/6: Cài đặt gói công cụ trong WSL (curl, git, tmux, jq, nodejs, tsx)"
 
 $pkgList = ($config.platforms.windows.required_wsl_packages -join " ")
 Write-Info "Đang kiểm tra và cài đặt: $pkgList..."
@@ -191,6 +227,12 @@ if ! command -v node >/dev/null 2>&1 || [ "\$(node -v | cut -d'v' -f2 | cut -d'.
     echo ">> Đang cài Node.js LTS vào WSL..."
     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
     sudo apt-get install -y -qq nodejs
+fi
+
+# Cài đặt tsx toàn cục để chạy server.ts trực tiếp
+if ! command -v tsx >/dev/null 2>&1; then
+    echo ">> Đang cài tsx (TypeScript execution engine)..."
+    sudo npm install -g tsx
 fi
 "@
 
@@ -275,19 +317,27 @@ Write-Success "Đã lưu biến môi trường WSL vào ~/.bashrc."
 
 # 3. Kích hoạt dịch vụ ensemble trong WSL (systemd hoặc background daemon)
 $serviceScript = @"
-if command -v systemctl >/dev/null 2>&1 && systemctl is-system-running >/dev/null 2>&1; then
-    sudo tee /etc/systemd/system/ensemble.service > /dev/null << 'SVCEOF'
+TSX_BIN="\$(which tsx 2>/dev/null || echo /usr/local/bin/tsx)"
+if command -v systemctl >/dev/null 2>&1; then
+    sudo tee /etc/systemd/system/ensemble.service > /dev/null << SVCEOF
 [Unit]
-Description=Ensemble Collab Server
+Description=Ensemble Multi-Agent HTTP Server and Web Dashboard
 After=network.target
 
 [Service]
-Type=simple
 User=$wslUser
-WorkingDirectory=/home/$wslUser/ensemble/_original
-ExecStart=/usr/bin/npm start
+Group=$wslUser
+Environment=HOME=/home/$wslUser
+Environment=TMUX_TMPDIR=/tmp
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/$wslUser/.local/bin
+Type=simple
+WorkingDirectory=/home/$wslUser/ensemble
+ExecStart=\$TSX_BIN /home/$wslUser/ensemble/server.ts
 Restart=always
-RestartSec=3
+RestartSec=2
+Environment=PORT=$port
+Environment=HOST=0.0.0.0
 Environment=NODE_ENV=production
 Environment=ENSEMBLE_PORT=$port
 Environment=ENSEMBLE_URL=$ensembleUrl
@@ -296,12 +346,12 @@ Environment=ENSEMBLE_URL=$ensembleUrl
 WantedBy=multi-user.target
 SVCEOF
     sudo systemctl daemon-reload
-    sudo systemctl enable --now ensemble
+    sudo systemctl enable --now ensemble 2>/dev/null || true
     echo ">> Service ensemble.service đã được kích hoạt qua systemd!"
 else
-    # Fallback chạy nền qua nohup nếu systemd tắt
+    # Fallback chạy nền qua nohup nếu systemd chưa sẵn sàng
     if ! pgrep -f "server.ts" >/dev/null 2>&1; then
-        cd \$HOME/ensemble/_original && nohup npm start > \$HOME/.ensemble/server.log 2>&1 &
+        cd \$HOME/ensemble && nohup \$TSX_BIN server.ts > \$HOME/.ensemble/server.log 2>&1 &
         echo ">> Ensemble server đã chạy ngầm trong background."
     fi
 fi

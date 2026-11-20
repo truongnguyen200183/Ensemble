@@ -67,18 +67,23 @@ Toàn bộ thông số hệ thống, mô hình AI và tên miền được quả
 ## 🪟 Cài đặt trên Windows (1-Click)
 
 ### Cách thực hiện:
-1. Mở thư mục dự án trên máy Windows.
-2. **Nhấp đúp chuột vào file [`install.bat`](./install.bat)** (hoặc mở Command Prompt / PowerShell và chạy `.\install.bat`).
+1. Mở thư mục dự án trên máy Windows (`D:\Ensemble`).
+2. **Nhấp đúp chuột vào file [`install.bat`](./install.bat)** (hoặc chuột phải chọn *Run as administrator* nếu muốn tự động thêm Windows Defender Exclusion).
 
-### Những gì trình cài đặt tự động thực hiện:
-* [x] **Kiểm tra Windows Host**: Tự kiểm tra `git`, `node` (nếu thiếu, tự gọi `winget` để cài).
-* [x] **Kiểm tra & Cài đặt WSL**: Kiểm tra xem WSL đã bật chưa. Nếu chưa có, tự chạy `wsl --install -d Ubuntu`.
-* [x] **Cài đặt môi trường trong WSL**: Tự động cài `git`, `tmux`, `curl`, `jq`, `nodejs`, `npm`.
+### Những gì trình cài đặt tự động thực hiện (Không cần gõ lệnh thủ công):
+* [x] **Kiểm tra Windows Host**: Tự kiểm tra `git`, `node` (nếu thiếu, tự gọi `winget` để cài đặt tự động).
+* [x] **Kiểm tra & Cài đặt WSL**: Kiểm tra xem WSL đã bật chưa. Nếu chưa có, tự động kích hoạt và cài đặt `Ubuntu`.
+* [x] **Tự động cấu hình `/etc/wsl.conf` (Quan trọng)**:
+  * Kích hoạt `[boot] systemd=true` để các lệnh quản lý dịch vụ `systemctl` hoạt động trơn tru.
+  * Kích hoạt `[automount] metadata,umask=22,fmask=11` để phân quyền và đọc ghi file trên ổ `D:\` không bị lỗi quyền giả.
+* [x] **Tự động tối ưu tài nguyên (`.wslconfig`)**: Thiết lập `memory=8GB`, `autoMemoryReclaim=gradual` và `vmIdleTimeout=-1` để server không bị tắt khi đóng cửa sổ.
+* [x] **Tự động cấu hình Windows Defender**: Thêm thư mục `D:\Projects` vào danh sách loại trừ để CPU không bị nghẽn khi Agent quét mã nguồn.
+* [x] **Cài đặt môi trường trong WSL**: Tự động cài `git`, `tmux`, `curl`, `jq`, `nodejs`, và công cụ chạy TypeScript `tsx`.
 * [x] **Đồng bộ mã nguồn**: Tự động tải/cập nhật phiên bản mới nhất từ Git về WSL (`~/ensemble`).
-* [x] **Cài đặt thư viện NPM**: Chạy `npm install` hoàn chỉnh trên cả Windows và Linux WSL.
-* [x] **Cấu hình Dịch vụ nền**: Đăng ký `ensemble.service` tự động khởi động cùng hệ điều hành.
-* [x] **Thiết lập Biến môi trường (ENV)**: Lưu `ENSEMBLE_PORT`, `ENSEMBLE_URL`, `COLLAB_MONITOR` vào User Environment và `~/.bashrc`.
-* [x] **Đăng ký lệnh toàn cục**: Đưa thư mục `bin/` vào Windows `PATH`. Bạn có thể gõ `collab` ở bất kỳ thư mục nào!
+* [x] **Cài đặt thư viện NPM**: Chạy `npm install` hoàn chỉnh trên Linux WSL.
+* [x] **Cấu hình Dịch vụ nền (Systemd Service)**: Đăng ký dịch vụ `ensemble.service` tự động khởi động và chạy ngầm trên cổng `23000`.
+* [x] **Thiết lập Biến môi trường (ENV)**: Lưu `ENSEMBLE_PORT`, `ENSEMBLE_URL`, `COLLAB_MONITOR` vào Windows User Environment và `~/.bashrc`.
+* [x] **Đăng ký lệnh toàn cục**: Đưa thư mục `bin/` vào Windows `PATH`. Bạn có thể mở bất kỳ cửa sổ nào và gõ lệnh `collab` ngay lập tức!
 
 ---
 
@@ -225,4 +230,14 @@ Sau đó chạy lại `install.bat` (hoặc `install.sh`) để hệ thống t�
 * Trên Windows: Gõ `wsl tmux attach`
 * Trên macOS / Linux: Gõ `tmux attach`
 * Thoát khỏi màn hình tmux: Nhấn `Ctrl + B`, sau đó nhấn `D`.
+
+### 5. Lỗi `System has not been booted with systemd as init system (PID 1)`
+* **Nguyên nhân**: File `/etc/wsl.conf` bị thiếu cấu hình `[boot] systemd=true` khiến WSL2 khởi động ở chế độ init thông thường và không hỗ trợ `systemctl`.
+* **Khắc phục**:
+  1. Chỉ cần **nhấp đúp chuột chạy lại `install.bat`** (trình cài đặt sẽ tự động nạp lại `systemd=true` và `metadata` vào `/etc/wsl.conf`).
+  2. Mở PowerShell trên Windows và chạy lệnh khởi động lại WSL:
+     ```powershell
+     wsl --shutdown
+     ```
+  3. Sau đó mở lại terminal WSL, dịch vụ `ensemble` sẽ tự động chạy ngầm bình thường.
 
