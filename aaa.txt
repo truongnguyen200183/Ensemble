@@ -1,0 +1,16 @@
+Hướng dẫn tối ưu Antigravity (Windows) & Claude Code (WSL2) với D:\ProjectsTài liệu này tổng hợp các thiết lập cần thiết để chạy Antigravity IDE trực tiếp trên Windows 11 và Claude Code (cùng các AI agent) trong môi trường WSL2, trong khi toàn bộ mã nguồn vẫn nằm linh hoạt tại D:\Projects.1. Kiến trúc hoạt độngPhía Windows 11: Antigravity IDE mở trực tiếp thư mục D:\Projects\<ten-du-an> để bạn code, chỉnh sửa giao diện và thao tác trực tiếp.Phía WSL2 (Ubuntu): Claude Code và các công cụ CLI truy cập cùng thư mục thông qua đường dẫn mount /mnt/d/Projects/<ten-du-an>.2. Loại trừ D:\Projects khỏi Windows Defender (Quan trọng nhất)Khi Claude Code quét codebase qua /mnt/d/Projects, tiến trình Antimalware Service Executable của Windows sẽ quét từng tệp, làm giảm đáng kể tốc độ đọc/tìm kiếm.Mở Windows Security $\rightarrow$ chọn Virus & threat protection.Dưới mục Virus & threat protection settings, chọn Manage settings.Cuộn xuống mục Exclusions $\rightarrow$ chọn Add or remove exclusions.Chọn Add an exclusion $\rightarrow$ Folder $\rightarrow$ chọn thư mục D:\Projects.Kiểm tra thành công: D:\Projects hiển thị trong danh sách loại trừ và CPU của Windows Defender không tăng đột biến khi Claude Code tìm kiếm trong dự án.3. Tối ưu mount và phân quyền trong /etc/wsl.confBật metadata giúp các công cụ Linux và agent trong WSL xử lý quyền tệp trên ổ D: chính xác hơn, tránh lỗi phân quyền giả.Mở terminal WSL và chạy lệnh:
+sudo tee /etc/wsl.conf > /dev/null << 'EOF'
+[boot]
+systemd=true
+
+[automount]
+enabled = true
+options = "metadata,umask=22,fmask=11"
+EOF
+Mở PowerShell trên Windows và khởi động lại WSL:wsl --shutdown
+Kiểm tra thành công: Mở lại WSL, chạy mount | grep /mnt/d và thấy tham số metadata xuất hiện.4. Giới hạn RAM cho VmmemWSL bằng .wslconfigNgăn máy ảo WSL2 chiếm dụng quá nhiều RAM trên Windows khi agent chạy các tác vụ nặng.Tạo hoặc chỉnh sửa tệp C:\Users\<TenUserWindows>\.wslconfig với nội dung:[wsl2]
+memory=6GB
+autoMemoryReclaim=gradual
+(Điều chỉnh mức 6GB tùy theo tổng dung lượng RAM trên máy của bạn, sau đó chạy wsl --shutdown trong PowerShell để áp dụng).Kiểm tra thành công: Theo dõi trong Task Manager, tiến trình VmmemWSL không vượt quá mức giới hạn và tự giảm dần RAM sau khi agent hoàn thành tác vụ.5. Tách thư viện nặng khỏi /mnt/d để tăng tốc I/OViệc đọc/ghi hàng chục nghìn tệp nhỏ qua cầu nối /mnt/d dễ gây chậm hệ thống:Python: Tạo môi trường ảo .venv bên trong hệ thống tệp Linux của WSL thay vì đặt trong D:\Projects:python3 -m venv ~/.venvs/ten-du-an
+source ~/.venvs/ten-du-an/bin/activate
+Node.js: Ưu tiên dùng pnpm hoặc trỏ bộ nhớ đệm (npm/pnpm store) về thư mục nội bộ của WSL (~/.pnpm-store, ~/.npm).6. Lưu ý vận hành hằng ngàyĐứng đúng thư mục dự án: Luôn cd /mnt/d/Projects/<ten-du-an> trước khi gõ claude để agent không quét nhầm ra toàn bộ ổ D:\.Tránh xung đột ghi tệp: Khi Claude Code đang áp dụng thay đổi (diff) lên tệp, hạn chế lưu đè hoặc bật Auto-Save với độ trễ quá ngắn trên Antigravity IDE để tránh xung đột khóa tệp (file lock).
