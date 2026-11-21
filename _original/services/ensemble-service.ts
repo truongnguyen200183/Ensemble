@@ -656,6 +656,7 @@ export function buildPromptPreview(params: {
   agentIndex: number
   templateName?: string
   instruction?: string
+  allAgents?: Array<{ name: string; role: string; instruction?: string }>
 }): string {
   const taskPreamble = readEnsembleConfig().taskPreamble
   const template = loadCollabTemplate(params.templateName)
@@ -709,6 +710,7 @@ export function buildPromptPreview(params: {
           `ROLE: ${roleName}.`,
           `You own architecture, planning, high-level design, task breakdown, and code review.`,
           `Your first action after greeting is to share a concrete implementation plan with the ${solo ? 'worker' : 'workers'} before any implementation starts.`,
+          `CRITICAL FOR LEAD: Review each team member's specific assignment in the team roster below. You must delegate tasks in alignment with these assignments (e.g. assign code implementation directly to the worker designated for coding, and review to the reviewer). Guide and direct them via team-say.`,
           solo
             ? `Keep the worker focused by delegating clear implementation steps, reviewing progress, and calling out risks or design corrections early.`
             : `Keep the workers focused by giving each of them a clearly separated piece of the work, reviewing progress, and calling out risks, overlap, or design corrections early.`,
@@ -722,11 +724,21 @@ export function buildPromptPreview(params: {
         ]
   }
 
+  let rosterText = ''
+  if (params.allAgents && params.allAgents.length > 0) {
+    const lines = params.allAgents.map(a => {
+      const isSelf = a.name === params.agentName
+      return `- ${a.name} [${(a.role || 'worker').toUpperCase()}]${isSelf ? ' (YOU)' : ''}: ${a.instruction ? a.instruction : 'Standard duties for ' + (a.role || 'worker')}`
+    })
+    rosterText = `TEAM ROSTER & ALL MEMBER ASSIGNMENTS:\n${lines.join('\n')}`
+  }
+
   return [
     `You are ${params.agentName} in team "${params.teamName}" with ${mateWord} ${mateList}.`,
     ...(taskPreamble ? [`Task preamble: ${taskPreamble}`] : []),
     `Task: ${params.description}`,
     ...(params.instruction && params.instruction.trim() ? [`SPECIFIC ASSIGNMENT FOR YOU (${params.agentName}):\n${params.instruction.trim()}\nPlease adhere strictly to these specific instructions.`] : []),
+    ...(rosterText ? [rosterText] : []),
     ...roleInstructions,
     `COMMUNICATION & FORMATTING RULES:`,
     `1. Send findings: ${teamSayCmd} "your message"`,
@@ -923,6 +935,7 @@ export async function createEnsembleTeam(
       agentIndex,
       templateName: request.templateName,
       instruction,
+      allAgents: team.agents.map(a => ({ name: a.name, role: a.role, instruction: a.instruction })),
     })
   }
 
@@ -1619,6 +1632,19 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
     type: 'chat', timestamp: new Date().toISOString(),
   })
 
+  // Broadcast team assignment roster to feed so Lead and all members see everyone's task
+  const assignmentLines = team.agents.map(a => {
+    const roleIcon = a.role?.toLowerCase().includes('lead') ? '👑' : (a.role?.toLowerCase().includes('review') ? '🔍' : '⚡')
+    const roleName = (a.role || 'worker').toUpperCase()
+    return `- ${roleIcon} **${a.name}** (${roleName}): ${a.instruction ? `"${a.instruction}"` : 'Thực hiện theo vai trò tiêu chuẩn'}`
+  }).join('\n')
+
+  appendMessage(team.id, {
+    id: uuidv4(), teamId: team.id, from: 'ensemble', to: 'team',
+    content: `📋 **Bảng phân công nhiệm vụ đội ngũ:**\n${assignmentLines}\n\n👉 **${team.agents[0]?.name || 'Lead'}**: Căn cứ vào bảng phân công này, bạn hãy lên kế hoạch chi tiết và giao nhiệm vụ (task) trực tiếp cho từng thành viên qua \`team-say\`.`,
+    type: 'chat', timestamp: new Date().toISOString(),
+  })
+
   // Get last messages for context
   const previousMessages = getMessages(team.id)
   const recentHistory = previousMessages
@@ -1668,14 +1694,24 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
       const agentSpec = team.agents[i]
       const agentName = `${team.name}-${agentSpec.name}`
       const teammateNames = team.agents.filter((_, j) => j !== i).map(a => a.name)
+      const isLead = (agentSpec.role || '').toLowerCase().includes('lead') || i === 0
+
+      const teamRosterAssignments = team.agents.map(a => {
+        const isSelf = a.name === agentSpec.name
+        return `- ${a.name} [${(a.role || 'worker').toUpperCase()}]${isSelf ? ' (YOU)' : ''}: ${a.instruction ? a.instruction : 'General duties for ' + (a.role || 'worker')}`
+      }).join('\n')
 
       const isReactivation = Boolean(recentHistory)
       const resumePrompt = [
         `You are ${agentSpec.name} (${(agentSpec.role || 'worker').toUpperCase()}) in team "${team.name}" with teammate(s) ${teammateNames.join(', ')}.`,
         `Task: ${team.description}.`,
         agentSpec.instruction && agentSpec.instruction.trim()
-          ? `SPECIFIC ROLE ASSIGNMENT & INSTRUCTIONS FOR YOU (${agentSpec.name}):\n${agentSpec.instruction.trim()}\nPlease focus on and follow these specific instructions diligently.`
+          ? `YOUR INDIVIDUAL ASSIGNMENT (${agentSpec.name}):\n${agentSpec.instruction.trim()}`
           : '',
+        `TEAM ROSTER & ALL MEMBER ASSIGNMENTS:\n${teamRosterAssignments}`,
+        isLead
+          ? `CRITICAL FOR LEAD: You are the team lead. Study each member's specific assignment above carefully. Break down the task and delegate work directly to each teammate matching their designated assignment (e.g. assign code implementation directly to the worker designated for coding, and review to the reviewer). Send your implementation plan and specific tasks via team-say.`
+          : `CRITICAL FOR WORKER: Coordinate with ${team.agents[0]?.name || 'Lead'} and execute your assigned tasks as described above.`,
         isReactivation
           ? `This session was REACTIVATED by the user to continue collaborating.`
           : `This team was newly created and launched by the user to execute this task.`,
