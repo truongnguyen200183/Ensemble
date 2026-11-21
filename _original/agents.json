@@ -162,5 +162,17 @@
     "inputMethod": "sendKeys",
     "color": "cyan",
     "icon": "🦙"
+  },
+  "ollama-qwen": {
+    "name": "ollama-qwen",
+    "command": "aider-smart",
+    "flags": [
+      "--model",
+      "ollama/qwen3-coder:30b"
+    ],
+    "readyMarker": ">",
+    "inputMethod": "sendKeys",
+    "color": "cyan",
+    "icon": "🦙"
   }
 }

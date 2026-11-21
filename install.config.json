@@ -136,6 +136,14 @@
         "description": "Mô hình cục bộ chạy trên server Ollama nội bộ 192.168.86.23 (Không tốn quota)",
         "category": "ollama",
         "tier": 7
+      },
+      {
+        "id": "ollama-qwen",
+        "name": "Ollama Qwen 3 Coder (30B Local)",
+        "badge": "Local Network",
+        "description": "Mô hình chuyên lập trình cục bộ chạy trên server Ollama nội bộ 192.168.86.23",
+        "category": "ollama",
+        "tier": 7
       }
     ]
   },

@@ -21,6 +21,8 @@ for ((i=1; i<=$#; i++)); do
     M="${!next_i}"
     if [[ "$M" == "ollama-gemma" || "$M" == "gemma4:12b" ]]; then
       MODEL="ollama/gemma4:12b"
+    elif [[ "$M" == "ollama-qwen" || "$M" == "qwen3-coder:30b" || "$M" == "qwen3-coder" ]]; then
+      MODEL="ollama/qwen3-coder:30b"
     elif [[ "$M" != ollama/* && "$M" != openai/* ]]; then
       MODEL="ollama/$M"
     else

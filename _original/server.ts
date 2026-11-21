@@ -232,6 +232,9 @@ const server = http.createServer(async (req, res) => {
         'agy-worker': 'Gemini 3.8 Flash (Medium)',
         'agy-pro': 'Claude Sonnet (Pro)',
         'ollama-gemma': 'Ollama Gemma 4 (12B Local)',
+        'ollama-qwen': 'Ollama Qwen 3 Coder (30B Local)',
+        'ollama/gemma4:12b': 'Ollama Gemma 4 (12B Local)',
+        'ollama/qwen3-coder:30b': 'Ollama Qwen 3 Coder (30B Local)',
         'gemini-pro-orchestrator-g1-pro': 'Orchestrator (Argon)',
         'gemini-pro-orchestrator-neon': 'Orchestrator (Neon)',
         'gemini-3.8-flash-medium': 'Gemini 3.8 Flash (Medium)',
@@ -777,7 +780,8 @@ const server = http.createServer(async (req, res) => {
 
         ...(hasOllama ? [
           // 7. Ollama Local (chỉ hiện khi máy đã cài đặt kết nối Ollama/Aider)
-          { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)' }
+          { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)' },
+          { id: 'ollama-qwen', name: 'Ollama Qwen 3 Coder (30B Local)', group: 'Local Ollama', desc: 'Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)' }
         ] : []),
       ]
 
@@ -830,10 +834,13 @@ const server = http.createServer(async (req, res) => {
                 a.flags = ['--permission-mode', 'auto', '--model', model]
                 a.readyMarker = '❯'
                 a.unsetEnv = ['ANTHROPIC_API_KEY']
-              } else if (model.startsWith('ollama') || model.includes('gemma')) {
+              } else if (model.startsWith('ollama') || model.includes('gemma') || model.includes('qwen')) {
                 // Model Ollama Local -> chạy qua aider-smart
                 a.command = 'aider-smart'
-                a.flags = ['--model', model === 'ollama-gemma' ? 'ollama/gemma4:12b' : model]
+                let targetM = model
+                if (model === 'ollama-gemma') targetM = 'ollama/gemma4:12b'
+                else if (model === 'ollama-qwen') targetM = 'ollama/qwen3-coder:30b'
+                a.flags = ['--model', targetM]
                 a.readyMarker = '>'
                 a.unsetEnv = []
               } else {
