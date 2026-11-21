@@ -1,0 +1,38 @@
+{
+  "ollama/gemma4:12b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  },
+  "ollama/qwen3-coder:30b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  },
+  "gemma4:12b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  },
+  "qwen3-coder:30b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  }
+}

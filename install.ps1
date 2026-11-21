@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Ensemble Collab - Automated Universal Installer for Windows
 # Reads install.config.json -> Checks Git, Node, WSL -> Auto-configures ENV & CLI
 # ==============================================================================
@@ -339,6 +339,8 @@ fi
 
 cat << 'AIDEREOF' > /tmp/aider-smart.sh
 #!/usr/bin/env bash
+# Runner for Aider connected to local Ollama (gemma4:12b / qwen3-coder:30b)
+# Hard context cap: 16384 tokens (num_ctx: 16384, max-chat-history-tokens: 12288)
 export OLLAMA_API_BASE="${defaultOllamaApi}"
 export OPENAI_API_BASE="${defaultOllamaApi}/v1"
 export OPENAI_API_KEY="ollama"
@@ -351,8 +353,10 @@ for ((i=1; i<=\$#; i++)); do
   if [ "\$ARG" == "--model" ]; then
     next_i=\$((i+1))
     M="\${!next_i}"
-    if [[ "\$M" == "ollama-gemma" || "\$M" == "${defaultOllamaModel}" ]]; then
-      MODEL="ollama/${defaultOllamaModel}"
+    if [[ "\$M" == "ollama-gemma" || "\$M" == "gemma4:12b" ]]; then
+      MODEL="ollama/gemma4:12b"
+    elif [[ "\$M" == "ollama-qwen" || "\$M" == "qwen3-coder:30b" || "\$M" == "qwen3-coder" ]]; then
+      MODEL="ollama/qwen3-coder:30b"
     elif [[ "\$M" != ollama/* && "\$M" != openai/* ]]; then
       MODEL="ollama/\$M"
     else
@@ -367,12 +371,104 @@ for ((i=1; i<=\$#; i++)); do
     ARGS+=("\$ARG")
   fi
 done
+
+EXTRA_FLAGS=()
+for s in "\$(pwd)/.aider.model.settings.yml" "\$HOME/ensemble/.aider.model.settings.yml" "\$HOME/.aider.model.settings.yml"; do
+  if [ -f "\$s" ]; then
+    EXTRA_FLAGS+=("--model-settings-file" "\$s")
+    break
+  fi
+done
+for m in "\$(pwd)/.aider.model.metadata.json" "\$HOME/ensemble/.aider.model.metadata.json" "\$HOME/.aider.model.metadata.json"; do
+  if [ -f "\$m" ]; then
+    EXTRA_FLAGS+=("--model-metadata-file" "\$m")
+    break
+  fi
+done
+
 AIDER_BIN="\$(command -v aider || echo "\$HOME/.local/bin/aider")"
-exec "\$AIDER_BIN" --model "\$MODEL" --yes-always --no-auto-commits --no-analytics --dark-mode "\${ARGS[@]}"
+exec "\$AIDER_BIN" --model "\$MODEL" --max-chat-history-tokens 12288 --no-check-model-accepts-settings "\${EXTRA_FLAGS[@]}" --yes-always --no-auto-commits --no-analytics --dark-mode "\${ARGS[@]}"
 AIDEREOF
 
 sudo mv /tmp/aider-smart.sh /usr/local/bin/aider-smart
 sudo chmod +x /usr/local/bin/aider-smart
+
+# Cấu hình giới hạn Model Context Window 16384 (tránh tràn RAM GPU / RAM máy chủ)
+cat << 'SETTINGSEOF' > /tmp/aider-settings.yml
+- name: ollama/gemma4:12b
+  edit_format: diff
+  weak_model_name: ollama/gemma4:12b
+  use_repo_map: true
+  extra_params:
+    num_ctx: 16384
+
+- name: ollama/qwen3-coder:30b
+  edit_format: diff
+  weak_model_name: ollama/qwen3-coder:30b
+  use_repo_map: true
+  extra_params:
+    num_ctx: 16384
+
+- name: gemma4:12b
+  edit_format: diff
+  weak_model_name: gemma4:12b
+  use_repo_map: true
+  extra_params:
+    num_ctx: 16384
+
+- name: qwen3-coder:30b
+  edit_format: diff
+  weak_model_name: qwen3-coder:30b
+  use_repo_map: true
+  extra_params:
+    num_ctx: 16384
+SETTINGSEOF
+
+cat << 'METAEof' > /tmp/aider-metadata.json
+{
+  "ollama/gemma4:12b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  },
+  "ollama/qwen3-coder:30b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  },
+  "gemma4:12b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  },
+  "qwen3-coder:30b": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  }
+}
+METAEof
+
+cp -f /tmp/aider-settings.yml \$HOME/.aider.model.settings.yml
+cp -f /tmp/aider-metadata.json \$HOME/.aider.model.metadata.json
+[ -d \$HOME/ensemble ] && cp -f /tmp/aider-settings.yml \$HOME/ensemble/.aider.model.settings.yml
+[ -d \$HOME/ensemble ] && cp -f /tmp/aider-metadata.json \$HOME/ensemble/.aider.model.metadata.json
 
 python3 -c "
 import json, os
@@ -383,7 +479,16 @@ for p in ['\$HOME/ensemble/agents.json', '\$HOME/ensemble/_original/agents.json'
             d['ollama-gemma'] = {
                 'name': 'ollama-gemma',
                 'command': 'aider-smart',
-                'flags': ['--model', 'ollama/${defaultOllamaModel}'],
+                'flags': ['--model', 'ollama/gemma4:12b'],
+                'readyMarker': '>',
+                'inputMethod': 'sendKeys',
+                'color': 'cyan',
+                'icon': '🦙'
+            }
+            d['ollama-qwen'] = {
+                'name': 'ollama-qwen',
+                'command': 'aider-smart',
+                'flags': ['--model', 'ollama/qwen3-coder:30b'],
                 'readyMarker': '>',
                 'inputMethod': 'sendKeys',
                 'color': 'cyan',

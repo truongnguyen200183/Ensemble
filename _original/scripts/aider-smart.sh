@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runner for Aider connected to local Ollama (gemma4:12b)
+# Runner for Aider connected to local Ollama (gemma4:12b / qwen3-coder:30b)
+# Hard context cap: 16384 tokens (num_ctx: 16384, max-chat-history-tokens: 12288)
 # Usage: aider-smart [options]
 
 export OLLAMA_API_BASE="${OLLAMA_API_BASE:-http://192.168.86.23:11434}"
@@ -38,10 +39,29 @@ for ((i=1; i<=$#; i++)); do
   fi
 done
 
+# Locate model settings & metadata for context window (16384 tokens limit)
+EXTRA_FLAGS=()
+for s in "$(pwd)/.aider.model.settings.yml" "$HOME/ensemble/.aider.model.settings.yml" "$HOME/.aider.model.settings.yml"; do
+  if [ -f "$s" ]; then
+    EXTRA_FLAGS+=("--model-settings-file" "$s")
+    break
+  fi
+done
+
+for m in "$(pwd)/.aider.model.metadata.json" "$HOME/ensemble/.aider.model.metadata.json" "$HOME/.aider.model.metadata.json"; do
+  if [ -f "$m" ]; then
+    EXTRA_FLAGS+=("--model-metadata-file" "$m")
+    break
+  fi
+done
+
 AIDER_BIN="$(command -v aider || echo "$HOME/.local/bin/aider")"
 
 exec "$AIDER_BIN" \
   --model "$MODEL" \
+  --max-chat-history-tokens 12288 \
+  --no-check-model-accepts-settings \
+  "${EXTRA_FLAGS[@]}" \
   --yes-always \
   --no-auto-commits \
   --no-analytics \

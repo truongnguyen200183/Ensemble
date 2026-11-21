@@ -3,4 +3,6 @@ dist/
 *.log
 .ensemble-data/
 .aider*
+!.aider.model.settings.yml
+!.aider.model.metadata.json
 

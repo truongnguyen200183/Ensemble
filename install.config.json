@@ -21,6 +21,8 @@
     "prompt_during_install": true,
     "api_base": "http://192.168.86.23:11434",
     "model": "gemma4:12b",
+    "num_ctx": 16384,
+    "max_chat_history_tokens": 12288,
     "description": "Tùy chọn kết nối mô hình cục bộ Ollama qua Aider CLI (hỏi khi cài đặt)"
   },
   "models": {
