@@ -231,6 +231,7 @@ const server = http.createServer(async (req, res) => {
         'agy': 'Orchestrator (Argon)',
         'agy-worker': 'Gemini 3.8 Flash (Medium)',
         'agy-pro': 'Claude Sonnet (Pro)',
+        'ollama-gemma': 'Ollama Gemma 4 (12B Local)',
         'gemini-pro-orchestrator-g1-pro': 'Orchestrator (Argon)',
         'gemini-pro-orchestrator-neon': 'Orchestrator (Neon)',
         'gemini-3.8-flash-medium': 'Gemini 3.8 Flash (Medium)',
@@ -754,6 +755,9 @@ const server = http.createServer(async (req, res) => {
 
         // 6. GPT-OSS 120B
         { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B', desc: 'Mô hình mã nguồn mở 120B' },
+
+        // 7. Ollama Local
+        { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ 192.168.86.23 (Không tốn quota)' },
       ]
 
       if (method === 'GET') {
@@ -805,9 +809,15 @@ const server = http.createServer(async (req, res) => {
                 a.flags = ['--permission-mode', 'auto', '--model', model]
                 a.readyMarker = '❯'
                 a.unsetEnv = ['ANTHROPIC_API_KEY']
+              } else if (model.startsWith('ollama') || model.includes('gemma')) {
+                // Model Ollama Local -> chạy qua aider-smart
+                a.command = 'aider-smart'
+                a.flags = ['--model', model === 'ollama-gemma' ? 'ollama/gemma4:12b' : model]
+                a.readyMarker = '>'
+                a.unsetEnv = []
               } else {
                 // Model Antigravity -> chạy qua agy-smart
-                if (a.command === 'claude-smart') {
+                if (a.command === 'claude-smart' || a.command === 'aider-smart') {
                   a.command = 'agy-smart'
                   a.flags = ['--dangerously-skip-permissions', '--model', model]
                   a.readyMarker = '? for shortcuts'

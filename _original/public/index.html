@@ -3116,6 +3116,22 @@
         ensembleRec: [
           '<strong>WORKER</strong> hoặc <strong>REVIEWER</strong> dự phòng để tạo góc nhìn đối chiếu độc lập.'
         ]
+      },
+      'ollama-gemma': {
+        name: 'Ollama Gemma 4 12B (Local)',
+        badge: 'Mạng nội bộ • Không tốn Quota',
+        coreStrengths: [
+          'Chạy trực tiếp trên server Ollama nội bộ (192.168.86.23:11434) qua Aider CLI.',
+          'Hoàn toàn miễn phí, riêng tư, không giới hạn request hay quota từ bên ngoài.',
+          'Hỗ trợ chế độ tư duy (thinking mode) và chỉnh sửa tệp tin tự động.'
+        ],
+        speedQuota: [
+          '<strong>Xử lý cục bộ</strong>',
+          'Không phụ thuộc vào kết nối Internet hay hạn mức API ngoài.'
+        ],
+        ensembleRec: [
+          'Lựa chọn tối ưu cho <strong>WORKER</strong> hoặc tác vụ tự động chạy nền không lo cạn quota.'
+        ]
       }
     }
 
@@ -3131,6 +3147,7 @@
       if (id.includes('sonnet')) return 'claude-sonnet-5-5'
       if (id.includes('flash')) return 'gemini-3.8-flash'
       if (id.includes('gpt-oss') || id.includes('120b')) return 'gpt-oss-120b'
+      if (id.includes('ollama') || id.includes('gemma')) return 'ollama-gemma'
       return 'gemini-4-neon'
     }
 
@@ -3256,6 +3273,7 @@
         { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash' },
         { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash' },
         { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B' },
+        { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama' },
       ]
 
       const models = (modelConfigData && modelConfigData.availableModels && modelConfigData.availableModels.length > 0)

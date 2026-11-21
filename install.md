@@ -241,3 +241,13 @@ Sau đó chạy lại `install.bat` (hoặc `install.sh`) để hệ thống t�
      ```
   3. Sau đó mở lại terminal WSL, dịch vụ `ensemble` sẽ tự động chạy ngầm bình thường.
 
+### 6. Tích hợp Mô hình Cục bộ Ollama (Local Network - Không tốn Quota)
+Ensemble hỗ trợ kết nối trực tiếp với server **Ollama** nội bộ (ví dụ: `http://192.168.86.23:11434`) chạy mô hình **`gemma4:12b`** thông qua **Aider CLI**:
+* **Cài đặt Aider**: Đã được tự động hóa qua `uv tool install --python 3.12 aider-chat`.
+* **Sử dụng**: Trong giao diện Web Dashboard, chọn `⚙️ Model` hoặc khi tạo Task mới, chọn Agent là **`Ollama Gemma 4 (12B Local)`**.
+* **Ưu điểm**:
+  * 100% riêng tư và chạy trong mạng nội bộ.
+  * Hoàn toàn không tốn tiền API hay quota hàng ngày.
+  * Hỗ trợ tư duy (thinking mode) và chỉnh sửa code tự động.
+
+

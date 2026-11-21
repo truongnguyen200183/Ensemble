@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Ensemble Collab - Automated Universal Installer for Windows
 # Reads install.config.json -> Checks Git, Node, WSL -> Auto-configures ENV & CLI
 # ==============================================================================
@@ -284,6 +284,8 @@ find ../scripts -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
 chmod +x ../run.sh 2>/dev/null || true
 [ -f scripts/agy-smart.sh ] && sudo cp scripts/agy-smart.sh /usr/local/bin/agy-smart && sudo chmod +x /usr/local/bin/agy-smart 2>/dev/null || true
 [ -f scripts/claude-smart.sh ] && sudo cp scripts/claude-smart.sh /usr/local/bin/claude-smart && sudo chmod +x /usr/local/bin/claude-smart 2>/dev/null || true
+[ -f scripts/aider-smart.sh ] && sudo cp scripts/aider-smart.sh /usr/local/bin/aider-smart && sudo chmod +x /usr/local/bin/aider-smart 2>/dev/null || true
+[ -f \$HOME/.local/bin/aider ] && sudo ln -sf \$HOME/.local/bin/aider /usr/local/bin/aider 2>/dev/null || true
 "@
 
 & wsl -d $wslDistroFound -e bash -c "$syncScript"

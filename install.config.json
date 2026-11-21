@@ -121,6 +121,14 @@
         "description": "Mô hình mã nguồn mở cộng đồng",
         "category": "openai",
         "tier": 6
+      },
+      {
+        "id": "ollama-gemma",
+        "name": "Ollama Gemma 4 (12B Local)",
+        "badge": "Local Network",
+        "description": "Mô hình cục bộ chạy trên server Ollama nội bộ 192.168.86.23 (Không tốn quota)",
+        "category": "ollama",
+        "tier": 7
       }
     ]
   },

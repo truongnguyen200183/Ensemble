@@ -150,5 +150,17 @@
     "unsetEnv": [
       "ANTHROPIC_API_KEY"
     ]
+  },
+  "ollama-gemma": {
+    "name": "ollama-gemma",
+    "command": "aider-smart",
+    "flags": [
+      "--model",
+      "ollama/gemma4:12b"
+    ],
+    "readyMarker": ">",
+    "inputMethod": "sendKeys",
+    "color": "cyan",
+    "icon": "🦙"
   }
 }
