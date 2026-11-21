@@ -331,6 +331,7 @@ const server = http.createServer(async (req, res) => {
           name: agent.name,
           role: agent.role,
           program: agent.program,
+          instruction: agent.instruction || '',
           modelDisplay,
           status: agent.status,
           alive: exists,
@@ -484,6 +485,7 @@ const server = http.createServer(async (req, res) => {
           name: (a.name || (idx === 0 ? 'Lead' : `Worker-${idx}`)).trim(),
           program: (a.program || (idx === 0 ? 'agy' : 'agy-worker')).trim(),
           role: (a.role || (idx === 0 ? 'lead' : 'worker')).trim(),
+          instruction: (a.instruction || '').trim(),
           hostId: a.hostId || '',
           status: a.status || 'active',
         }))
@@ -527,6 +529,17 @@ const server = http.createServer(async (req, res) => {
               content: `🔄 Vai trò của **${up.name}** đã được cập nhật từ **${prev.role.toUpperCase()}** sang **${up.role.toUpperCase()}**. Các thành viên vui lòng điều chỉnh phân công và phối hợp theo vai trò mới.`,
             })
           }
+          if (up.instruction && (!prev || prev.instruction !== up.instruction)) {
+            appendMessage(teamId, {
+              id: uuidv4(),
+              teamId,
+              from: 'ensemble',
+              to: 'team',
+              type: 'chat',
+              timestamp: new Date().toISOString(),
+              content: `🎯 **Nhiệm vụ cụ thể của ${up.name}**: "${up.instruction}"`,
+            })
+          }
         }
 
         const updated = updateTeam(teamId, { agents: updatedAgents })
@@ -564,6 +577,7 @@ const server = http.createServer(async (req, res) => {
           name: (a.name || (idx === 0 ? 'Lead' : `Worker-${idx}`)).trim(),
           program: (a.program || (idx === 0 ? 'agy' : 'agy-worker')).trim(),
           role: (a.role || (idx === 0 ? 'lead' : 'worker')).trim(),
+          instruction: (a.instruction || '').trim(),
           hostId: a.hostId || '',
           status: 'active' as const,
         }))

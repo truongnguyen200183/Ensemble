@@ -22,6 +22,7 @@ export interface EnsembleTeamAgent {
   name: string
   program: string
   role: string
+  instruction?: string
   hostId: string
   status: 'spawning' | 'active' | 'idle' | 'done' | 'failed' | 'replaced'
   worktreePath?: string

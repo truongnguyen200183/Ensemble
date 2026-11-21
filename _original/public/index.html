@@ -711,7 +711,7 @@
           <span class="text-xl">👥</span>
           <div>
             <h3 class="text-sm font-bold text-slate-100">Thiết Lập & Quản Lý Đội Ngũ Agent</h3>
-            <p class="text-[11px] text-slate-400">Thêm, bớt Agent, đổi tên, phân vai trò và chọn mô hình (28 mô hình AI)</p>
+            <p class="text-[11px] text-slate-400">Thêm, bớt Agent, đổi tên, phân vai trò, mô hình và nhiệm vụ cụ thể</p>
           </div>
         </div>
         <button id="closeManageAgentsBtn" type="button" onclick="closeManageAgentsModal()" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
@@ -737,7 +737,7 @@
             <span>Thêm Agent</span>
           </button>
         </div>
-        <div id="currentTeamAgentsContainer" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+        <div id="currentTeamAgentsContainer" class="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
           <!-- Rendered dynamically -->
         </div>
       </div>
@@ -1122,6 +1122,7 @@
                   <div class="text-[10px] text-blue-400 font-medium truncate" title="${escapeHtml(agent.modelDisplay)}">
                     ${escapeHtml(agent.modelDisplay)}
                   </div>
+                  ${agent.instruction ? `<div class="text-[10px] text-amber-300/90 font-medium truncate mt-0.5" title="${escapeHtml(agent.instruction)}">🎯 ${escapeHtml(agent.instruction)}</div>` : ''}
                 </div>
               </div>
               <div class="shrink-0">
@@ -2283,9 +2284,12 @@
             const { role, isLead } = getAgentRoleInfo(a.name)
             const pill = document.createElement('div')
             pill.className = isLead
-              ? 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-950/80 border border-blue-500/50 text-blue-300 flex items-center space-x-1'
-              : 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center space-x-1'
-            pill.innerHTML = `<span>${isLead ? '👑' : '⚡'}</span><span>${role}</span>`
+              ? 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-950/80 border border-blue-500/50 text-blue-300 flex items-center space-x-1 cursor-default'
+              : 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center space-x-1 cursor-default'
+            if (a.instruction) {
+              pill.title = `🎯 Nhiệm vụ: ${a.instruction}`
+            }
+            pill.innerHTML = `<span>${isLead ? '👑' : '⚡'}</span><span>${role}</span>${a.instruction ? '<span class="text-[9px] text-amber-300 ml-0.5" title="' + escapeHtml(a.instruction) + '">🎯</span>' : ''}`
             rosterEl.appendChild(pill)
           })
 
@@ -3335,38 +3339,47 @@
         const canDelete = newTaskAgents.length > 1
         const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
         const div = document.createElement('div')
-        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs'
+        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start space-x-2 text-xs'
         div.innerHTML = `
-          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold">
+          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold self-start mt-2">
             <span>${icon}</span>
             <span>#${idx + 1}</span>
           </div>
-          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div class="sm:col-span-3">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
-              <input type="text" value="${ag.name}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <div class="flex-1 min-w-0 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
+                <input type="text" value="${escapeHtml(ag.name)}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
+                <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
+                  <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
+                  <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
+                  <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
+                  <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
+                  <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
+                  <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
+                  <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-5">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
+                <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  ${renderAgentProgramOptions(ag.program)}
+                </select>
+              </div>
             </div>
-            <div class="sm:col-span-4">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-              <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
-                <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
-                <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
-                <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
-                <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
-                <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
-                <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
-                <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
-              </select>
-            </div>
-            <div class="sm:col-span-5">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-              <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                ${renderAgentProgramOptions(ag.program)}
-              </select>
+            <div>
+              <label class="block text-[10px] text-blue-300 font-semibold mb-0.5 flex items-center space-x-1">
+                <span>🎯</span>
+                <span>Nhiệm vụ & Chỉ dẫn vai trò cụ thể:</span>
+              </label>
+              <input type="text" value="${ag.instruction ? escapeHtml(ag.instruction) : ''}" oninput="updateNewTaskAgentItem(${idx}, 'instruction', this.value)" placeholder="Ví dụ: Thực hiện công việc code, báo cáo về code đã viết..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded px-2.5 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
           </div>
-          <button type="button" onclick="removeNewTaskAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0" title="Bớt Agent này">
+          <button type="button" onclick="removeNewTaskAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0 self-start mt-2" title="Bớt Agent này">
             <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
           </button>
         `
@@ -3379,12 +3392,13 @@
       let prog = 'agy-worker'
       let role = 'WORKER'
       let name = `Worker-${idx - 1}`
+      let instruction = ''
       if (idx === 3) {
         prog = 'agy-pro'
         role = 'REVIEWER'
         name = 'Reviewer'
       }
-      newTaskAgents.push({ name, role, program: prog })
+      newTaskAgents.push({ name, role, program: prog, instruction })
       renderNewTaskAgentsList()
     }
 
@@ -3403,23 +3417,23 @@
     function onNewTaskTemplateChange(template) {
       if (template === 'review') {
         newTaskAgents = [
-          { name: 'Reviewer', role: 'REVIEWER', program: 'agy' },
-          { name: 'Critic', role: 'CRITIC', program: 'agy-pro' }
+          { name: 'Reviewer', role: 'REVIEWER', program: 'agy', instruction: 'Đọc kỹ code, phân tích kiến trúc và chỉ ra điểm chưa tối ưu' },
+          { name: 'Critic', role: 'CRITIC', program: 'agy-pro', instruction: 'Tìm kiếm bug, lỗ hổng bảo mật và phản biện gay gắt các phương án' }
         ]
       } else if (template === 'implement') {
         newTaskAgents = [
-          { name: 'Architect', role: 'ARCHITECT', program: 'agy' },
-          { name: 'Developer', role: 'DEVELOPER', program: 'agy-worker' }
+          { name: 'Architect', role: 'ARCHITECT', program: 'agy', instruction: 'Lập kế hoạch kiến trúc, thiết kế cấu trúc file và chia việc' },
+          { name: 'Developer', role: 'DEVELOPER', program: 'agy-worker', instruction: 'Thực hiện code chi tiết, viết unit test và báo cáo tiến độ' }
         ]
       } else if (template === 'debug') {
         newTaskAgents = [
-          { name: 'Lead-Debugger', role: 'LEAD', program: 'agy' },
-          { name: 'Worker-Reproducer', role: 'WORKER', program: 'agy-worker' }
+          { name: 'Lead-Debugger', role: 'LEAD', program: 'agy', instruction: 'Phân tích log lỗi, xác định nguyên nhân gốc rễ và đề xuất cách sửa' },
+          { name: 'Worker-Reproducer', role: 'WORKER', program: 'agy-worker', instruction: 'Tái hiện lỗi, thử nghiệm bản vá và kiểm tra kết quả' }
         ]
       } else {
         newTaskAgents = [
-          { name: 'Lead', role: 'LEAD', program: 'agy' },
-          { name: 'Worker', role: 'WORKER', program: 'agy-worker' }
+          { name: 'Lead', role: 'LEAD', program: 'agy', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả' },
+          { name: 'Worker', role: 'WORKER', program: 'agy-worker', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết' }
         ]
       }
       renderNewTaskAgentsList()
@@ -3446,12 +3460,13 @@
         name: a.name || 'Agent',
         role: a.role || 'worker',
         program: a.program || 'agy-worker',
+        instruction: a.instruction || '',
         status: a.status || 'active'
       }))
       if (editingRunningAgents.length === 0) {
         editingRunningAgents = [
-          { name: 'Lead', role: 'LEAD', program: 'agy', status: 'active' },
-          { name: 'Worker', role: 'WORKER', program: 'agy-worker', status: 'active' }
+          { name: 'Lead', role: 'LEAD', program: 'agy', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả', status: 'active' },
+          { name: 'Worker', role: 'WORKER', program: 'agy-worker', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết', status: 'active' }
         ]
       }
 
@@ -3491,38 +3506,47 @@
         const canDelete = editingRunningAgents.length > 1
         const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
         const div = document.createElement('div')
-        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs'
+        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start space-x-2 text-xs'
         div.innerHTML = `
-          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold">
+          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold self-start mt-2">
             <span>${icon}</span>
             <span>#${idx + 1}</span>
           </div>
-          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div class="sm:col-span-3">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
-              <input type="text" value="${ag.name}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <div class="flex-1 min-w-0 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
+                <input type="text" value="${escapeHtml(ag.name)}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
+                  <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
+                  <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
+                  <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
+                  <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
+                  <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
+                  <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
+                  <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-5">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  ${renderAgentProgramOptions(ag.program)}
+                </select>
+              </div>
             </div>
-            <div class="sm:col-span-4">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-              <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
-                <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
-                <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
-                <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
-                <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
-                <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
-                <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
-                <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
-              </select>
-            </div>
-            <div class="sm:col-span-5">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-              <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                ${renderAgentProgramOptions(ag.program)}
-              </select>
+            <div>
+              <label class="block text-[10px] text-blue-300 font-semibold mb-0.5 flex items-center space-x-1">
+                <span>🎯</span>
+                <span>Nhiệm vụ & Chỉ dẫn vai trò cụ thể:</span>
+              </label>
+              <input type="text" value="${ag.instruction ? escapeHtml(ag.instruction) : ''}" oninput="updateRunningTeamAgentItem(${idx}, 'instruction', this.value)" placeholder="Ví dụ: Worker Ollama thực hiện công việc code, báo cáo về code đã viết..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded px-2.5 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
           </div>
-          <button type="button" onclick="removeRunningTeamAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0" title="Bớt Agent này">
+          <button type="button" onclick="removeRunningTeamAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0 self-start mt-2" title="Bớt Agent này">
             <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
           </button>
         `
@@ -3534,6 +3558,11 @@
       const idx = editingRunningAgents.length + 1
       editingRunningAgents.push({
         name: idx === 3 ? 'Reviewer' : `Worker-${idx - 1}`,
+        role: idx === 3 ? 'REVIEWER' : 'WORKER',
+        program: idx === 3 ? 'agy-pro' : 'agy-worker',
+        instruction: '',
+        status: 'active'
+      })
         role: idx === 3 ? 'REVIEWER' : 'WORKER',
         program: idx === 3 ? 'agy-pro' : 'agy-worker',
         status: 'active'

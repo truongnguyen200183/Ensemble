@@ -655,6 +655,7 @@ export function buildPromptPreview(params: {
   teammateNames: string[]
   agentIndex: number
   templateName?: string
+  instruction?: string
 }): string {
   const taskPreamble = readEnsembleConfig().taskPreamble
   const template = loadCollabTemplate(params.templateName)
@@ -725,6 +726,7 @@ export function buildPromptPreview(params: {
     `You are ${params.agentName} in team "${params.teamName}" with ${mateWord} ${mateList}.`,
     ...(taskPreamble ? [`Task preamble: ${taskPreamble}`] : []),
     `Task: ${params.description}`,
+    ...(params.instruction && params.instruction.trim() ? [`SPECIFIC ASSIGNMENT FOR YOU (${params.agentName}):\n${params.instruction.trim()}\nPlease adhere strictly to these specific instructions.`] : []),
     ...roleInstructions,
     `COMMUNICATION & FORMATTING RULES:`,
     `1. Send findings: ${teamSayCmd} "your message"`,
@@ -911,7 +913,7 @@ export async function createEnsembleTeam(
     }
   }
 
-  const buildPrompt = (agentName: string, otherNames: string[], agentIndex: number) => {
+  const buildPrompt = (agentName: string, otherNames: string[], agentIndex: number, instruction?: string) => {
     return buildPromptPreview({
       teamId: team.id,
       teamName: team.name,
@@ -920,11 +922,12 @@ export async function createEnsembleTeam(
       teammateNames: otherNames,
       agentIndex,
       templateName: request.templateName,
+      instruction,
     })
   }
 
   // Sessies die dit team echt heeft. Postcheck, rescue en cleanup bepaalden dit
-  // eerder met een tmux-scan op de vorm van de sessienaam, waardoor het ene
+  // eerder met một tmux-scan op de vorm van de sessienaam, waardoor het ene
   // team de sessies van het andere meepakte. agentName hieronder is de ENE
   // plek waar de sessienaam ontstaat; het register bewaart die letterlijk in
   // plaats van 'm elders opnieuw samen te stellen uit team.name + agent.name.
@@ -936,7 +939,7 @@ export async function createEnsembleTeam(
     const agentSpec = team.agents[i]
     const hostId = await routeToHost(agentSpec.program, specs[i].hostId)
     const agentName = `${team.name}-${agentSpec.name}`
-    const prompt = buildPrompt(agentSpec.name, team.agents.filter((_, j) => j !== i).map(a => a.name), i)
+    const prompt = buildPrompt(agentSpec.name, team.agents.filter((_, j) => j !== i).map(a => a.name), i, agentSpec.instruction)
 
     ensureCollabDirs(team.id)
     const promptFile = collabPromptFile(team.id, agentSpec.name)
@@ -1668,8 +1671,11 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
 
       const isReactivation = Boolean(recentHistory)
       const resumePrompt = [
-        `You are ${agentSpec.name} in team "${team.name}" with teammate(s) ${teammateNames.join(', ')}.`,
+        `You are ${agentSpec.name} (${(agentSpec.role || 'worker').toUpperCase()}) in team "${team.name}" with teammate(s) ${teammateNames.join(', ')}.`,
         `Task: ${team.description}.`,
+        agentSpec.instruction && agentSpec.instruction.trim()
+          ? `SPECIFIC ROLE ASSIGNMENT & INSTRUCTIONS FOR YOU (${agentSpec.name}):\n${agentSpec.instruction.trim()}\nPlease focus on and follow these specific instructions diligently.`
+          : '',
         isReactivation
           ? `This session was REACTIVATED by the user to continue collaborating.`
           : `This team was newly created and launched by the user to execute this task.`,
