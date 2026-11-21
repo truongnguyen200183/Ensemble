@@ -242,12 +242,26 @@ Sau đó chạy lại `install.bat` (hoặc `install.sh`) để hệ thống t�
   3. Sau đó mở lại terminal WSL, dịch vụ `ensemble` sẽ tự động chạy ngầm bình thường.
 
 ### 6. Tích hợp Mô hình Cục bộ Ollama (Local Network - Không tốn Quota)
-Ensemble hỗ trợ kết nối trực tiếp với server **Ollama** nội bộ (ví dụ: `http://192.168.86.23:11434`) chạy mô hình **`gemma4:12b`** thông qua **Aider CLI**:
-* **Cài đặt Aider**: Đã được tự động hóa qua `uv tool install --python 3.12 aider-chat`.
+Ensemble hỗ trợ kết nối trực tiếp với server **Ollama** nội bộ (ví dụ: `http://192.168.86.23:11434`) chạy mô hình **`gemma4:12b`** (hoặc bất kỳ model nào khác) thông qua **Aider CLI**:
+* **Tùy chọn linh hoạt khi cài đặt (`install.ps1` / `install.bat`)**:
+  * Trình cài đặt sẽ hỏi: `Bạn có muốn cấu hình kết nối Mô hình cục bộ Ollama (Mạng nội bộ / Local) không? (y/N)`
+  * **Nếu chọn N (hoặc nhấn Enter mặc định)**: Trình cài đặt sẽ bỏ qua, không tốn thời gian tải gói Aider/uv, và giao diện Web Dashboard sẽ ẩn model này để tránh chọn nhầm.
+  * **Nếu chọn Y**: Trình cài đặt cho phép nhập URL server Ollama (mặc định: `http://192.168.86.23:11434`) và tên model (mặc định: `gemma4:12b`), tự động kiểm tra ping kết nối mạng LAN và thiết lập Aider CLI.
+* **Cấu hình trước qua `install.config.json`**:
+  ```json
+  "ollama": {
+    "enabled": false,
+    "prompt_during_install": true,
+    "api_base": "http://192.168.86.23:11434",
+    "model": "gemma4:12b"
+  }
+  ```
+  *(Đặt `"prompt_during_install": false` nếu muốn chạy cài đặt hoàn toàn tự động không cần hỏi).*
 * **Sử dụng**: Trong giao diện Web Dashboard, chọn `⚙️ Model` hoặc khi tạo Task mới, chọn Agent là **`Ollama Gemma 4 (12B Local)`**.
 * **Ưu điểm**:
   * 100% riêng tư và chạy trong mạng nội bộ.
   * Hoàn toàn không tốn tiền API hay quota hàng ngày.
+  * Hỗ trợ tư duy (thinking mode) và chỉnh sửa code tự động.
   * Hỗ trợ tư duy (thinking mode) và chỉnh sửa code tự động.
 
 

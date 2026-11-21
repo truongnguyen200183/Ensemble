@@ -706,6 +706,11 @@ const server = http.createServer(async (req, res) => {
       const agentsPath = nodePath.join(serverDir, 'agents.json')
       const exhaustedFile = nodePath.join(process.env.HOME || '/home/truong', '.ensemble', 'exhausted-models.txt')
 
+      const hasOllama = fs.existsSync('/usr/local/bin/aider-smart') ||
+                        fs.existsSync('/usr/bin/aider-smart') ||
+                        fs.existsSync('/usr/local/bin/aider') ||
+                        fs.existsSync(nodePath.join(process.env.HOME || '/root', '.local/bin/aider'))
+
       const availableModels = [
         // 1. Gemini 4 Neon (New)
         { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', group: 'Gemini 4 Neon', desc: 'Siêu tư duy cực hạn (XHigh)' },
@@ -756,8 +761,10 @@ const server = http.createServer(async (req, res) => {
         // 6. GPT-OSS 120B
         { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B', desc: 'Mô hình mã nguồn mở 120B' },
 
-        // 7. Ollama Local
-        { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ 192.168.86.23 (Không tốn quota)' },
+        ...(hasOllama ? [
+          // 7. Ollama Local (chỉ hiện khi máy đã cài đặt kết nối Ollama/Aider)
+          { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)' }
+        ] : []),
       ]
 
       if (method === 'GET') {

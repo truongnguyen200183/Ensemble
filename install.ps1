@@ -284,12 +284,132 @@ find ../scripts -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
 chmod +x ../run.sh 2>/dev/null || true
 [ -f scripts/agy-smart.sh ] && sudo cp scripts/agy-smart.sh /usr/local/bin/agy-smart && sudo chmod +x /usr/local/bin/agy-smart 2>/dev/null || true
 [ -f scripts/claude-smart.sh ] && sudo cp scripts/claude-smart.sh /usr/local/bin/claude-smart && sudo chmod +x /usr/local/bin/claude-smart 2>/dev/null || true
-[ -f scripts/aider-smart.sh ] && sudo cp scripts/aider-smart.sh /usr/local/bin/aider-smart && sudo chmod +x /usr/local/bin/aider-smart 2>/dev/null || true
-[ -f \$HOME/.local/bin/aider ] && sudo ln -sf \$HOME/.local/bin/aider /usr/local/bin/aider 2>/dev/null || true
 "@
 
 & wsl -d $wslDistroFound -e bash -c "$syncScript"
 Write-Success "Mã nguồn và NPM dependencies trong WSL đã sẵn sàng."
+
+# ------------------------------------------------------------------------------
+# 4b. Tùy chọn cấu hình Mô hình Cục bộ Ollama (Aider CLI)
+# ------------------------------------------------------------------------------
+$ollamaConfig = $config.ollama
+$defaultOllamaApi = if ($ollamaConfig -and $ollamaConfig.api_base) { $ollamaConfig.api_base } else { "http://192.168.86.23:11434" }
+$defaultOllamaModel = if ($ollamaConfig -and $ollamaConfig.model) { $ollamaConfig.model } else { "gemma4:12b" }
+
+$installOllama = $false
+if ($ollamaConfig -and $ollamaConfig.enabled -eq $true) {
+    $installOllama = $true
+} elseif ($ollamaConfig -and $ollamaConfig.prompt_during_install -ne $false) {
+    Write-Host ""
+    Write-Host ">> Bạn có muốn cấu hình kết nối Mô hình cục bộ Ollama (Mạng nội bộ / Local) không? (y/N): " -NoNewline -ForegroundColor Yellow
+    $ansOllama = Read-Host
+    if ($ansOllama -eq "Y" -or $ansOllama -eq "y") {
+        $installOllama = $true
+    }
+}
+
+if ($installOllama) {
+    Write-Host "   Nhập URL máy chủ Ollama [Mặc định: $defaultOllamaApi]: " -NoNewline -ForegroundColor Cyan
+    $userApi = Read-Host
+    if ($userApi -and $userApi.Trim()) { $defaultOllamaApi = $userApi.Trim() }
+
+    Write-Host "   Nhập tên Model Ollama [Mặc định: $defaultOllamaModel]: " -NoNewline -ForegroundColor Cyan
+    $userModel = Read-Host
+    if ($userModel -and $userModel.Trim()) { $defaultOllamaModel = $userModel.Trim() }
+
+    Write-Info "Đang kiểm tra kết nối tới máy chủ Ollama ($defaultOllamaApi)..."
+    $checkConn = (& wsl -d $wslDistroFound -e bash -c "curl -s --connect-timeout 3 $defaultOllamaApi/api/tags 2>/dev/null || true").Trim()
+    if ($checkConn) {
+        Write-Success "Kết nối Ollama thành công!"
+    } else {
+        Write-Warn "Chưa kết nối được tới $defaultOllamaApi (máy chủ tắt hoặc máy tính này không cùng mạng LAN)."
+        Write-Info "Hệ thống vẫn sẽ chuẩn bị sẵn Aider CLI để bạn có thể kết nối bất kỳ lúc nào."
+    }
+
+    Write-Info "Đang cài đặt / cập nhật Aider CLI cho Ollama trong WSL..."
+    $ollamaSetup = @"
+if ! command -v uv >/dev/null 2>&1; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+export PATH="\$HOME/.local/bin:\$PATH"
+if ! command -v aider >/dev/null 2>&1; then
+    uv tool install --python 3.12 aider-chat
+fi
+[ -f \$HOME/.local/bin/aider ] && sudo ln -sf \$HOME/.local/bin/aider /usr/local/bin/aider
+
+cat << 'AIDEREOF' > /tmp/aider-smart.sh
+#!/usr/bin/env bash
+export OLLAMA_API_BASE="${defaultOllamaApi}"
+export OPENAI_API_BASE="${defaultOllamaApi}/v1"
+export OPENAI_API_KEY="ollama"
+MODEL="ollama/${defaultOllamaModel}"
+ARGS=()
+SKIP_NEXT=0
+for ((i=1; i<=\$#; i++)); do
+  if [ \$SKIP_NEXT -eq 1 ]; then SKIP_NEXT=0; continue; fi
+  ARG="\${!i}"
+  if [ "\$ARG" == "--model" ]; then
+    next_i=\$((i+1))
+    M="\${!next_i}"
+    if [[ "\$M" == "ollama-gemma" || "\$M" == "${defaultOllamaModel}" ]]; then
+      MODEL="ollama/${defaultOllamaModel}"
+    elif [[ "\$M" != ollama/* && "\$M" != openai/* ]]; then
+      MODEL="ollama/\$M"
+    else
+      MODEL="\$M"
+    fi
+    SKIP_NEXT=1
+  elif [ "\$ARG" == "--effort" ]; then
+    SKIP_NEXT=1
+  elif [[ "\$ARG" == --effort=* ]]; then
+    continue
+  else
+    ARGS+=("\$ARG")
+  fi
+done
+AIDER_BIN="\$(command -v aider || echo "\$HOME/.local/bin/aider")"
+exec "\$AIDER_BIN" --model "\$MODEL" --yes-always --no-auto-commits --no-analytics --dark-mode "\${ARGS[@]}"
+AIDEREOF
+
+sudo mv /tmp/aider-smart.sh /usr/local/bin/aider-smart
+sudo chmod +x /usr/local/bin/aider-smart
+
+python3 -c "
+import json, os
+for p in ['\$HOME/ensemble/agents.json', '\$HOME/ensemble/_original/agents.json']:
+    if os.path.exists(p):
+        try:
+            with open(p, 'r') as f: d = json.load(f)
+            d['ollama-gemma'] = {
+                'name': 'ollama-gemma',
+                'command': 'aider-smart',
+                'flags': ['--model', 'ollama/${defaultOllamaModel}'],
+                'readyMarker': '>',
+                'inputMethod': 'sendKeys',
+                'color': 'cyan',
+                'icon': '🦙'
+            }
+            with open(p, 'w') as f: json.dump(d, f, indent=2)
+        except: pass
+"
+"@
+    & wsl -d $wslDistroFound -e bash -c "$ollamaSetup"
+    Write-Success "Đã cài đặt Aider CLI và kích hoạt Ollama ($defaultOllamaModel)."
+} else {
+    Write-Info "Bỏ qua cài đặt Ollama (máy tính không dùng mô hình nội bộ)."
+    # Gỡ bỏ entry nếu có để tránh gọi nhầm
+    & wsl -d $wslDistroFound -e bash -c "python3 -c \"
+import json, os
+for p in ['\$HOME/ensemble/agents.json', '\$HOME/ensemble/_original/agents.json']:
+    if os.path.exists(p):
+        try:
+            with open(p, 'r') as f: d = json.load(f)
+            if 'ollama-gemma' in d:
+                del d['ollama-gemma']
+                with open(p, 'w') as f: json.dump(d, f, indent=2)
+        except: pass
+\""
+}
 
 # ------------------------------------------------------------------------------
 # 6. Thiết lập Biến môi trường (ENV) & Service

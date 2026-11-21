@@ -16,6 +16,13 @@
     "auto_open_browser": true,
     "service_name": "ensemble"
   },
+  "ollama": {
+    "enabled": false,
+    "prompt_during_install": true,
+    "api_base": "http://192.168.86.23:11434",
+    "model": "gemma4:12b",
+    "description": "Tùy chọn kết nối mô hình cục bộ Ollama qua Aider CLI (hỏi khi cài đặt)"
+  },
   "models": {
     "roles": {
       "lead": "gemini-3.8-flash-thinking",
