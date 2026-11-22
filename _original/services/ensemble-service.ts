@@ -1633,9 +1633,20 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
     try { fs.unlinkSync(finishedMarker) } catch {}
   }
 
+  // Check whether this is a reactivation or a first-time launch
+  const previousMessages = getMessages(team.id)
+  const isReactivation = previousMessages.some(m => m.type === 'chat' && m.from !== 'ensemble')
+  const recentHistory = previousMessages
+    .filter(m => m.type === 'chat' && m.from !== 'ensemble')
+    .slice(-8)
+    .map(m => `[${m.from} -> ${m.to}]: ${m.content.slice(0, 300)}`)
+    .join('\n')
+
   appendMessage(team.id, {
     id: uuidv4(), teamId: team.id, from: 'ensemble', to: 'team',
-    content: `🔄 Kích hoạt lại phiên #${team.name}: Đang khởi động lại các Agent...`,
+    content: isReactivation
+      ? `🔄 Kích hoạt lại phiên #${team.name}: Đang khởi động lại các Agent...`
+      : `🚀 Khởi chạy phiên làm việc #${team.name}: Đang khởi động các Agent...`,
     type: 'chat', timestamp: new Date().toISOString(),
   })
 
@@ -1651,14 +1662,6 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
     content: `📋 **Bảng phân công nhiệm vụ đội ngũ:**\n${assignmentLines}\n\n👉 **${team.agents[0]?.name || 'Lead'}**: Căn cứ vào bảng phân công này, bạn hãy lên kế hoạch chi tiết và giao nhiệm vụ (task) trực tiếp cho từng thành viên qua \`team-say\`.`,
     type: 'chat', timestamp: new Date().toISOString(),
   })
-
-  // Get last messages for context
-  const previousMessages = getMessages(team.id)
-  const recentHistory = previousMessages
-    .filter(m => m.type === 'chat' && m.from !== 'ensemble')
-    .slice(-8)
-    .map(m => `[${m.from} -> ${m.to}]: ${m.content.slice(0, 300)}`)
-    .join('\n')
 
   for (let i = 0; i < team.agents.length; i++) {
     const agentSpec = team.agents[i]
@@ -1748,7 +1751,9 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
 
     appendMessage(team.id, {
       id: uuidv4(), teamId: team.id, from: 'ensemble', to: 'team',
-      content: `✅ Tất cả Agent đã trực tuyến trở lại! Bạn có thể gửi lệnh hoặc nhắn tin tiếp.`,
+      content: isReactivation
+        ? `✅ Tất cả Agent đã trực tuyến trở lại! Bạn có thể gửi lệnh hoặc nhắn tin tiếp.`
+        : `✅ Đội ngũ Agent đã sẵn sàng! Bạn có thể gửi lệnh hoặc theo dõi tiến trình.`,
       type: 'chat', timestamp: new Date().toISOString(),
     })
   }, 1000)
