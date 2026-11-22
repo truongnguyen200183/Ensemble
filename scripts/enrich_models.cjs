@@ -132,11 +132,15 @@ for (const f of files) {
       const layer = m.layer || inferLayer(m.id, m.group);
       const key = getModelGroupKey(m.id);
       const info = m.info || INFO_CATALOG[key] || {};
+      let desc = m.desc || '';
+      if (m.id === 'gemini-4-neon-xhigh' || desc.includes('tu duy') || desc.includes('XHigh')) {
+        desc = 'Si\u00eau t\u01b0 duy c\u1ef1c h\u1ea1n (XHigh)';
+      }
       return {
         id: m.id,
         name: m.name,
         group: m.group,
-        desc: m.desc || '',
+        desc,
         layer,
         apiKey: m.apiKey || '',
         info

@@ -3,8 +3,9 @@
     "id": "gemini-4-neon-xhigh",
     "name": "Gemini 4 Neon (XHigh)",
     "group": "Gemini 4 Neon",
-    "desc": "Si�u tu duy c?c h?n (XHigh)",
+    "desc": "Siêu tư duy cực hạn (XHigh)",
     "layer": "Tier 1",
+    "apiKey": "",
     "info": {
       "coreStrengths": [
         "Thế hệ Gemini 4 mới nhất, tối ưu đặc biệt cho tác vụ lập trình & chu trình trao đổi tác tử (agentic loop).",
@@ -623,37 +624,15 @@
     }
   },
   {
-    "id": "ollama-gemma",
-    "name": "Ollama Gemma 4 (12B Local)",
+    "id": "ollama-qwen2.5-coder:14b",
+    "name": "Ollama Qwen 2.5 Coder (14B Local)",
     "group": "Local Ollama",
-    "desc": "Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)",
+    "desc": "Chuyên lập trình & kiến trúc mã nguồn 14B (Mạng nội bộ)",
     "layer": "Local",
     "apiKey": "",
     "info": {
       "coreStrengths": [
-        "Chạy trực tiếp trên server Ollama nội bộ (192.168.86.23:11434) qua Aider CLI.",
-        "Hoàn toàn miễn phí, riêng tư, không giới hạn request hay quota từ bên ngoài.",
-        "Hỗ trợ chế độ tư duy (thinking mode) và chỉnh sửa tệp tin tự động."
-      ],
-      "speedQuota": [
-        "Xử lý cục bộ",
-        "Không phụ thuộc vào kết nối Internet hay hạn mức API ngoài."
-      ],
-      "ensembleRec": [
-        "Lựa chọn tối ưu cho WORKER hoặc tác vụ tự động chạy nền không lo cạn quota."
-      ]
-    }
-  },
-  {
-    "id": "ollama-qwen",
-    "name": "Ollama Qwen 3 Coder (30B Local)",
-    "group": "Local Ollama",
-    "desc": "Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)",
-    "layer": "Local",
-    "apiKey": "",
-    "info": {
-      "coreStrengths": [
-        "Mô hình chuyên dụng về lập trình và kiến trúc mã nguồn 30B tham số.",
+        "Mô hình chuyên dụng về lập trình và kiến trúc mã nguồn 14B tham số.",
         "Khả năng đọc hiểu repo lớn, refactor, sinh code và fix bug cực kỳ chính xác.",
         "Chạy trực tiếp trên server Ollama nội bộ qua Aider CLI, hoàn toàn miễn phí và riêng tư."
       ],
