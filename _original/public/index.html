@@ -995,18 +995,63 @@
       }
     })
 
-    function getRoleIcon(role) {
-      const r = (role || '').toLowerCase()
+    const AVAILABLE_AGENT_ICONS = [
+      '👑', '⚡', '🔍', '🧐', '💻', '📐', '🧪', '🔬', '🤖', '🧠', '🛡️', '🚀', '🔥', '🎯', '💎', '🦙'
+    ]
+
+    const AVAILABLE_AGENT_COLORS = [
+      { id: 'amber', name: '🟡 Vàng', badge: 'bg-amber-950/80 text-amber-300 border border-amber-600/50', avatar: 'bg-amber-950/80 border-amber-600/50 text-amber-300' },
+      { id: 'blue', name: '🔵 Lam', badge: 'bg-blue-950/80 text-blue-300 border border-blue-600/50', avatar: 'bg-blue-950/80 border-blue-600/50 text-blue-300' },
+      { id: 'purple', name: '🟣 Tím', badge: 'bg-purple-950/80 text-purple-300 border border-purple-600/50', avatar: 'bg-purple-950/80 border-purple-600/50 text-purple-300' },
+      { id: 'emerald', name: '🟢 Lục', badge: 'bg-emerald-950/80 text-emerald-300 border border-emerald-600/50', avatar: 'bg-emerald-950/80 border-emerald-600/50 text-emerald-300' },
+      { id: 'rose', name: '🔴 Đỏ', badge: 'bg-rose-950/80 text-rose-300 border border-rose-600/50', avatar: 'bg-rose-950/80 border-rose-600/50 text-rose-300' },
+      { id: 'cyan', name: '🌐 Ngọc', badge: 'bg-cyan-950/80 text-cyan-300 border border-cyan-600/50', avatar: 'bg-cyan-950/80 border-cyan-600/50 text-cyan-300' },
+      { id: 'indigo', name: '🔷 Chàm', badge: 'bg-indigo-950/80 text-indigo-300 border border-indigo-600/50', avatar: 'bg-indigo-950/80 border-indigo-600/50 text-indigo-300' },
+      { id: 'slate', name: '⚪ Xám', badge: 'bg-slate-800 text-slate-300 border border-slate-700', avatar: 'bg-slate-800 border-slate-700 text-slate-300' },
+    ]
+
+    function getAgentIcon(agentOrRole) {
+      if (typeof agentOrRole === 'object' && agentOrRole && agentOrRole.icon) {
+        return agentOrRole.icon
+      }
+      const r = (typeof agentOrRole === 'string' ? agentOrRole : (agentOrRole?.role || '')).toLowerCase()
       if (r.includes('lead')) return '👑'
       if (r.includes('review')) return '🔍'
+      if (r.includes('critic')) return '🧐'
+      if (r.includes('architect')) return '📐'
+      if (r.includes('developer')) return '💻'
+      if (r.includes('tester')) return '🧪'
+      if (r.includes('researcher')) return '🔬'
       return '⚡'
     }
 
-    function getRoleBadgeClass(role) {
+    function getRoleIcon(role) {
+      return getAgentIcon(role)
+    }
+
+    function getAgentBadgeClass(color, role) {
+      const c = (color || '').toLowerCase()
+      const found = AVAILABLE_AGENT_COLORS.find(col => col.id === c)
+      if (found) return found.badge
       const r = (role || '').toLowerCase()
       if (r.includes('lead')) return 'bg-amber-950/80 text-amber-300 border border-amber-600/50'
-      if (r.includes('review')) return 'bg-indigo-950/80 text-indigo-300 border border-indigo-600/50'
-      return 'bg-emerald-950/80 text-emerald-300 border border-emerald-600/50'
+      if (r.includes('review')) return 'bg-purple-950/80 text-purple-300 border border-purple-600/50'
+      if (r.includes('critic')) return 'bg-rose-950/80 text-rose-300 border border-rose-600/50'
+      return 'bg-blue-950/80 text-blue-300 border border-blue-600/50'
+    }
+
+    function getRoleBadgeClass(role, color) {
+      return getAgentBadgeClass(color, role)
+    }
+
+    function getAgentAvatarBoxClass(color, role) {
+      const c = (color || '').toLowerCase()
+      const found = AVAILABLE_AGENT_COLORS.find(col => col.id === c)
+      if (found) return found.avatar
+      const r = (role || '').toLowerCase()
+      if (r.includes('lead')) return 'bg-amber-950/60 border-amber-600/50 text-amber-300'
+      if (r.includes('review')) return 'bg-purple-950/60 border-purple-600/50 text-purple-300'
+      return 'bg-slate-800 border-slate-700 text-slate-300'
     }
 
     function getStateBadgeHtml(state, detail) {
@@ -1180,18 +1225,24 @@
               ? 'border-rose-600/60 bg-rose-950/20'
               : 'border-slate-800 bg-slate-900/80 hover:border-slate-700'
 
+        const teamAgent = (currentTeamAgents || []).find(ta => ta.name.toLowerCase() === agent.name.toLowerCase())
+        const agentIcon = agent.icon || teamAgent?.icon || getAgentIcon(agent.role)
+        const agentColor = agent.color || teamAgent?.color || ''
+        const avatarBoxClass = getAgentAvatarBoxClass(agentColor, agent.role)
+        const badgeClass = getRoleBadgeClass(agent.role, agentColor)
+
         html += `
           <div class="border rounded-xl p-2.5 shadow-md transition-all duration-150 space-y-2 ${borderClass}">
             <!-- Header -->
             <div class="flex items-start justify-between gap-1">
               <div class="flex items-center space-x-2 min-w-0">
-                <div class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-sm shrink-0 shadow-sm">
-                  ${getRoleIcon(agent.role)}
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0 shadow-sm ${avatarBoxClass}">
+                  ${agentIcon}
                 </div>
                 <div class="truncate min-w-0">
                   <div class="flex items-center space-x-1.5 truncate">
                     <span class="font-bold text-xs text-slate-100 truncate">${escapeHtml(agent.name)}</span>
-                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase shrink-0 ${getRoleBadgeClass(agent.role)}">
+                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase shrink-0 ${badgeClass}">
                       ${escapeHtml(agent.role)}
                     </span>
                   </div>
@@ -1422,6 +1473,8 @@
       let role = 'WORKER'
       let isLead = false
       let model = ''
+      let icon = ''
+      let color = ''
 
       if (matchedAgent) {
         const r = (matchedAgent.role || '').toLowerCase()
@@ -1436,12 +1489,18 @@
           role = (matchedAgent.role || 'WORKER').toUpperCase()
         }
 
+        icon = matchedAgent.icon || ''
+        color = matchedAgent.color || ''
+
         const prog = knownAgents[matchedAgent.program]
         if (prog && prog.flags) {
           const mIdx = prog.flags.indexOf('--model')
           if (mIdx !== -1 && prog.flags[mIdx + 1]) {
             model = prog.flags[mIdx + 1]
           }
+        }
+        if (!model && matchedAgent.program) {
+          model = matchedAgent.program
         }
       } else {
         if (lower === 'agy-1' || lower === 'lead') {
@@ -1468,8 +1527,12 @@
       else if (model.includes('sonnet')) model = 'Claude Sonnet 5.5'
       else if (model.includes('flash')) model = 'Gemini 3.8 Flash'
       else if (model.includes('gpt-oss') || model.includes('120b')) model = 'GPT-OSS 120B'
+      else if (model.includes('qwen')) model = 'Qwen Coder'
+      else if (model.includes('gemma')) model = 'Gemma'
 
-      return { isLead, role, model }
+      if (!icon) icon = isLead ? '👑' : (role === 'REVIEWER' ? '🔍' : '⚡')
+
+      return { isLead, role, model, icon, color }
     }
 
     // Normalize text: clean self-introductions like "Tôi là agy-1 (ROLE: LEAD)"
@@ -1603,9 +1666,10 @@
       }
 
       // 3. AGENT MESSAGES
-      const { isLead, role, model } = getAgentRoleInfo(msg.from)
+      const { isLead, role, model, icon, color } = getAgentRoleInfo(msg.from)
       const cleanContent = normalizeMessageContent(msg.content, isLead, role)
       const isSentinelDone = msg.content.trim() === '<<COLLAB_DONE>>'
+      const badgeStyle = getAgentBadgeClass(color, role)
 
       if (isLead) {
         // ---------------- LEAD AGENT (BÊN TRÁI) ----------------
@@ -1614,8 +1678,8 @@
           <div class="max-w-[90%] sm:max-w-[80%] rounded-2xl rounded-tl-sm p-4 bg-[#141e33] border-l-4 border-l-blue-500 border border-slate-800/80 shadow-lg">
             <div class="flex items-center justify-between space-x-3 mb-2 pb-1.5 border-b border-slate-800">
               <div class="flex items-center space-x-2">
-                <span class="px-2 py-0.5 rounded-md bg-blue-600/30 text-blue-300 border border-blue-500/40 font-bold text-xs flex items-center space-x-1">
-                  <span>👑</span>
+                <span class="px-2 py-0.5 rounded-md ${badgeStyle} font-bold text-xs flex items-center space-x-1">
+                  <span>${icon}</span>
                   <span>${role} (${escapeHtml(msg.from)})</span>
                 </span>
                 ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs font-bold">➔</span><span class="text-[10px] text-purple-300 font-semibold px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-800/60">${escapeHtml(msg.to)}</span>` : ''}
@@ -1643,8 +1707,6 @@
         // ---------------- WORKER / OTHER AGENTS (BÊN PHẢI) ----------------
         const isReviewer = role === 'REVIEWER'
         const borderStyle = isReviewer ? 'border-r-4 border-r-purple-500 bg-[#1d152c]' : 'border-r-4 border-r-emerald-500 bg-[#0d231b]'
-        const badgeStyle = isReviewer ? 'bg-purple-600/30 text-purple-300 border-purple-500/40' : 'bg-emerald-600/30 text-emerald-300 border-emerald-500/40'
-        const icon = isReviewer ? '🔍' : '⚡'
 
         div.className += ' items-end group'
         div.innerHTML = `
@@ -3667,10 +3729,10 @@
       if (e.target.id === 'modelDetailModal') closeModelDetailModal()
     })
 
-    // Agent Customization in New Task (Thêm, bớt, đổi tên, chỉnh sửa vai trò)
+    // Agent Customization in New Task (Thêm, bớt, đổi tên, chỉnh sửa vai trò, icon, màu sắc)
     let newTaskAgents = [
-      { name: 'Lead', role: 'LEAD', program: 'agy' },
-      { name: 'Worker', role: 'WORKER', program: 'agy-worker' }
+      { name: 'Lead', role: 'LEAD', program: 'gemini-4-hydrogen-medium', icon: '👑', color: 'amber' },
+      { name: 'Worker', role: 'WORKER', program: 'gemini-3.8-flash-medium', icon: '⚡', color: 'blue' }
     ]
 
     function renderAgentProgramOptions(currentProg) {
@@ -3733,16 +3795,14 @@
         html += `</optgroup>`
       }
 
-      // 2. Nhóm CLI & Cấu hình mặc định
-      html += `<optgroup label="─── CLI & Cấu hình mặc định ───">`
+      // 2. Nhóm CLI Cấu hình hệ thống (agents.json)
+      html += `<optgroup label="─── CLI Cấu hình hệ thống (agents.json) ───">`
       const defaultClis = [
-        { id: 'agy', name: 'agy (Cấu hình mặc định Lead)' },
-        { id: 'agy-worker', name: 'agy-worker (Cấu hình mặc định Worker)' },
-        { id: 'agy-pro', name: 'agy-pro (Cấu hình mặc định Reviewer)' },
-        { id: 'claude', name: 'Claude Code CLI' },
-        { id: 'codex', name: 'Codex CLI' },
-        { id: 'gemini', name: 'Gemini CLI' },
-        { id: 'opencode', name: 'OpenCode CLI' },
+        { id: 'agy', name: 'Google Antigravity CLI (agy)' },
+        { id: 'claude', name: 'Claude Code CLI (claude)' },
+        { id: 'codex', name: 'OpenAI Codex CLI (codex)' },
+        { id: 'ollama', name: 'Ollama Aider CLI (ollama)' },
+        { id: 'grok', name: 'xAI Grok CLI (grok)' },
       ]
       defaultClis.forEach(cli => {
         const isSel = (currentProg === cli.id) ? 'selected' : ''
@@ -3757,31 +3817,27 @@
       const container = document.getElementById('newTaskAgentsContainer')
       if (!container) return
       container.innerHTML = ''
-      
-      const roleIcons = {
-        'LEAD': '👑', 'WORKER': '⚡', 'REVIEWER': '🔍', 'CRITIC': '🧐',
-        'ARCHITECT': '📐', 'DEVELOPER': '💻', 'TESTER': '🧪', 'RESEARCHER': '🔬'
-      }
 
       newTaskAgents.forEach((ag, idx) => {
         const canDelete = newTaskAgents.length > 1
-        const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
+        const icon = ag.icon || getAgentIcon(ag.role)
+        const color = ag.color || (ag.role?.toUpperCase().includes('LEAD') ? 'amber' : (ag.role?.toUpperCase().includes('REVIEW') ? 'purple' : 'blue'))
         const div = document.createElement('div')
         div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start space-x-2 text-xs'
         div.innerHTML = `
           <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold self-start mt-2">
-            <span>${icon}</span>
+            <span class="text-base">${icon}</span>
             <span>#${idx + 1}</span>
           </div>
           <div class="flex-1 min-w-0 space-y-2">
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
               <div class="sm:col-span-3">
                 <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
                 <input type="text" value="${escapeHtml(ag.name)}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
               </div>
-              <div class="sm:col-span-4">
+              <div class="sm:col-span-3">
                 <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-                <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                   <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
                   <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
                   <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
@@ -3792,10 +3848,22 @@
                   <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
                 </select>
               </div>
-              <div class="sm:col-span-5">
+              <div class="sm:col-span-3">
                 <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-                <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                   ${renderAgentProgramOptions(ag.program)}
+                </select>
+              </div>
+              <div class="sm:col-span-1">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Icon</label>
+                <select onchange="updateNewTaskAgentItem(${idx}, 'icon', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-1 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer text-center">
+                  ${AVAILABLE_AGENT_ICONS.map(ic => `<option value="${ic}" ${icon === ic ? 'selected' : ''}>${ic}</option>`).join('')}
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Màu</label>
+                <select onchange="updateNewTaskAgentItem(${idx}, 'color', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1.5 text-[11px] text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  ${AVAILABLE_AGENT_COLORS.map(col => `<option value="${col.id}" ${color === col.id ? 'selected' : ''}>${col.name.split(' ')[0]}</option>`).join('')}
                 </select>
               </div>
             </div>
@@ -3817,16 +3885,20 @@
 
     function addNewTaskAgentItem() {
       const idx = newTaskAgents.length + 1
-      let prog = 'agy-worker'
+      let prog = 'gemini-3.8-flash-medium'
       let role = 'WORKER'
       let name = `Worker-${idx - 1}`
+      let icon = '⚡'
+      let color = 'blue'
       let instruction = ''
       if (idx === 3) {
-        prog = 'agy-pro'
+        prog = 'gemini-4-argon-low'
         role = 'REVIEWER'
         name = 'Reviewer'
+        icon = '🔍'
+        color = 'purple'
       }
-      newTaskAgents.push({ name, role, program: prog, instruction })
+      newTaskAgents.push({ name, role, program: prog, icon, color, instruction })
       renderNewTaskAgentsList()
     }
 
@@ -3839,29 +3911,38 @@
     function updateNewTaskAgentItem(idx, field, value) {
       if (newTaskAgents[idx]) {
         newTaskAgents[idx][field] = value
+        if (field === 'role') {
+          const defaultIconMap = { 'LEAD': '👑', 'WORKER': '⚡', 'REVIEWER': '🔍', 'CRITIC': '🧐', 'ARCHITECT': '📐', 'DEVELOPER': '💻', 'TESTER': '🧪', 'RESEARCHER': '🔬' }
+          const defaultColorMap = { 'LEAD': 'amber', 'WORKER': 'blue', 'REVIEWER': 'purple', 'CRITIC': 'rose', 'ARCHITECT': 'indigo', 'DEVELOPER': 'blue', 'TESTER': 'emerald', 'RESEARCHER': 'cyan' }
+          newTaskAgents[idx].icon = defaultIconMap[value.toUpperCase()] || '🤖'
+          newTaskAgents[idx].color = defaultColorMap[value.toUpperCase()] || 'blue'
+          renderNewTaskAgentsList()
+        } else if (field === 'icon' || field === 'color') {
+          renderNewTaskAgentsList()
+        }
       }
     }
 
     function onNewTaskTemplateChange(template) {
       if (template === 'review') {
         newTaskAgents = [
-          { name: 'Reviewer', role: 'REVIEWER', program: 'agy', instruction: 'Đọc kỹ code, phân tích kiến trúc và chỉ ra điểm chưa tối ưu' },
-          { name: 'Critic', role: 'CRITIC', program: 'agy-pro', instruction: 'Tìm kiếm bug, lỗ hổng bảo mật và phản biện gay gắt các phương án' }
+          { name: 'Reviewer', role: 'REVIEWER', program: 'gemini-4-argon-high', icon: '🔍', color: 'purple', instruction: 'Đọc kỹ code, phân tích kiến trúc và chỉ ra điểm chưa tối ưu' },
+          { name: 'Critic', role: 'CRITIC', program: 'claude-opus-5-5-high', icon: '🧐', color: 'rose', instruction: 'Tìm kiếm bug, lỗ hổng bảo mật và phản biện gay gắt các phương án' }
         ]
       } else if (template === 'implement') {
         newTaskAgents = [
-          { name: 'Architect', role: 'ARCHITECT', program: 'agy', instruction: 'Lập kế hoạch kiến trúc, thiết kế cấu trúc file và chia việc' },
-          { name: 'Developer', role: 'DEVELOPER', program: 'agy-worker', instruction: 'Thực hiện code chi tiết, viết unit test và báo cáo tiến độ' }
+          { name: 'Architect', role: 'ARCHITECT', program: 'gemini-4-hydrogen-medium', icon: '📐', color: 'indigo', instruction: 'Lập kế hoạch kiến trúc, thiết kế cấu trúc file và chia việc' },
+          { name: 'Developer', role: 'DEVELOPER', program: 'gemini-3.8-flash-medium', icon: '💻', color: 'blue', instruction: 'Thực hiện code chi tiết, viết unit test và báo cáo tiến độ' }
         ]
       } else if (template === 'debug') {
         newTaskAgents = [
-          { name: 'Lead-Debugger', role: 'LEAD', program: 'agy', instruction: 'Phân tích log lỗi, xác định nguyên nhân gốc rễ và đề xuất cách sửa' },
-          { name: 'Worker-Reproducer', role: 'WORKER', program: 'agy-worker', instruction: 'Tái hiện lỗi, thử nghiệm bản vá và kiểm tra kết quả' }
+          { name: 'Lead-Debugger', role: 'LEAD', program: 'gemini-4-argon-high', icon: '👑', color: 'amber', instruction: 'Phân tích log lỗi, xác định nguyên nhân gốc rễ và đề xuất cách sửa' },
+          { name: 'Worker-Reproducer', role: 'WORKER', program: 'gemini-3.8-flash-medium', icon: '⚡', color: 'blue', instruction: 'Tái hiện lỗi, thử nghiệm bản vá và kiểm tra kết quả' }
         ]
       } else {
         newTaskAgents = [
-          { name: 'Lead', role: 'LEAD', program: 'agy', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả' },
-          { name: 'Worker', role: 'WORKER', program: 'agy-worker', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết' }
+          { name: 'Lead', role: 'LEAD', program: 'gemini-4-hydrogen-medium', icon: '👑', color: 'amber', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả' },
+          { name: 'Worker', role: 'WORKER', program: 'gemini-3.8-flash-medium', icon: '⚡', color: 'blue', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết' }
         ]
       }
       renderNewTaskAgentsList()
@@ -3887,14 +3968,16 @@
       editingRunningAgents = agents.map(a => ({
         name: a.name || 'Agent',
         role: a.role || 'worker',
-        program: a.program || 'agy-worker',
+        program: a.program || 'gemini-3.8-flash-medium',
         instruction: a.instruction || '',
+        icon: a.icon || getAgentIcon(a.role),
+        color: a.color || (a.role?.toLowerCase().includes('lead') ? 'amber' : (a.role?.toLowerCase().includes('review') ? 'purple' : 'blue')),
         status: a.status || 'active'
       }))
       if (editingRunningAgents.length === 0) {
         editingRunningAgents = [
-          { name: 'Lead', role: 'LEAD', program: 'agy', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả', status: 'active' },
-          { name: 'Worker', role: 'WORKER', program: 'agy-worker', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết', status: 'active' }
+          { name: 'Lead', role: 'LEAD', program: 'gemini-4-hydrogen-medium', icon: '👑', color: 'amber', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả', status: 'active' },
+          { name: 'Worker', role: 'WORKER', program: 'gemini-3.8-flash-medium', icon: '⚡', color: 'blue', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết', status: 'active' }
         ]
       }
 
@@ -3925,30 +4008,26 @@
       if (!container) return
       container.innerHTML = ''
 
-      const roleIcons = {
-        'LEAD': '👑', 'WORKER': '⚡', 'REVIEWER': '🔍', 'CRITIC': '🧐',
-        'ARCHITECT': '📐', 'DEVELOPER': '💻', 'TESTER': '🧪', 'RESEARCHER': '🔬'
-      }
-
       editingRunningAgents.forEach((ag, idx) => {
         const canDelete = editingRunningAgents.length > 1
-        const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
+        const icon = ag.icon || getAgentIcon(ag.role)
+        const color = ag.color || (ag.role?.toUpperCase().includes('LEAD') ? 'amber' : (ag.role?.toUpperCase().includes('REVIEW') ? 'purple' : 'blue'))
         const div = document.createElement('div')
         div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start space-x-2 text-xs'
         div.innerHTML = `
           <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold self-start mt-2">
-            <span>${icon}</span>
+            <span class="text-base">${icon}</span>
             <span>#${idx + 1}</span>
           </div>
           <div class="flex-1 min-w-0 space-y-2">
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
               <div class="sm:col-span-3">
                 <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
                 <input type="text" value="${escapeHtml(ag.name)}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
               </div>
-              <div class="sm:col-span-4">
+              <div class="sm:col-span-3">
                 <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-                <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                   <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
                   <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
                   <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
@@ -3959,10 +4038,22 @@
                   <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
                 </select>
               </div>
-              <div class="sm:col-span-5">
+              <div class="sm:col-span-3">
                 <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-                <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                   ${renderAgentProgramOptions(ag.program)}
+                </select>
+              </div>
+              <div class="sm:col-span-1">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Icon</label>
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'icon', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-1 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer text-center">
+                  ${AVAILABLE_AGENT_ICONS.map(ic => `<option value="${ic}" ${icon === ic ? 'selected' : ''}>${ic}</option>`).join('')}
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Màu</label>
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'color', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1.5 text-[11px] text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  ${AVAILABLE_AGENT_COLORS.map(col => `<option value="${col.id}" ${color === col.id ? 'selected' : ''}>${col.name.split(' ')[0]}</option>`).join('')}
                 </select>
               </div>
             </div>
@@ -3984,11 +4075,26 @@
 
     function addRunningTeamAgentItem() {
       const idx = editingRunningAgents.length + 1
+      let prog = 'gemini-3.8-flash-medium'
+      let role = 'WORKER'
+      let name = `Worker-${idx - 1}`
+      let icon = '⚡'
+      let color = 'blue'
+      let instruction = ''
+      if (idx === 3) {
+        prog = 'gemini-4-argon-low'
+        role = 'REVIEWER'
+        name = 'Reviewer'
+        icon = '🔍'
+        color = 'purple'
+      }
       editingRunningAgents.push({
-        name: idx === 3 ? 'Reviewer' : `Worker-${idx - 1}`,
-        role: idx === 3 ? 'REVIEWER' : 'WORKER',
-        program: idx === 3 ? 'agy-pro' : 'agy-worker',
-        instruction: '',
+        name,
+        role,
+        program: prog,
+        instruction,
+        icon,
+        color,
         status: 'active'
       })
       renderRunningTeamAgentsList()
@@ -4003,6 +4109,15 @@
     function updateRunningTeamAgentItem(idx, field, value) {
       if (editingRunningAgents[idx]) {
         editingRunningAgents[idx][field] = value
+        if (field === 'role') {
+          const defaultIconMap = { 'LEAD': '👑', 'WORKER': '⚡', 'REVIEWER': '🔍', 'CRITIC': '🧐', 'ARCHITECT': '📐', 'DEVELOPER': '💻', 'TESTER': '🧪', 'RESEARCHER': '🔬' }
+          const defaultColorMap = { 'LEAD': 'amber', 'WORKER': 'blue', 'REVIEWER': 'purple', 'CRITIC': 'rose', 'ARCHITECT': 'indigo', 'DEVELOPER': 'blue', 'TESTER': 'emerald', 'RESEARCHER': 'cyan' }
+          editingRunningAgents[idx].icon = defaultIconMap[value.toUpperCase()] || '🤖'
+          editingRunningAgents[idx].color = defaultColorMap[value.toUpperCase()] || 'blue'
+          renderRunningTeamAgentsList()
+        } else if (field === 'icon' || field === 'color') {
+          renderRunningTeamAgentsList()
+        }
       }
     }
 

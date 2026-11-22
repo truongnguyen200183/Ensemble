@@ -23,6 +23,8 @@ export interface EnsembleTeamAgent {
   program: string
   role: string
   instruction?: string
+  icon?: string
+  color?: string
   hostId: string
   status: 'spawning' | 'active' | 'idle' | 'done' | 'failed' | 'replaced'
   worktreePath?: string

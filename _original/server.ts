@@ -544,7 +544,7 @@ const server = http.createServer(async (req, res) => {
       } else if (typeof body.agents === 'string' && body.agents.trim()) {
         agents = body.agents.trim()
       } else {
-        agents = (template === 'review' || template === 'review-pro') ? 'agy,agy-pro' : 'agy,agy-worker'
+        agents = (template === 'review' || template === 'review-pro') ? 'agy,claude' : 'agy,agy'
       }
 
       const { spawn } = await import('child_process')
@@ -635,9 +635,11 @@ const server = http.createServer(async (req, res) => {
         const updatedAgents = body.agents.map((a: any, idx: number) => ({
           agentId: a.agentId || '',
           name: (a.name || (idx === 0 ? 'Lead' : `Worker-${idx}`)).trim(),
-          program: (a.program || (idx === 0 ? 'agy' : 'agy-worker')).trim(),
+          program: (a.program || 'agy').trim(),
           role: (a.role || (idx === 0 ? 'lead' : 'worker')).trim(),
           instruction: (a.instruction || '').trim(),
+          icon: (a.icon || '').trim(),
+          color: (a.color || '').trim(),
           hostId: a.hostId || '',
           status: a.status || 'active',
         }))
@@ -727,9 +729,11 @@ const server = http.createServer(async (req, res) => {
         const updatedAgents = body.agents.map((a: any, idx: number) => ({
           agentId: a.agentId || '',
           name: (a.name || (idx === 0 ? 'Lead' : `Worker-${idx}`)).trim(),
-          program: (a.program || (idx === 0 ? 'agy' : 'agy-worker')).trim(),
+          program: (a.program || 'agy').trim(),
           role: (a.role || (idx === 0 ? 'lead' : 'worker')).trim(),
           instruction: (a.instruction || '').trim(),
+          icon: (a.icon || '').trim(),
+          color: (a.color || '').trim(),
           hostId: a.hostId || '',
           status: 'active' as const,
         }))
@@ -899,8 +903,8 @@ const server = http.createServer(async (req, res) => {
           availableModels,
           roles: {
             lead: getModel('agy') || 'gemini-4-argon-low',
-            worker: getModel('agy-worker') || 'gemini-3.8-flash-low',
-            reviewer: getModel('agy-pro') || 'gemini-4-argon-low',
+            worker: 'gemini-3.8-flash-low',
+            reviewer: 'gemini-4-argon-low',
           },
           exhaustedModels: exhausted,
         }, 200, origin)
@@ -1026,8 +1030,6 @@ const server = http.createServer(async (req, res) => {
 
           if (body.roles) {
             if (body.roles.lead) setModel('agy', body.roles.lead)
-            if (body.roles.worker) setModel('agy-worker', body.roles.worker)
-            if (body.roles.reviewer) setModel('agy-pro', body.roles.reviewer)
           }
 
           fs.writeFileSync(agentsPath, JSON.stringify(currentAgents, null, 2), 'utf8')

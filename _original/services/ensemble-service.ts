@@ -1652,7 +1652,7 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
 
   // Broadcast team assignment roster to feed so Lead and all members see everyone's task
   const assignmentLines = team.agents.map(a => {
-    const roleIcon = a.role?.toLowerCase().includes('lead') ? '👑' : (a.role?.toLowerCase().includes('review') ? '🔍' : '⚡')
+    const roleIcon = a.icon || (a.role?.toLowerCase().includes('lead') ? '👑' : (a.role?.toLowerCase().includes('review') ? '🔍' : '⚡'))
     const roleName = (a.role || 'worker').toUpperCase()
     return `- ${roleIcon} **${a.name}** (${roleName}): ${a.instruction ? `"${a.instruction}"` : 'Thực hiện theo vai trò tiêu chuẩn'}`
   }).join('\n')

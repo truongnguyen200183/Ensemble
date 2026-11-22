@@ -1,4 +1,34 @@
 {
+  "agy": {
+    "name": "agy",
+    "command": "agy-smart",
+    "flags": [
+      "--dangerously-skip-permissions"
+    ],
+    "readyMarker": "? for shortcuts",
+    "inputMethod": "sendKeys",
+    "color": "red",
+    "icon": "▲",
+    "unsetEnv": [
+      "GEMINI_API_KEY",
+      "GOOGLE_API_KEY"
+    ]
+  },
+  "claude": {
+    "name": "claude",
+    "command": "claude-smart",
+    "flags": [
+      "--permission-mode",
+      "auto"
+    ],
+    "readyMarker": "❯",
+    "inputMethod": "sendKeys",
+    "color": "green",
+    "icon": "●",
+    "unsetEnv": [
+      "ANTHROPIC_API_KEY"
+    ]
+  },
   "codex": {
     "name": "codex",
     "command": "codex",
@@ -10,59 +40,14 @@
     "color": "blue",
     "icon": "◆"
   },
-  "claude": {
-    "name": "claude",
-    "command": "claude",
-    "flags": [
-      "--permission-mode",
-      "auto",
-      "--model",
-      "sonnet"
-    ],
-    "readyMarker": "❯",
-    "inputMethod": "sendKeys",
-    "color": "green",
-    "icon": "●",
-    "unsetEnv": [
-      "ANTHROPIC_API_KEY"
-    ]
-  },
-  "agy": {
-    "name": "agy",
-    "command": "agy-smart",
-    "flags": [
-      "--dangerously-skip-permissions",
-      "--model",
-      "gemini-4-hydrogen-medium"
-    ],
-    "readyMarker": "? for shortcuts",
-    "inputMethod": "sendKeys",
-    "color": "red",
-    "icon": "▲",
-    "unsetEnv": [
-      "GEMINI_API_KEY",
-      "GOOGLE_API_KEY"
-    ]
-  },
-  "gemini": {
-    "name": "gemini",
-    "command": "gemini",
-    "flags": [
-      "--yolo"
-    ],
-    "readyMarker": "Type your message",
-    "inputMethod": "pasteFromFile",
-    "color": "yellow",
-    "icon": "★"
-  },
-  "opencode": {
-    "name": "opencode",
-    "command": "opencode",
+  "ollama": {
+    "name": "ollama",
+    "command": "aider-smart",
     "flags": [],
-    "readyMarker": "Ask anything",
+    "readyMarker": ">",
     "inputMethod": "sendKeys",
     "color": "cyan",
-    "icon": "▣"
+    "icon": "🦙"
   },
   "grok": {
     "name": "grok",
@@ -75,104 +60,5 @@
     "inputMethod": "pasteFromFile",
     "color": "white",
     "icon": "✕"
-  },
-  "glm": {
-    "name": "glm",
-    "command": "glm",
-    "flags": [
-      "--permission-mode",
-      "auto"
-    ],
-    "readyMarker": "❯",
-    "inputMethod": "sendKeys",
-    "color": "magenta",
-    "icon": "◈"
-  },
-  "mimo": {
-    "name": "mimo",
-    "command": "mimo",
-    "flags": [
-      "--trust",
-      "--dangerously-skip-permissions"
-    ],
-    "readyMarker": "Type your message",
-    "inputMethod": "pasteFromFile",
-    "color": "cyan",
-    "icon": "◇"
-  },
-  "agy-worker": {
-    "name": "agy-worker",
-    "command": "agy-smart",
-    "flags": [
-      "--dangerously-skip-permissions",
-      "--model",
-      "gemini-3.8-flash-medium"
-    ],
-    "readyMarker": "? for shortcuts",
-    "inputMethod": "sendKeys",
-    "color": "yellow",
-    "icon": "▼",
-    "unsetEnv": [
-      "GEMINI_API_KEY",
-      "GOOGLE_API_KEY"
-    ]
-  },
-  "agy-pro": {
-    "name": "agy-pro",
-    "command": "agy-smart",
-    "flags": [
-      "--dangerously-skip-permissions",
-      "--model",
-      "gemini-3.8-flash-medium"
-    ],
-    "readyMarker": "? for shortcuts",
-    "inputMethod": "sendKeys",
-    "color": "magenta",
-    "icon": "◆",
-    "unsetEnv": [
-      "GEMINI_API_KEY",
-      "GOOGLE_API_KEY"
-    ]
-  },
-  "claude-opus": {
-    "name": "claude-opus",
-    "command": "claude",
-    "flags": [
-      "--permission-mode",
-      "auto",
-      "--model",
-      "opus"
-    ],
-    "readyMarker": "❯",
-    "inputMethod": "sendKeys",
-    "color": "green",
-    "icon": "◉",
-    "unsetEnv": [
-      "ANTHROPIC_API_KEY"
-    ]
-  },
-  "ollama-gemma": {
-    "name": "ollama-gemma",
-    "command": "aider-smart",
-    "flags": [
-      "--model",
-      "ollama/gemma4:12b"
-    ],
-    "readyMarker": ">",
-    "inputMethod": "sendKeys",
-    "color": "cyan",
-    "icon": "🦙"
-  },
-  "ollama-qwen": {
-    "name": "ollama-qwen",
-    "command": "aider-smart",
-    "flags": [
-      "--model",
-      "ollama/qwen3-coder:30b"
-    ],
-    "readyMarker": ">",
-    "inputMethod": "sendKeys",
-    "color": "cyan",
-    "icon": "🦙"
   }
 }
