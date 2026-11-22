@@ -852,11 +852,21 @@
           </div>
         </div>
 
-        <!-- Row 2: Layer & API Key -->
+        <!-- Row 2: CLI Engine & Layer -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
+            <label class="block text-slate-400 text-[11px] mb-1 font-semibold">Trình điều khiển CLI (CLI Engine) <span class="text-rose-400">*</span></label>
+            <select id="detailModelCli" onchange="handleDetailModelCliChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer">
+              <option value="agy">🪐 Antigravity CLI (agy / Gemini)</option>
+              <option value="claude">🟣 Claude Code CLI (claude / Anthropic)</option>
+              <option value="ollama">🦙 Ollama Local (Aider / Mạng nội bộ)</option>
+              <option value="codex">💻 OpenAI Codex CLI (codex)</option>
+              <option value="grok">🧠 Grok xAI CLI (grok)</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-slate-400 text-[11px] mb-1 font-semibold">Phân tầng / Cấp bậc (Layer) <span class="text-rose-400">*</span></label>
-            <select id="detailModelLayer" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer">
+            <select id="detailModelLayer" onchange="handleDetailModelLayerChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer">
               <option value="Tier 1">👑 Tier 1 (Tối cao / Kiến trúc / Lead)</option>
               <option value="Tier 2">⚡ Tier 2 (Tiêu chuẩn / Cân bằng / Worker)</option>
               <option value="Tier 3">🚀 Tier 3 (Nhanh / Tiết kiệm token)</option>
@@ -864,15 +874,53 @@
               <option value="Local">🏠 Local (Mạng nội bộ / Ollama)</option>
             </select>
           </div>
+        </div>
+
+        <!-- Row 3: Icon & Color -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-slate-400 text-[11px] mb-1 font-semibold flex items-center justify-between">
-              <span>API Key riêng (Để gọi/tạo model theo API key)</span>
-              <span class="text-[10px] text-slate-500">(Tùy chọn)</span>
-            </label>
-            <div class="relative flex items-center">
-              <input id="detailModelApiKey" type="password" placeholder="sk-... hoặc AIza... (Để trống nếu dùng mặc định)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 pr-8 text-slate-100 text-xs focus:border-blue-500 focus:outline-none font-mono" />
-              <button type="button" onclick="toggleDetailApiKeyVisibility()" class="absolute right-2 text-slate-400 hover:text-slate-200 cursor-pointer" title="Hiện/Ẩn API Key">👁️</button>
-            </div>
+            <label class="block text-slate-400 text-[11px] mb-1 font-semibold">Biểu tượng mặc định (Icon)</label>
+            <select id="detailModelIcon" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer">
+              <option value="👑">👑 Vương miện (Lead / Tối cao)</option>
+              <option value="⚡">⚡ Tia sét (Nhanh / Hiệu năng)</option>
+              <option value="🔍">🔍 Kính lúp (Reviewer / Kiểm tra)</option>
+              <option value="🧐">🧐 Soi xét (Đánh giá sâu)</option>
+              <option value="🦙">🦙 Llama (Ollama / Local)</option>
+              <option value="🤖">🤖 Robot (Worker / Tự động)</option>
+              <option value="💻">💻 Máy tính (Coder / Lập trình)</option>
+              <option value="🧠">🧠 Trí tuệ (Tư duy / Reasoning)</option>
+              <option value="🚀">🚀 Tên lửa (Tăng tốc / Runner)</option>
+              <option value="▲">▲ Tam giác (Antigravity mặc định)</option>
+              <option value="●">● Tròn (Claude mặc định)</option>
+              <option value="◆">◆ Kim cương (Tier 1)</option>
+              <option value="⭐">⭐ Ngôi sao (Đặc biệt)</option>
+              <option value="🛡️">🛡️ Khiên chắn (Bảo mật / Giám sát)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 text-[11px] mb-1 font-semibold">Màu sắc mặc định (Color)</label>
+            <select id="detailModelColor" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer">
+              <option value="amber">🟡 Hổ phách (Amber - Vàng cam)</option>
+              <option value="blue">🔵 Xanh dương (Blue - Cân bằng)</option>
+              <option value="purple">🟣 Tím (Purple - Sáng tạo)</option>
+              <option value="emerald">🟢 Xanh lục (Emerald - Ổn định)</option>
+              <option value="rose">🔴 Đỏ hồng (Rose - Nổi bật)</option>
+              <option value="cyan">🔷 Xanh ngọc (Cyan - Hiện đại/Local)</option>
+              <option value="indigo">🟦 Chàm (Indigo - Chuyên sâu)</option>
+              <option value="slate">⚪ Xám (Slate - Trung tính)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 4: API Key -->
+        <div>
+          <label class="block text-slate-400 text-[11px] mb-1 font-semibold flex items-center justify-between">
+            <span>API Key riêng (Để gọi/tạo model theo API key)</span>
+            <span class="text-[10px] text-slate-500">(Tùy chọn)</span>
+          </label>
+          <div class="relative flex items-center">
+            <input id="detailModelApiKey" type="password" placeholder="sk-... hoặc AIza... (Để trống nếu dùng mặc định)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 pr-8 text-slate-100 text-xs focus:border-blue-500 focus:outline-none font-mono" />
+            <button type="button" onclick="toggleDetailApiKeyVisibility()" class="absolute right-2 text-slate-400 hover:text-slate-200 cursor-pointer" title="Hiện/Ẩn API Key">👁️</button>
           </div>
         </div>
 
@@ -2948,6 +2996,67 @@
       closeModelDetailModal()
     }
 
+    function handleDetailModelCliChange(cli) {
+      const idInput = document.getElementById('detailModelId')
+      const layerSelect = document.getElementById('detailModelLayer')
+      const iconSelect = document.getElementById('detailModelIcon')
+      const colorSelect = document.getElementById('detailModelColor')
+
+      if (cli === 'ollama') {
+        if (layerSelect && layerSelect.value !== 'Local') layerSelect.value = 'Local'
+        if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = '🦙'
+        if (colorSelect && (colorSelect.value === 'blue' || colorSelect.value === 'emerald')) colorSelect.value = 'cyan'
+        if (idInput) {
+          let val = idInput.value.trim()
+          if (val && !val.startsWith('ollama/')) {
+            val = val.replace(/^ollama-/, '')
+            idInput.value = 'ollama/' + val
+          } else if (!val) {
+            idInput.value = 'ollama/'
+          }
+        }
+      } else if (cli === 'claude') {
+        if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 1'
+        if (iconSelect && iconSelect.value === '🦙') iconSelect.value = '●'
+        if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'emerald'
+        if (idInput && idInput.value.startsWith('ollama/')) {
+          idInput.value = idInput.value.replace(/^ollama\//, '')
+        }
+      } else if (cli === 'codex') {
+        if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 2'
+        if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = '💻'
+        if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'emerald'
+        if (idInput && idInput.value.startsWith('ollama/')) {
+          idInput.value = idInput.value.replace(/^ollama\//, '')
+        }
+      } else if (cli === 'grok') {
+        if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 2'
+        if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = '🧠'
+        if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'purple'
+        if (idInput && idInput.value.startsWith('ollama/')) {
+          idInput.value = idInput.value.replace(/^ollama\//, '')
+        }
+      } else {
+        // agy
+        if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 2'
+        if (iconSelect && iconSelect.value === '🦙') iconSelect.value = '▲'
+        if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'blue'
+        if (idInput && idInput.value.startsWith('ollama/')) {
+          idInput.value = idInput.value.replace(/^ollama\//, '')
+        }
+      }
+    }
+
+    function handleDetailModelLayerChange(layer) {
+      if (layer === 'Local') {
+        const cliSelect = document.getElementById('detailModelCli')
+        if (cliSelect && cliSelect.value !== 'ollama') {
+          cliSelect.value = 'ollama'
+          handleDetailModelCliChange('ollama')
+        }
+      }
+    }
+
     function openModelDetailModal(modelId) {
       const modal = document.getElementById('modelDetailModal')
       if (!modal) return
@@ -2960,6 +3069,9 @@
       const idInput = document.getElementById('detailModelId')
       const nameInput = document.getElementById('detailModelName')
       const layerSelect = document.getElementById('detailModelLayer')
+      const cliSelect = document.getElementById('detailModelCli')
+      const iconSelect = document.getElementById('detailModelIcon')
+      const colorSelect = document.getElementById('detailModelColor')
       const apiKeyInput = document.getElementById('detailModelApiKey')
       const descInput = document.getElementById('detailModelDesc')
       const strengthsInput = document.getElementById('detailModelStrengths')
@@ -2977,6 +3089,9 @@
         if (idInput) { idInput.value = ''; idInput.disabled = false; }
         if (nameInput) nameInput.value = ''
         if (layerSelect) layerSelect.value = 'Tier 2'
+        if (cliSelect) cliSelect.value = 'agy'
+        if (iconSelect) iconSelect.value = '▲'
+        if (colorSelect) colorSelect.value = 'blue'
         if (apiKeyInput) { apiKeyInput.value = ''; apiKeyInput.type = 'password'; }
         if (descInput) descInput.value = ''
         if (strengthsInput) strengthsInput.value = ''
@@ -2985,13 +3100,17 @@
       } else {
         const models = (modelConfigData && modelConfigData.availableModels) || []
         const m = models.find(x => x.id === modelId) || { id: modelId, name: modelId }
+        const inferredCli = m.cli || (m.layer === 'Local' || m.id.startsWith('ollama') ? 'ollama' : (m.id.startsWith('cc-') ? 'claude' : 'agy'))
         if (titleEl) titleEl.innerHTML = `<span>👁️ Chi Tiết: ${escapeHtml(m.name)}</span>`
-        if (subtitleEl) subtitleEl.textContent = `Mã: ${m.id} • ${m.layer || 'Tier 2'}`
+        if (subtitleEl) subtitleEl.textContent = `Mã: ${m.id} • ${m.layer || 'Tier 2'} • CLI: ${inferredCli}`
         if (saveBtn) saveBtn.innerHTML = '<span>💾 Lưu Thay Đổi</span>'
         if (deleteBtn) deleteBtn.classList.remove('hidden')
         if (idInput) { idInput.value = m.id || ''; idInput.disabled = false; }
         if (nameInput) nameInput.value = m.name || ''
         if (layerSelect) layerSelect.value = m.layer || inferLayer(m.id, m.group) || 'Tier 2'
+        if (cliSelect) cliSelect.value = inferredCli
+        if (iconSelect) iconSelect.value = m.icon || (inferredCli === 'ollama' ? '🦙' : (inferredCli === 'claude' ? '●' : '▲'))
+        if (colorSelect) colorSelect.value = m.color || (inferredCli === 'ollama' ? 'cyan' : (inferredCli === 'claude' ? 'emerald' : 'blue'))
         if (apiKeyInput) { apiKeyInput.value = m.apiKey || ''; apiKeyInput.type = 'password'; }
         if (descInput) descInput.value = m.desc || ''
 
@@ -3030,10 +3149,13 @@
     }
 
     async function saveCurrentDetailModel() {
-      const id = (document.getElementById('detailModelId')?.value || '').trim()
+      let id = (document.getElementById('detailModelId')?.value || '').trim()
       const name = (document.getElementById('detailModelName')?.value || '').trim()
       const originalId = document.getElementById('detailModelOriginalId')?.value || ''
       const layer = document.getElementById('detailModelLayer')?.value || 'Tier 2'
+      const cli = document.getElementById('detailModelCli')?.value || 'agy'
+      const icon = document.getElementById('detailModelIcon')?.value || '🤖'
+      const color = document.getElementById('detailModelColor')?.value || 'blue'
       const apiKey = (document.getElementById('detailModelApiKey')?.value || '').trim()
       const desc = (document.getElementById('detailModelDesc')?.value || '').trim()
       const strengths = (document.getElementById('detailModelStrengths')?.value || '').trim()
@@ -3049,12 +3171,24 @@
         return
       }
 
+      // Tự động đảm bảo tiền tố ollama/ khi CLI là ollama
+      if (cli === 'ollama') {
+        if (id.startsWith('ollama-')) {
+          id = 'ollama/' + id.slice(7)
+        } else if (!id.startsWith('ollama/')) {
+          id = 'ollama/' + id
+        }
+      }
+
       const modelPayload = {
         id,
         originalId: originalId || id,
         name,
         desc,
         layer,
+        cli,
+        icon,
+        color,
         apiKey,
         info: {
           coreStrengths: strengths ? strengths.split('\n').map(s => s.trim()).filter(Boolean) : [],

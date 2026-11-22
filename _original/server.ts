@@ -31,6 +31,9 @@ export interface ModelDef {
   desc?: string
   layer?: string
   apiKey?: string
+  cli?: string
+  icon?: string
+  color?: string
   info?: ModelInfoDef
 }
 
@@ -928,6 +931,9 @@ const server = http.createServer(async (req, res) => {
               group: String(body.addModel.group || 'Khác').trim(),
               desc: String(body.addModel.desc || '').trim(),
               layer: String(body.addModel.layer || 'Tier 2').trim(),
+              cli: body.addModel.cli ? String(body.addModel.cli).trim() : 'agy',
+              icon: body.addModel.icon ? String(body.addModel.icon).trim() : undefined,
+              color: body.addModel.color ? String(body.addModel.color).trim() : undefined,
               ...(body.addModel.apiKey ? { apiKey: String(body.addModel.apiKey).trim() } : {}),
               ...(body.addModel.info ? { info: body.addModel.info } : {}),
             }
@@ -951,6 +957,9 @@ const server = http.createServer(async (req, res) => {
             const targetGroup = String(up.group || (idx !== -1 ? currentModels[idx].group : 'Khác')).trim()
             const targetDesc = up.desc !== undefined ? String(up.desc).trim() : (idx !== -1 ? currentModels[idx].desc : '')
             const targetLayer = up.layer ? String(up.layer).trim() : (idx !== -1 ? currentModels[idx].layer || 'Tier 2' : 'Tier 2')
+            const targetCli = up.cli !== undefined ? String(up.cli).trim() : (idx !== -1 ? currentModels[idx].cli || 'agy' : 'agy')
+            const targetIcon = up.icon !== undefined ? String(up.icon).trim() : (idx !== -1 ? currentModels[idx].icon : undefined)
+            const targetColor = up.color !== undefined ? String(up.color).trim() : (idx !== -1 ? currentModels[idx].color : undefined)
             const targetApiKey = up.apiKey !== undefined ? String(up.apiKey).trim() : (idx !== -1 ? currentModels[idx].apiKey : undefined)
             const targetInfo = up.info || (idx !== -1 ? currentModels[idx].info : undefined)
 
@@ -960,6 +969,9 @@ const server = http.createServer(async (req, res) => {
               group: targetGroup,
               desc: targetDesc,
               layer: targetLayer,
+              cli: targetCli,
+              ...(targetIcon ? { icon: targetIcon } : {}),
+              ...(targetColor ? { color: targetColor } : {}),
               ...(targetApiKey ? { apiKey: targetApiKey } : {}),
               ...(targetInfo ? { info: targetInfo } : {}),
             }
@@ -997,33 +1009,41 @@ const server = http.createServer(async (req, res) => {
           const setModel = (key: string, model: string) => {
             if (currentAgents[key] && currentAgents[key].flags) {
               const a = currentAgents[key]
-              if (model.startsWith('cc-')) {
+              const targetDef = currentModels.find(m => m.id === model)
+              const cli = targetDef?.cli || (model.startsWith('ollama') ? 'ollama' : (model.startsWith('cc-') ? 'claude' : 'agy'))
+
+              if (cli === 'claude') {
                 // Model Claude Pro -> chạy qua Claude Code CLI
                 a.command = 'claude-smart'
                 a.flags = ['--permission-mode', 'auto', '--model', model]
                 a.readyMarker = '❯'
                 a.unsetEnv = ['ANTHROPIC_API_KEY']
-              } else if (model.startsWith('ollama') || model.includes('gemma') || model.includes('qwen') || model.includes('phi') || model.includes('llama') || model.includes('mistral')) {
+              } else if (cli === 'ollama') {
                 // Model Ollama Local -> chạy qua aider-smart
                 a.command = 'aider-smart'
                 let targetM = model
-                if (model === 'ollama-gemma') targetM = 'ollama/gemma4:12b'
-                else if (model === 'ollama-qwen') targetM = 'ollama/qwen3-coder:30b'
-                else if (!targetM.startsWith('ollama/')) targetM = `ollama/${targetM}`
+                if (!targetM.startsWith('ollama/')) targetM = `ollama/${targetM}`
                 a.flags = ['--model', targetM]
                 a.readyMarker = '>'
                 a.unsetEnv = []
+              } else if (cli === 'codex') {
+                // Model Codex -> chạy qua codex-smart
+                a.command = 'codex-smart'
+                a.flags = ['--model', model]
+                a.readyMarker = '$'
+                a.unsetEnv = []
+              } else if (cli === 'grok') {
+                // Model Grok -> chạy qua grok-smart
+                a.command = 'grok-smart'
+                a.flags = ['--model', model]
+                a.readyMarker = '?'
+                a.unsetEnv = []
               } else {
                 // Model Antigravity -> chạy qua agy-smart
-                if (a.command === 'claude-smart' || a.command === 'aider-smart') {
-                  a.command = 'agy-smart'
-                  a.flags = ['--dangerously-skip-permissions', '--model', model]
-                  a.readyMarker = '? for shortcuts'
-                  a.unsetEnv = ['GEMINI_API_KEY', 'GOOGLE_API_KEY']
-                } else {
-                  const idx = a.flags.indexOf('--model')
-                  if (idx !== -1) a.flags[idx + 1] = model
-                }
+                a.command = 'agy-smart'
+                a.flags = ['--dangerously-skip-permissions', '--model', model]
+                a.readyMarker = '? for shortcuts'
+                a.unsetEnv = ['GEMINI_API_KEY', 'GOOGLE_API_KEY']
               }
             }
           }

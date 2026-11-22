@@ -103,6 +103,9 @@ interface DynamicModelDef {
   desc?: string
   layer?: string
   apiKey?: string
+  cli?: string
+  icon?: string
+  color?: string
 }
 
 function loadDynamicModels(): DynamicModelDef[] {
@@ -163,11 +166,15 @@ export function resolveAgentProgramDetailed(program: string): AgentResolution {
   const dynamicModels = loadDynamicModels()
   const dynamicModel = dynamicModels.find(m => m.id.toLowerCase() === p)
   if (dynamicModel) {
-    const isLocalOllama = dynamicModel.layer === 'Local' ||
+    const cli = dynamicModel.cli || (
+      dynamicModel.layer === 'Local' ||
       dynamicModel.id.startsWith('ollama') ||
       Boolean(dynamicModel.group && dynamicModel.group.toLowerCase().includes('ollama'))
+        ? 'ollama'
+        : (dynamicModel.id.startsWith('cc-') ? 'claude' : 'agy')
+    )
 
-    if (isLocalOllama) {
+    if (cli === 'ollama') {
       let targetM = dynamicModel.id
       if (targetM.startsWith('ollama-')) {
         targetM = 'ollama/' + targetM.slice(7)
@@ -180,39 +187,62 @@ export function resolveAgentProgramDetailed(program: string): AgentResolution {
         flags: ['--model', targetM],
         readyMarker: '>',
         inputMethod: 'sendKeys' as const,
-        color: 'cyan',
-        icon: '🦙',
+        color: dynamicModel.color || 'cyan',
+        icon: dynamicModel.icon || '🦙',
       }
       return { agent, how: 'exact', requested: program }
     }
 
-    if (dynamicModel.id.startsWith('cc-')) {
+    if (cli === 'claude') {
       const agent: AgentProgram = {
         name: dynamicModel.name,
         command: 'claude-smart',
         flags: ['--permission-mode', 'auto', '--model', dynamicModel.id],
         readyMarker: '❯',
         inputMethod: 'sendKeys' as const,
-        color: 'green',
-        icon: '●',
+        color: dynamicModel.color || 'emerald',
+        icon: dynamicModel.icon || '●',
         unsetEnv: ['ANTHROPIC_API_KEY'],
       }
       return { agent, how: 'exact', requested: program }
     }
 
-    // Antigravity (agy-smart)
-    const isClaudePro = dynamicModel.id.startsWith('cc-')
+    if (cli === 'codex') {
+      const agent: AgentProgram = {
+        name: dynamicModel.name,
+        command: 'codex-smart',
+        flags: ['--model', dynamicModel.id],
+        readyMarker: '$',
+        inputMethod: 'sendKeys' as const,
+        color: dynamicModel.color || 'emerald',
+        icon: dynamicModel.icon || '💻',
+      }
+      return { agent, how: 'exact', requested: program }
+    }
+
+    if (cli === 'grok') {
+      const agent: AgentProgram = {
+        name: dynamicModel.name,
+        command: 'grok-smart',
+        flags: ['--model', dynamicModel.id],
+        readyMarker: '?',
+        inputMethod: 'sendKeys' as const,
+        color: dynamicModel.color || 'purple',
+        icon: dynamicModel.icon || '🧠',
+      }
+      return { agent, how: 'exact', requested: program }
+    }
+
+    // Default: 'agy' (Google Antigravity CLI)
     const agent: AgentProgram = {
       name: dynamicModel.name,
-      command: isClaudePro ? 'claude-smart' : 'agy-smart',
-      flags: isClaudePro
-        ? ['--permission-mode', 'auto', '--model', dynamicModel.id]
-        : ['--dangerously-skip-permissions', '--model', dynamicModel.id],
-      readyMarker: isClaudePro ? '❯' : '? for shortcuts',
+      command: 'agy-smart',
+      flags: ['--dangerously-skip-permissions', '--model', dynamicModel.id],
+      readyMarker: '? for shortcuts',
       inputMethod: 'sendKeys' as const,
-      color: dynamicModel.id.includes('flash') ? 'yellow' : 'blue',
-      icon: '▲',
-      unsetEnv: isClaudePro ? ['ANTHROPIC_API_KEY'] : ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+      color: dynamicModel.color || (dynamicModel.id.includes('flash') ? 'amber' : 'blue'),
+      icon: dynamicModel.icon || '▲',
+      unsetEnv: ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
     }
     return { agent, how: 'exact', requested: program }
   }

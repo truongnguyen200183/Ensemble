@@ -20,7 +20,10 @@
         "Medium: Vị trí WORKER cho các bài toán phức tạp.",
         "Low: WORKER chạy nhanh, tiết kiệm token."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "👑",
+    "color": "amber"
   },
   {
     "id": "gemini-4-neon-high",
@@ -43,7 +46,10 @@
         "Medium: Vị trí WORKER cho các bài toán phức tạp.",
         "Low: WORKER chạy nhanh, tiết kiệm token."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-neon-medium",
@@ -66,7 +72,10 @@
         "Medium: Vị trí WORKER cho các bài toán phức tạp.",
         "Low: WORKER chạy nhanh, tiết kiệm token."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-neon-low",
@@ -89,7 +98,10 @@
         "Medium: Vị trí WORKER cho các bài toán phức tạp.",
         "Low: WORKER chạy nhanh, tiết kiệm token."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-pro-orchestrator-neon",
@@ -110,7 +122,10 @@
       "ensembleRec": [
         "Cực kỳ lý tưởng cho vị trí LEAD (Kiến trúc sư trưởng / Lập kế hoạch)."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-argon-high",
@@ -131,7 +146,10 @@
       "ensembleRec": [
         "LEAD hoặc REVIEWER cho các dự án quy mô lớn cần độ chính xác tối đa."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-argon-medium",
@@ -152,7 +170,10 @@
       "ensembleRec": [
         "LEAD hoặc REVIEWER cho các dự án quy mô lớn cần độ chính xác tối đa."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-argon-low",
@@ -173,7 +194,10 @@
       "ensembleRec": [
         "LEAD hoặc REVIEWER cho các dự án quy mô lớn cần độ chính xác tối đa."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-hydrogen-xhigh",
@@ -195,7 +219,10 @@
         "XHigh / High: LEAD / REVIEWER.",
         "Medium / Low: WORKER hiệu năng cao."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "👑",
+    "color": "amber"
   },
   {
     "id": "gemini-4-hydrogen-high",
@@ -217,7 +244,10 @@
         "XHigh / High: LEAD / REVIEWER.",
         "Medium / Low: WORKER hiệu năng cao."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-hydrogen-medium",
@@ -239,7 +269,10 @@
         "XHigh / High: LEAD / REVIEWER.",
         "Medium / Low: WORKER hiệu năng cao."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-4-hydrogen-low",
@@ -261,7 +294,10 @@
         "XHigh / High: LEAD / REVIEWER.",
         "Medium / Low: WORKER hiệu năng cao."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-pro-orchestrator-g1-pro",
@@ -282,7 +318,10 @@
       "ensembleRec": [
         "Vị trí LEAD: Phù hợp khi điều phối các dự án đòi hỏi kiến trúc chuẩn mực cao."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "claude-opus-5-5-high",
@@ -303,7 +342,10 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "claude-opus-5-5-medium",
@@ -324,7 +366,10 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "claude-opus-5-5-low",
@@ -345,7 +390,10 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "claude-sonnet-5-5-high",
@@ -366,7 +414,10 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "claude-sonnet-5-5-medium",
@@ -387,7 +438,10 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "claude-sonnet-5-5-low",
@@ -408,7 +462,10 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "cc-opus-high",
@@ -429,7 +486,10 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "cc-opus-medium",
@@ -450,7 +510,10 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "cc-opus-low",
@@ -471,7 +534,10 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "cc-sonnet-high",
@@ -492,7 +558,10 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "cc-sonnet-medium",
@@ -513,7 +582,10 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "cc-sonnet-low",
@@ -534,7 +606,10 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    }
+    },
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple"
   },
   {
     "id": "gemini-3.8-flash-high",
@@ -556,7 +631,10 @@
         "WORKER tiêu chuẩn xử lý các tác vụ thực thi nhanh chóng.",
         "Trạm cứu sinh (Auto-fallback) an toàn khi các model Bậc 1 & 2 hết hạn mức."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-3.8-flash-medium",
@@ -578,7 +656,10 @@
         "WORKER tiêu chuẩn xử lý các tác vụ thực thi nhanh chóng.",
         "Trạm cứu sinh (Auto-fallback) an toàn khi các model Bậc 1 & 2 hết hạn mức."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gemini-3.8-flash-low",
@@ -600,7 +681,10 @@
         "WORKER tiêu chuẩn xử lý các tác vụ thực thi nhanh chóng.",
         "Trạm cứu sinh (Auto-fallback) an toàn khi các model Bậc 1 & 2 hết hạn mức."
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "gpt-oss-120b-medium",
@@ -621,10 +705,13 @@
       "ensembleRec": [
         "WORKER hoặc REVIEWER dự phòng để tạo góc nhìn đối chiếu độc lập."
       ]
-    }
+    },
+    "cli": "codex",
+    "icon": "◆",
+    "color": "indigo"
   },
   {
-    "id": "ollama-qwen2.5-coder:14b",
+    "id": "ollama/qwen2.5-coder:14b",
     "name": "Ollama Qwen 2.5 Coder (14B Local)",
     "group": "Local Ollama",
     "desc": "Chuyên lập trình & kiến trúc mã nguồn 14B (Mạng nội bộ)",
@@ -643,7 +730,10 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho WORKER (Lập trình viên) khi triển khai trong mạng nội bộ."
       ]
-    }
+    },
+    "cli": "ollama",
+    "icon": "🦙",
+    "color": "cyan"
   },
   {
     "id": "deepseek-flash",
@@ -665,7 +755,10 @@
       "ensembleRec": [
         "WORKER"
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   },
   {
     "id": "deepseek-v4-pro",
@@ -687,6 +780,9 @@
       "ensembleRec": [
         "LEAD, REVIEWER"
       ]
-    }
+    },
+    "cli": "agy",
+    "icon": "▲",
+    "color": "blue"
   }
 ]
