@@ -493,12 +493,6 @@ const server = http.createServer(async (req, res) => {
         }
       }))
 
-      const anyAlive = results.some(r => r.alive)
-      if (anyAlive && team.status === 'disbanded') {
-        team.status = 'active'
-        updateTeam(team.id, { status: 'active' })
-      }
-
       return json(res, {
         teamId: team.id,
         teamStatus: team.status,

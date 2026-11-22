@@ -1212,10 +1212,6 @@ export async function listEnsembleTeams(): Promise<ServiceResult<{ teams: Ensemb
         team.status = 'disbanded'
         updateTeam(team.id, { status: 'disbanded' })
       }
-    } else if (team.status === 'disbanded' && anyAlive) {
-      // Auto-heal: agents are running in tmux, mark team active
-      team.status = 'active'
-      updateTeam(team.id, { status: 'active' })
     }
   }
   return { data: { teams }, status: 200 }
@@ -1449,7 +1445,7 @@ export async function disbandTeam(teamId: string, failureReason?: string, finish
   )
 
   for (const agent of team.agents) {
-    if (agent.status === 'active') {
+    if (agent.status !== 'replaced') {
       appendMessage(teamId, {
         id: uuidv4(), teamId, from: 'ensemble', to: 'team',
         content: `${agent.name} has left #${team.name}`,

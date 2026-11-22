@@ -157,18 +157,13 @@ export async function spawnLocalAgent(options: SpawnAgentOptions): Promise<Spawn
 export async function killLocalAgent(sessionName: string): Promise<void> {
   const runtime = getRuntime()
   try {
-    // Graceful exit from agy to shell
+    // Graceful exit from agy/aider/claude to shell
     await runtime.sendKeys(sessionName, 'C-c', { enter: false })
-    await new Promise(r => setTimeout(r, 500))
+    await new Promise(r => setTimeout(r, 200))
     await runtime.sendKeys(sessionName, '/exit', { enter: true })
-    await new Promise(r => setTimeout(r, 500))
-
-    // Display banner and wait for user keypress instead of abruptly closing
-    await runtime.sendKeys(sessionName, ' echo -e "\\n\\033[1;32m══════════════════════════════════════════════════════════════════════════════\\033[0m"', { enter: true })
-    await runtime.sendKeys(sessionName, ' echo -e "\\033[1;32m  ✔ [NHIỆM VỤ ĐÃ HOÀN TẤT] Bạn có thể cuộn (Ctrl+B [) để xem lại toàn bộ.\\033[0m"', { enter: true })
-    await runtime.sendKeys(sessionName, ' echo -e "\\033[1;33m  Nhấn phím bất kỳ (ESC, Enter...) để đóng cửa sổ này...\\033[0m"', { enter: true })
-    await runtime.sendKeys(sessionName, ' echo -e "\\033[1;32m══════════════════════════════════════════════════════════════════════════════\\033[0m"', { enter: true })
-    await runtime.sendKeys(sessionName, ' read -r -s -n 1; exit', { enter: true })
+    await new Promise(r => setTimeout(r, 300))
+    // Actually terminate the tmux session
+    await runtime.killSession(sessionName)
   } catch {
     // Session may already be gone
   }
