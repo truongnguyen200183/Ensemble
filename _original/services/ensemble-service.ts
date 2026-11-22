@@ -1194,21 +1194,28 @@ export async function listEnsembleTeams(): Promise<ServiceResult<{ teams: Ensemb
   const teams = loadTeams()
   const runtime = getRuntime()
   for (const team of teams) {
+    let anyAlive = false
+    for (const agent of team.agents) {
+      const sessionName = `${team.name}-${agent.name}`
+      try {
+        if (await runtime.sessionExists(sessionName)) {
+          anyAlive = true
+          break
+        }
+      } catch {}
+    }
+
     if (team.status === 'active') {
-      let anyAlive = false
-      for (const agent of team.agents) {
-        const sessionName = `${team.name}-${agent.name}`
-        try {
-          if (await runtime.sessionExists(sessionName)) {
-            anyAlive = true
-            break
-          }
-        } catch {}
-      }
-      if (!anyAlive) {
+      const ageMs = Date.now() - new Date(team.createdAt).getTime()
+      // Grace period: do not disband if team was created/reactivated less than 60s ago
+      if (!anyAlive && (Number.isNaN(ageMs) || ageMs > 60_000)) {
         team.status = 'disbanded'
         updateTeam(team.id, { status: 'disbanded' })
       }
+    } else if (team.status === 'disbanded' && anyAlive) {
+      // Auto-heal: agents are running in tmux, mark team active
+      team.status = 'active'
+      updateTeam(team.id, { status: 'active' })
     }
   }
   return { data: { teams }, status: 200 }
@@ -1673,7 +1680,8 @@ export async function reactivateTeam(teamId: string): Promise<ServiceResult<{ te
     }
   }
 
-  updateTeam(team.id, { agents: team.agents })
+  team.status = 'active'
+  updateTeam(team.id, { status: 'active', agents: team.agents })
 
   // Ensure ensemble-bridge.sh is running for this team to bridge messages between CLI and Web API
   try {

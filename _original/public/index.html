@@ -1154,6 +1154,17 @@
       const busyEl = document.getElementById('busyAgentCount')
       if (busyEl) busyEl.textContent = `${busyCount} Bận`
 
+      // Auto-sync team status if agents are alive or backend reports active
+      const currentTeam = teamsList.find(t => t.id === currentTeamId)
+      if (currentTeam) {
+        if (teamStatus === 'active' || activeCount > 0) {
+          if (currentTeam.status !== 'active') {
+            currentTeam.status = 'active'
+            updateSelectedSessionUI()
+          }
+        }
+      }
+
       if (agents.length === 0) {
         container.innerHTML = `
           <div class="p-6 text-center text-xs text-slate-500 space-y-2">
@@ -1980,8 +1991,13 @@
         })
         if (res.ok) {
           window.userLockedOldSession = false
+          if (currentTeam) {
+            currentTeam.status = 'active'
+            updateSelectedSessionUI()
+          }
           await loadTeamsList()
           await fetchMessages()
+          await fetchAgentLiveStatus(true)
         } else {
           const err = await res.json().catch(() => ({}))
           alert('Không thể kích hoạt lại: ' + (err.error || res.statusText))
