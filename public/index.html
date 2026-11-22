@@ -788,10 +788,15 @@
                 <span>➕</span>
                 <span>Thêm Model</span>
               </button>
-              <button type="button" onclick="resetDefaultModels()" class="text-[11px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer flex items-center space-x-1" title="Khôi phục danh sách mô hình về mặc định ban đầu">
-                <span>🔄</span>
-                <span>Mặc định</span>
+              <button type="button" onclick="triggerImportModels()" class="text-[11px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer flex items-center space-x-1" title="Nhập danh sách mô hình từ file JSON">
+                <span>📥</span>
+                <span>Import JSON</span>
               </button>
+              <button type="button" onclick="exportModelsData()" class="text-[11px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer flex items-center space-x-1" title="Xuất dữ liệu mô hình thành file JSON">
+                <span>📤</span>
+                <span>Export JSON</span>
+              </button>
+              <input type="file" id="importModelsFileInput" accept=".json" class="hidden" onchange="handleImportModelsFile(event)" />
               <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa Quota</button>
             </div>
           </div>
@@ -3122,6 +3127,101 @@
       } catch (err) {
         alert('Lỗi kết nối khi khôi phục model: ' + err.message)
       }
+    }
+
+    // Export Models Data to JSON File
+    function exportModelsData() {
+      const models = (modelConfigData && modelConfigData.availableModels) || []
+      if (models.length === 0) {
+        alert('Không có dữ liệu mô hình để xuất!')
+        return
+      }
+      const jsonStr = JSON.stringify(models, null, 2)
+      const blob = new Blob([jsonStr], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const dateStr = new Date().toISOString().slice(0, 10)
+      a.href = url
+      a.download = `ensemble-models-${dateStr}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+
+    // Trigger Import File Dialog
+    function triggerImportModels() {
+      const fileInput = document.getElementById('importModelsFileInput')
+      if (fileInput) {
+        fileInput.value = ''
+        fileInput.click()
+      }
+    }
+
+    // Handle Imported JSON File
+    async function handleImportModelsFile(e) {
+      const file = e.target.files?.[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        try {
+          const content = event.target.result
+          let parsed = JSON.parse(content)
+          if (!Array.isArray(parsed)) {
+            if (parsed.availableModels && Array.isArray(parsed.availableModels)) {
+              parsed = parsed.availableModels
+            } else if (parsed.models && Array.isArray(parsed.models)) {
+              parsed = parsed.models
+            } else {
+              alert('Tệp JSON không hợp lệ! Dữ liệu phải là danh sách các mô hình.')
+              return
+            }
+          }
+
+          if (parsed.length === 0) {
+            alert('Tệp JSON không chứa mô hình nào!')
+            return
+          }
+
+          const validModels = parsed.filter(m => m && m.id && m.name).map(m => ({
+            id: String(m.id).trim(),
+            name: String(m.name).trim(),
+            group: String(m.group || 'Khác').trim(),
+            desc: String(m.desc || '').trim(),
+            layer: String(m.layer || inferLayer(m.id, m.group) || 'Tier 2').trim(),
+            apiKey: m.apiKey ? String(m.apiKey).trim() : '',
+            info: m.info || undefined
+          }))
+
+          if (validModels.length === 0) {
+            alert('Không tìm thấy mô hình hợp lệ (cần có ít nhất id và name) trong file!')
+            return
+          }
+
+          const ok = confirm(`Bạn có muốn nạp ${validModels.length} mô hình từ file "${file.name}" không?\n\n(Dữ liệu sẽ được lưu và áp dụng cho hệ thống)`)
+          if (!ok) return
+
+          const res = await fetch('/api/ensemble/model-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ models: validModels })
+          })
+          const data = await res.json()
+          if (res.ok && data.success) {
+            alert(`Đã nhập thành công ${validModels.length} mô hình!`)
+            await loadModelConfig(true)
+            if (typeof renderCurrentTeamAgentsList === 'function') {
+              renderCurrentTeamAgentsList()
+            }
+          } else {
+            alert('Lỗi nhập dữ liệu: ' + (data.error || 'Không xác định'))
+          }
+        } catch (err) {
+          alert('Lỗi đọc file JSON: ' + err.message)
+        }
+      }
+      reader.readAsText(file, 'utf8')
     }
 
     async function deleteAgentFromTeam(agentName) {

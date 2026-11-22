@@ -644,5 +644,49 @@
         "Lựa chọn hàng đầu cho WORKER (Lập trình viên) khi triển khai trong mạng nội bộ."
       ]
     }
+  },
+  {
+    "id": "deepseek-flash",
+    "name": "DeepSeek-Flash",
+    "group": "Khác",
+    "desc": "Cực nhanh - Siêu rẻ",
+    "layer": "Tier 3",
+    "apiKey": "sk-a70a4c48280e468fa75bd5dc70758088",
+    "info": {
+      "coreStrengths": [
+        "- Rất tốt (8.5/10):",
+        "- Công việc lập trình hằng ngày chế độ Act Mode",
+        "- Refactor code, tạo trang/component TypeScript, viết controller/service C#, hoặc cần gửi ảnh chụp màn hình lỗi giao diện."
+      ],
+      "speedQuota": [
+        "Tỷ lệ hiệu năng / giá thành tốt",
+        "Tốc độ phản hồi cực nhanh, ngữ cảnh lên tới 1M token"
+      ],
+      "ensembleRec": [
+        "WORKER"
+      ]
+    }
+  },
+  {
+    "id": "deepseek-v4-pro",
+    "name": "DeepSeek-Pro",
+    "group": "Khác",
+    "desc": "Suy luận sâu",
+    "layer": "Tier 2",
+    "apiKey": "sk-a70a4c48280e468fa75bd5dc70758088",
+    "info": {
+      "coreStrengths": [
+        "- Xuất sắc (9.5/10):",
+        "- Chuyên trị các bài toán khó như tối ưu truy vấn EF Core/SQL phức tạp, xử lý bất đồng bộ (async/await), đa luồng, hoặc thiết kế lại kiến trúc nhiều tầng.",
+        "- Giai đoạn lên kế hoạch dự án mới (chế độ Plan Mode), truy vết những lỗi ngầm (race condition, memory leak)"
+      ],
+      "speedQuota": [
+        "Chế độ Thinking (suy nghĩ rất dài trước khi xuất code)",
+        "Đắt gấp ~4–7 lần Flash"
+      ],
+      "ensembleRec": [
+        "LEAD, REVIEWER"
+      ]
+    }
   }
 ]
