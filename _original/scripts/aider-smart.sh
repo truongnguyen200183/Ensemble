@@ -16,20 +16,14 @@ for ((i=1; i<=$#; i++)); do
   if [ "$ARG" == "--model" ]; then
     next_i=$((i+1))
     M="${!next_i}"
-    if [[ "$M" == "ollama-gemma" || "$M" == "gemma4:12b" ]]; then
-      MODEL="ollama/gemma4:12b"
-    elif [[ "$M" == "ollama-qwen" || "$M" == "qwen3-coder:30b" || "$M" == "qwen3-coder" ]]; then
-      MODEL="ollama/qwen3-coder:30b"
-    elif [[ "$M" == "deepseek-flash" || "$M" == "deepseek/deepseek-flash" ]]; then
-      MODEL="deepseek/deepseek-chat"
-    elif [[ "$M" == "deepseek-pro" || "$M" == "deepseek/deepseek-pro" || "$M" == "deepseek-v4-pro" ]]; then
-      MODEL="deepseek/deepseek-reasoner"
-    elif [[ "$M" == ollama/* || "$M" == openai/* || "$M" == deepseek/* || "$M" == openrouter/* ]]; then
+    if [[ "$M" == ollama/* || "$M" == openai/* || "$M" == deepseek/* || "$M" == openrouter/* ]]; then
       MODEL="$M"
-    elif [[ "$M" == deepseek-* ]]; then
-      MODEL="deepseek/${M#deepseek-}"
     elif [[ "$M" == ollama-* ]]; then
       MODEL="ollama/${M#ollama-}"
+    elif [[ "$M" == openai-* ]]; then
+      MODEL="openai/${M#openai-}"
+    elif [[ "$M" == deepseek-* ]]; then
+      MODEL="deepseek/${M#deepseek-}"
     else
       MODEL="$M"
     fi
