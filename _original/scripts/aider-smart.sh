@@ -37,9 +37,9 @@ for ((i=1; i<=$#; i++)); do
   fi
 done
 
-export OLLAMA_API_BASE="${OLLAMA_API_BASE:-http://192.168.86.23:11434}"
+export OLLAMA_API_BASE="${OLLAMA_API_BASE:-http://192.168.86.22:11434}"
 if [[ "$MODEL" == ollama/* ]]; then
-  export OPENAI_API_BASE="${OPENAI_API_BASE:-http://192.168.86.23:11434/v1}"
+  export OPENAI_API_BASE="${OPENAI_API_BASE:-http://192.168.86.22:11434/v1}"
   export OPENAI_API_KEY="${OPENAI_API_KEY:-ollama}"
 fi
 

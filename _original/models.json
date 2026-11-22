@@ -729,7 +729,7 @@
     "color": "cyan"
   },
   {
-    "id": "deepseek-flash",
+    "id": "deepseek/deepseek-flash",
     "name": "DeepSeek-Flash",
     "group": "Khác",
     "desc": "Cực nhanh - Siêu rẻ",
@@ -754,7 +754,7 @@
     }
   },
   {
-    "id": "deepseek-v4-pro",
+    "id": "deepseek/deepseek-v4-pro",
     "name": "DeepSeek-Pro",
     "group": "Khác",
     "desc": "Suy luận sâu",
