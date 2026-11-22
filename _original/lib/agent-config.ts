@@ -96,8 +96,37 @@ export const KNOWN_MODELS = [
   'gpt-oss-120b-medium',
 ]
 
+interface DynamicModelDef {
+  id: string
+  name: string
+  group?: string
+  desc?: string
+  layer?: string
+  apiKey?: string
+}
+
+function loadDynamicModels(): DynamicModelDef[] {
+  const candidates = [
+    path.join(__dirname, '..', 'models.json'),
+    path.join(__dirname, '..', '..', 'models.json'),
+    '/mnt/d/Ensemble/models.json',
+    '/home/truong/ensemble/models.json',
+  ]
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      try {
+        const raw = fs.readFileSync(c, 'utf-8')
+        const data = JSON.parse(raw)
+        if (Array.isArray(data)) return data
+      } catch {}
+    }
+  }
+  return []
+}
+
 export function availableAgentKeys(): string[] {
-  return Array.from(new Set([...Object.keys(loadAgentsConfig()), ...KNOWN_MODELS]))
+  const dynamicKeys = loadDynamicModels().map(m => m.id)
+  return Array.from(new Set([...Object.keys(loadAgentsConfig()), ...KNOWN_MODELS, ...dynamicKeys]))
 }
 
 /** Thrown when an explicitly requested agent does not exist. */
@@ -130,7 +159,83 @@ export function resolveAgentProgramDetailed(program: string): AgentResolution {
 
   if (config[p]) return { agent: config[p], how: 'exact', requested: program }
 
-  // Check if program is a known model or model-like ID
+  // 1. Dynamic models from models.json
+  const dynamicModels = loadDynamicModels()
+  const dynamicModel = dynamicModels.find(m => m.id.toLowerCase() === p)
+  if (dynamicModel) {
+    const isLocalOllama = dynamicModel.layer === 'Local' ||
+      dynamicModel.id.startsWith('ollama') ||
+      Boolean(dynamicModel.group && dynamicModel.group.toLowerCase().includes('ollama'))
+
+    if (isLocalOllama) {
+      let targetM = dynamicModel.id
+      if (targetM.startsWith('ollama-')) {
+        targetM = 'ollama/' + targetM.slice(7)
+      } else if (!targetM.startsWith('ollama/')) {
+        targetM = 'ollama/' + targetM
+      }
+      const agent: AgentProgram = {
+        name: dynamicModel.name,
+        command: 'aider-smart',
+        flags: ['--model', targetM],
+        readyMarker: '>',
+        inputMethod: 'sendKeys' as const,
+        color: 'cyan',
+        icon: '🦙',
+      }
+      return { agent, how: 'exact', requested: program }
+    }
+
+    if (dynamicModel.id.startsWith('cc-')) {
+      const agent: AgentProgram = {
+        name: dynamicModel.name,
+        command: 'claude-smart',
+        flags: ['--permission-mode', 'auto', '--model', dynamicModel.id],
+        readyMarker: '❯',
+        inputMethod: 'sendKeys' as const,
+        color: 'green',
+        icon: '●',
+        unsetEnv: ['ANTHROPIC_API_KEY'],
+      }
+      return { agent, how: 'exact', requested: program }
+    }
+
+    // Antigravity (agy-smart)
+    const isClaudePro = dynamicModel.id.startsWith('cc-')
+    const agent: AgentProgram = {
+      name: dynamicModel.name,
+      command: isClaudePro ? 'claude-smart' : 'agy-smart',
+      flags: isClaudePro
+        ? ['--permission-mode', 'auto', '--model', dynamicModel.id]
+        : ['--dangerously-skip-permissions', '--model', dynamicModel.id],
+      readyMarker: isClaudePro ? '❯' : '? for shortcuts',
+      inputMethod: 'sendKeys' as const,
+      color: dynamicModel.id.includes('flash') ? 'yellow' : 'blue',
+      icon: '▲',
+      unsetEnv: isClaudePro ? ['ANTHROPIC_API_KEY'] : ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
+    }
+    return { agent, how: 'exact', requested: program }
+  }
+
+  // 2. Direct Ollama model IDs (ollama-xxx or ollama/xxx)
+  if (p.startsWith('ollama-') || p.startsWith('ollama/')) {
+    let targetM = program
+    if (targetM.startsWith('ollama-')) {
+      targetM = 'ollama/' + targetM.slice(7)
+    }
+    const agent: AgentProgram = {
+      name: program,
+      command: 'aider-smart',
+      flags: ['--model', targetM],
+      readyMarker: '>',
+      inputMethod: 'sendKeys' as const,
+      color: 'cyan',
+      icon: '🦙',
+    }
+    return { agent, how: 'exact', requested: program }
+  }
+
+  // 3. Check if program is a known model or model-like ID
   if (KNOWN_MODELS.includes(p) || p.startsWith('gemini-') || p.startsWith('claude-') || p.startsWith('cc-') || p.startsWith('gpt-')) {
     const isClaudePro = p.startsWith('cc-')
     const agent: AgentProgram = {
@@ -148,7 +253,7 @@ export function resolveAgentProgramDetailed(program: string): AgentResolution {
     return { agent, how: 'exact', requested: program }
   }
 
-  // Substring match (e.g. "claude code" matches "claude")
+  // 4. Substring match (e.g. "claude code" matches "claude")
   for (const [key, agent] of Object.entries(config)) {
     if (p.includes(key)) return { agent, how: 'substring', requested: program }
   }

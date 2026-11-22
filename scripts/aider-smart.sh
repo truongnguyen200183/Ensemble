@@ -24,10 +24,12 @@ for ((i=1; i<=$#; i++)); do
       MODEL="ollama/gemma4:12b"
     elif [[ "$M" == "ollama-qwen" || "$M" == "qwen3-coder:30b" || "$M" == "qwen3-coder" ]]; then
       MODEL="ollama/qwen3-coder:30b"
-    elif [[ "$M" != ollama/* && "$M" != openai/* ]]; then
-      MODEL="ollama/$M"
-    else
+    elif [[ "$M" == ollama/* || "$M" == openai/* ]]; then
       MODEL="$M"
+    elif [[ "$M" == ollama-* ]]; then
+      MODEL="ollama/${M#ollama-}"
+    else
+      MODEL="ollama/$M"
     fi
     SKIP_NEXT=1
   elif [ "$ARG" == "--effort" ]; then
