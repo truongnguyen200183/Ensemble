@@ -3,186 +3,667 @@
     "id": "gemini-4-neon-xhigh",
     "name": "Gemini 4 Neon (XHigh)",
     "group": "Gemini 4 Neon",
-    "desc": "Siêu tư duy cực hạn (XHigh)"
+    "desc": "Si�u tu duy c?c h?n (XHigh)",
+    "layer": "Tier 1",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ Gemini 4 mới nhất, tối ưu đặc biệt cho tác vụ lập trình & chu trình trao đổi tác tử (agentic loop).",
+        "Khả năng tư duy logic sâu tiệm cận Argon nhưng độ trễ (latency) thấp hơn đáng kể và ít bị nghẽn thời gian chờ."
+      ],
+      "speedQuota": [
+        "Nhanh & Mượt",
+        "Quota tính chung cho toàn bộ họ Neon (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: Vị trí LEAD hoặc REVIEWER.",
+        "Medium: Vị trí WORKER cho các bài toán phức tạp.",
+        "Low: WORKER chạy nhanh, tiết kiệm token."
+      ]
+    }
   },
   {
     "id": "gemini-4-neon-high",
     "name": "Gemini 4 Neon (High)",
     "group": "Gemini 4 Neon",
-    "desc": "Tư duy cao nhất"
+    "desc": "Tư duy cao nhất",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ Gemini 4 mới nhất, tối ưu đặc biệt cho tác vụ lập trình & chu trình trao đổi tác tử (agentic loop).",
+        "Khả năng tư duy logic sâu tiệm cận Argon nhưng độ trễ (latency) thấp hơn đáng kể và ít bị nghẽn thời gian chờ."
+      ],
+      "speedQuota": [
+        "Nhanh & Mượt",
+        "Quota tính chung cho toàn bộ họ Neon (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: Vị trí LEAD hoặc REVIEWER.",
+        "Medium: Vị trí WORKER cho các bài toán phức tạp.",
+        "Low: WORKER chạy nhanh, tiết kiệm token."
+      ]
+    }
   },
   {
     "id": "gemini-4-neon-medium",
     "name": "Gemini 4 Neon (Medium)",
     "group": "Gemini 4 Neon",
-    "desc": "Cân bằng tốc độ & trí tuệ"
+    "desc": "Cân bằng tốc độ & trí tuệ",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ Gemini 4 mới nhất, tối ưu đặc biệt cho tác vụ lập trình & chu trình trao đổi tác tử (agentic loop).",
+        "Khả năng tư duy logic sâu tiệm cận Argon nhưng độ trễ (latency) thấp hơn đáng kể và ít bị nghẽn thời gian chờ."
+      ],
+      "speedQuota": [
+        "Nhanh & Mượt",
+        "Quota tính chung cho toàn bộ họ Neon (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: Vị trí LEAD hoặc REVIEWER.",
+        "Medium: Vị trí WORKER cho các bài toán phức tạp.",
+        "Low: WORKER chạy nhanh, tiết kiệm token."
+      ]
+    }
   },
   {
     "id": "gemini-4-neon-low",
     "name": "Gemini 4 Neon (Low)",
     "group": "Gemini 4 Neon",
-    "desc": "Tốc độ cao & tiết kiệm token"
+    "desc": "Tốc độ cao & tiết kiệm token",
+    "layer": "Tier 3",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ Gemini 4 mới nhất, tối ưu đặc biệt cho tác vụ lập trình & chu trình trao đổi tác tử (agentic loop).",
+        "Khả năng tư duy logic sâu tiệm cận Argon nhưng độ trễ (latency) thấp hơn đáng kể và ít bị nghẽn thời gian chờ."
+      ],
+      "speedQuota": [
+        "Nhanh & Mượt",
+        "Quota tính chung cho toàn bộ họ Neon (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: Vị trí LEAD hoặc REVIEWER.",
+        "Medium: Vị trí WORKER cho các bài toán phức tạp.",
+        "Low: WORKER chạy nhanh, tiết kiệm token."
+      ]
+    }
   },
   {
     "id": "gemini-pro-orchestrator-neon",
     "name": "Orchestrator (Neon)",
     "group": "Orchestrator (Neon)",
-    "desc": "Chuyên điều phối tác tử thế hệ mới"
+    "desc": "Chuyên điều phối tác tử thế hệ mới",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình chuyên dụng được Google huấn luyện riêng cho vai trò Điều phối tác tử (Swarm Coordinator / Orchestrator) trên nền kiến trúc Neon.",
+        "Phân tích yêu cầu, bóc tách nhiệm vụ con (subtasks) và tổng hợp kết quả giữa các tác tử với tốc độ tức thì."
+      ],
+      "speedQuota": [
+        "Rất nhanh & Tức thì",
+        "Tối ưu hóa độ trễ phản hồi turn-by-turn trong các phiên cộng tác dài."
+      ],
+      "ensembleRec": [
+        "Cực kỳ lý tưởng cho vị trí LEAD (Kiến trúc sư trưởng / Lập kế hoạch)."
+      ]
+    }
   },
   {
     "id": "gemini-4-argon-high",
     "name": "Gemini 4 Argon (High)",
     "group": "Gemini 4 Argon",
-    "desc": "Tư duy cao nhất"
+    "desc": "Tư duy cao nhất",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình suy luận và tính toán mạnh mẽ nhất của Google.",
+        "Khả năng giải quyết các thuật toán phức tạp, suy luận trừu tượng và kiến trúc sâu rộng."
+      ],
+      "speedQuota": [
+        "Chậm hơn & Quota nghiêm ngặt",
+        "Dễ chạm trần hạn mức nếu gọi liên tục nhiều lượt."
+      ],
+      "ensembleRec": [
+        "LEAD hoặc REVIEWER cho các dự án quy mô lớn cần độ chính xác tối đa."
+      ]
+    }
   },
   {
     "id": "gemini-4-argon-medium",
     "name": "Gemini 4 Argon (Medium)",
     "group": "Gemini 4 Argon",
-    "desc": "Tư duy tiêu chuẩn"
+    "desc": "Tư duy tiêu chuẩn",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình suy luận và tính toán mạnh mẽ nhất của Google.",
+        "Khả năng giải quyết các thuật toán phức tạp, suy luận trừu tượng và kiến trúc sâu rộng."
+      ],
+      "speedQuota": [
+        "Chậm hơn & Quota nghiêm ngặt",
+        "Dễ chạm trần hạn mức nếu gọi liên tục nhiều lượt."
+      ],
+      "ensembleRec": [
+        "LEAD hoặc REVIEWER cho các dự án quy mô lớn cần độ chính xác tối đa."
+      ]
+    }
   },
   {
     "id": "gemini-4-argon-low",
     "name": "Gemini 4 Argon (Low)",
     "group": "Gemini 4 Argon",
-    "desc": "Nhanh & Nhẹ"
+    "desc": "Nhanh & Nhẹ",
+    "layer": "Tier 3",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình suy luận và tính toán mạnh mẽ nhất của Google.",
+        "Khả năng giải quyết các thuật toán phức tạp, suy luận trừu tượng và kiến trúc sâu rộng."
+      ],
+      "speedQuota": [
+        "Chậm hơn & Quota nghiêm ngặt",
+        "Dễ chạm trần hạn mức nếu gọi liên tục nhiều lượt."
+      ],
+      "ensembleRec": [
+        "LEAD hoặc REVIEWER cho các dự án quy mô lớn cần độ chính xác tối đa."
+      ]
+    }
   },
   {
     "id": "gemini-4-hydrogen-xhigh",
     "name": "Gemini 4 Hydrogen (XHigh)",
     "group": "Gemini 4 Hydrogen",
-    "desc": "Siêu tư duy cực hạn (XHigh)"
+    "desc": "Siêu tư duy cực hạn (XHigh)",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ mô hình thế hệ 4 cân bằng giữa suy luận nâng cao và hiệu năng xử lý.",
+        "Khả năng duy trì mạch logic xuyên suốt trong các phiên làm việc dài."
+      ],
+      "speedQuota": [
+        "Nhanh hơn Argon",
+        "Quota tính chung cho họ Hydrogen (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: LEAD / REVIEWER.",
+        "Medium / Low: WORKER hiệu năng cao."
+      ]
+    }
   },
   {
     "id": "gemini-4-hydrogen-high",
     "name": "Gemini 4 Hydrogen (High)",
     "group": "Gemini 4 Hydrogen",
-    "desc": "Tư duy nâng cao"
+    "desc": "Tư duy nâng cao",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ mô hình thế hệ 4 cân bằng giữa suy luận nâng cao và hiệu năng xử lý.",
+        "Khả năng duy trì mạch logic xuyên suốt trong các phiên làm việc dài."
+      ],
+      "speedQuota": [
+        "Nhanh hơn Argon",
+        "Quota tính chung cho họ Hydrogen (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: LEAD / REVIEWER.",
+        "Medium / Low: WORKER hiệu năng cao."
+      ]
+    }
   },
   {
     "id": "gemini-4-hydrogen-medium",
     "name": "Gemini 4 Hydrogen (Medium)",
     "group": "Gemini 4 Hydrogen",
-    "desc": "Cân bằng thế hệ mới"
+    "desc": "Cân bằng thế hệ mới",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ mô hình thế hệ 4 cân bằng giữa suy luận nâng cao và hiệu năng xử lý.",
+        "Khả năng duy trì mạch logic xuyên suốt trong các phiên làm việc dài."
+      ],
+      "speedQuota": [
+        "Nhanh hơn Argon",
+        "Quota tính chung cho họ Hydrogen (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: LEAD / REVIEWER.",
+        "Medium / Low: WORKER hiệu năng cao."
+      ]
+    }
   },
   {
     "id": "gemini-4-hydrogen-low",
     "name": "Gemini 4 Hydrogen (Low)",
     "group": "Gemini 4 Hydrogen",
-    "desc": "Tốc độ cao & tiết kiệm"
+    "desc": "Tốc độ cao & tiết kiệm",
+    "layer": "Tier 3",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Thế hệ mô hình thế hệ 4 cân bằng giữa suy luận nâng cao và hiệu năng xử lý.",
+        "Khả năng duy trì mạch logic xuyên suốt trong các phiên làm việc dài."
+      ],
+      "speedQuota": [
+        "Nhanh hơn Argon",
+        "Quota tính chung cho họ Hydrogen (XHigh / High / Med / Low)."
+      ],
+      "ensembleRec": [
+        "XHigh / High: LEAD / REVIEWER.",
+        "Medium / Low: WORKER hiệu năng cao."
+      ]
+    }
   },
   {
     "id": "gemini-pro-orchestrator-g1-pro",
     "name": "Orchestrator (Argon)",
     "group": "Orchestrator (Argon)",
-    "desc": "Chuyên điều phối nhóm tác tử"
+    "desc": "Chuyên điều phối nhóm tác tử",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình chuyên dụng điều phối nhóm tác tử xây dựng trên nền tảng Gemini 4 Argon.",
+        "Phân tích yêu cầu cẩn trọng, suy luận chặt chẽ từng bước triển khai kế hoạch."
+      ],
+      "speedQuota": [
+        "Trung bình / Nặng",
+        "Cần chú ý hạn mức Quota tuần của họ Argon."
+      ],
+      "ensembleRec": [
+        "Vị trí LEAD: Phù hợp khi điều phối các dự án đòi hỏi kiến trúc chuẩn mực cao."
+      ]
+    }
   },
   {
     "id": "claude-opus-5-5-high",
     "name": "Claude Opus 5.5 (High)",
     "group": "Claude Opus 5.5",
-    "desc": "Siêu phân tích kiến trúc"
+    "desc": "Siêu phân tích kiến trúc",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
+        "Phát hiện lỗi tiềm ẩn và thiết kế module rất xuất sắc."
+      ],
+      "speedQuota": [
+        "Trung bình",
+        "Hạn mức tiêu thụ theo gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
+      ]
+    }
   },
   {
     "id": "claude-opus-5-5-medium",
     "name": "Claude Opus 5.5 (Medium)",
     "group": "Claude Opus 5.5",
-    "desc": "Cân bằng cao cấp"
+    "desc": "Cân bằng cao cấp",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
+        "Phát hiện lỗi tiềm ẩn và thiết kế module rất xuất sắc."
+      ],
+      "speedQuota": [
+        "Trung bình",
+        "Hạn mức tiêu thụ theo gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
+      ]
+    }
   },
   {
     "id": "claude-opus-5-5-low",
     "name": "Claude Opus 5.5 (Low)",
     "group": "Claude Opus 5.5",
-    "desc": "Phản hồi nhanh"
+    "desc": "Phản hồi nhanh",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
+        "Phát hiện lỗi tiềm ẩn và thiết kế module rất xuất sắc."
+      ],
+      "speedQuota": [
+        "Trung bình",
+        "Hạn mức tiêu thụ theo gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
+      ]
+    }
   },
   {
     "id": "claude-sonnet-5-5-high",
     "name": "Claude Sonnet 5.5 (High)",
     "group": "Claude Sonnet 5.5",
-    "desc": "Lập trình chuyên sâu"
+    "desc": "Lập trình chuyên sâu",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
+        "Hiểu ngữ cảnh mã nguồn cực tốt, sinh code sạch và hoàn chỉnh."
+      ],
+      "speedQuota": [
+        "Rất nhanh & Ổn định",
+        "Theo hạn mức gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
+      ]
+    }
   },
   {
     "id": "claude-sonnet-5-5-medium",
     "name": "Claude Sonnet 5.5 (Medium)",
     "group": "Claude Sonnet 5.5",
-    "desc": "Cân bằng & code chuẩn"
+    "desc": "Cân bằng & code chuẩn",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
+        "Hiểu ngữ cảnh mã nguồn cực tốt, sinh code sạch và hoàn chỉnh."
+      ],
+      "speedQuota": [
+        "Rất nhanh & Ổn định",
+        "Theo hạn mức gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
+      ]
+    }
   },
   {
     "id": "claude-sonnet-5-5-low",
     "name": "Claude Sonnet 5.5 (Low)",
     "group": "Claude Sonnet 5.5",
-    "desc": "Tốc độ cao"
+    "desc": "Tốc độ cao",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
+        "Hiểu ngữ cảnh mã nguồn cực tốt, sinh code sạch và hoàn chỉnh."
+      ],
+      "speedQuota": [
+        "Rất nhanh & Ổn định",
+        "Theo hạn mức gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
+      ]
+    }
   },
   {
     "id": "cc-opus-high",
     "name": "Claude Opus (Pro) (High)",
     "group": "Claude Opus (Pro)",
-    "desc": "Claude Pro: Siêu phân tích kiến trúc"
+    "desc": "Claude Pro: Siêu phân tích kiến trúc",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
+        "Phát hiện lỗi tiềm ẩn và thiết kế module rất xuất sắc."
+      ],
+      "speedQuota": [
+        "Trung bình",
+        "Hạn mức tiêu thụ theo gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
+      ]
+    }
   },
   {
     "id": "cc-opus-medium",
     "name": "Claude Opus (Pro) (Medium)",
     "group": "Claude Opus (Pro)",
-    "desc": "Claude Pro: Cân bằng cao cấp"
+    "desc": "Claude Pro: Cân bằng cao cấp",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
+        "Phát hiện lỗi tiềm ẩn và thiết kế module rất xuất sắc."
+      ],
+      "speedQuota": [
+        "Trung bình",
+        "Hạn mức tiêu thụ theo gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
+      ]
+    }
   },
   {
     "id": "cc-opus-low",
     "name": "Claude Opus (Pro) (Low)",
     "group": "Claude Opus (Pro)",
-    "desc": "Claude Pro: Phản hồi nhanh"
+    "desc": "Claude Pro: Phản hồi nhanh",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
+        "Phát hiện lỗi tiềm ẩn và thiết kế module rất xuất sắc."
+      ],
+      "speedQuota": [
+        "Trung bình",
+        "Hạn mức tiêu thụ theo gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
+      ]
+    }
   },
   {
     "id": "cc-sonnet-high",
     "name": "Claude Sonnet (Pro) (High)",
     "group": "Claude Sonnet (Pro)",
-    "desc": "Claude Pro: Lập trình chuyên sâu"
+    "desc": "Claude Pro: Lập trình chuyên sâu",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
+        "Hiểu ngữ cảnh mã nguồn cực tốt, sinh code sạch và hoàn chỉnh."
+      ],
+      "speedQuota": [
+        "Rất nhanh & Ổn định",
+        "Theo hạn mức gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
+      ]
+    }
   },
   {
     "id": "cc-sonnet-medium",
     "name": "Claude Sonnet (Pro) (Medium)",
     "group": "Claude Sonnet (Pro)",
-    "desc": "Claude Pro: Cân bằng & code chuẩn"
+    "desc": "Claude Pro: Cân bằng & code chuẩn",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
+        "Hiểu ngữ cảnh mã nguồn cực tốt, sinh code sạch và hoàn chỉnh."
+      ],
+      "speedQuota": [
+        "Rất nhanh & Ổn định",
+        "Theo hạn mức gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
+      ]
+    }
   },
   {
     "id": "cc-sonnet-low",
     "name": "Claude Sonnet (Pro) (Low)",
     "group": "Claude Sonnet (Pro)",
-    "desc": "Claude Pro: Tốc độ cao"
+    "desc": "Claude Pro: Tốc độ cao",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
+        "Hiểu ngữ cảnh mã nguồn cực tốt, sinh code sạch và hoàn chỉnh."
+      ],
+      "speedQuota": [
+        "Rất nhanh & Ổn định",
+        "Theo hạn mức gói Claude Pro / Claude Code."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
+      ]
+    }
   },
   {
     "id": "gemini-3.8-flash-high",
     "name": "Gemini 3.8 Flash (High)",
     "group": "Gemini 3.8 Flash",
-    "desc": "Suy luận cao, dồi dào Quota"
+    "desc": "Suy luận cao, dồi dào Quota",
+    "layer": "Tier 1",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Tốc độ phản hồi cực kỳ nhanh, đa phương thức (multimodal), xử lý context lớn nhẹ nhàng.",
+        "Chi phí token thấp và hạn mức gọi API cực kỳ hào phóng."
+      ],
+      "speedQuota": [
+        "Siêu nhanh & Dồi dào Quota nhất",
+        "Hầu như không bao giờ lo bị nghẽn hoặc hết Quota."
+      ],
+      "ensembleRec": [
+        "WORKER tiêu chuẩn xử lý các tác vụ thực thi nhanh chóng.",
+        "Trạm cứu sinh (Auto-fallback) an toàn khi các model Bậc 1 & 2 hết hạn mức."
+      ]
+    }
   },
   {
     "id": "gemini-3.8-flash-medium",
     "name": "Gemini 3.8 Flash (Medium)",
     "group": "Gemini 3.8 Flash",
-    "desc": "Đa phương thức, tốc độ cao"
+    "desc": "Đa phương thức, tốc độ cao",
+    "layer": "Tier 2",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Tốc độ phản hồi cực kỳ nhanh, đa phương thức (multimodal), xử lý context lớn nhẹ nhàng.",
+        "Chi phí token thấp và hạn mức gọi API cực kỳ hào phóng."
+      ],
+      "speedQuota": [
+        "Siêu nhanh & Dồi dào Quota nhất",
+        "Hầu như không bao giờ lo bị nghẽn hoặc hết Quota."
+      ],
+      "ensembleRec": [
+        "WORKER tiêu chuẩn xử lý các tác vụ thực thi nhanh chóng.",
+        "Trạm cứu sinh (Auto-fallback) an toàn khi các model Bậc 1 & 2 hết hạn mức."
+      ]
+    }
   },
   {
     "id": "gemini-3.8-flash-low",
     "name": "Gemini 3.8 Flash (Low)",
     "group": "Gemini 3.8 Flash",
-    "desc": "Siêu nhẹ, tiết kiệm token"
+    "desc": "Siêu nhẹ, tiết kiệm token",
+    "layer": "Tier 3",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Tốc độ phản hồi cực kỳ nhanh, đa phương thức (multimodal), xử lý context lớn nhẹ nhàng.",
+        "Chi phí token thấp và hạn mức gọi API cực kỳ hào phóng."
+      ],
+      "speedQuota": [
+        "Siêu nhanh & Dồi dào Quota nhất",
+        "Hầu như không bao giờ lo bị nghẽn hoặc hết Quota."
+      ],
+      "ensembleRec": [
+        "WORKER tiêu chuẩn xử lý các tác vụ thực thi nhanh chóng.",
+        "Trạm cứu sinh (Auto-fallback) an toàn khi các model Bậc 1 & 2 hết hạn mức."
+      ]
+    }
   },
   {
     "id": "gpt-oss-120b-medium",
     "name": "GPT-OSS 120B (Medium)",
     "group": "GPT-OSS 120B",
-    "desc": "Mô hình mã nguồn mở 120B"
+    "desc": "Mô hình mã nguồn mở 120B",
+    "layer": "Tier 4",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình mã nguồn mở kích thước lớn 120B tham số, phục vụ nghiên cứu và đa dạng hóa góc nhìn.",
+        "Tạo góc nhìn đối chiếu độc lập không phụ thuộc nhà cung cấp duy nhất."
+      ],
+      "speedQuota": [
+        "Khá nhanh",
+        "Phụ thuộc vào máy chủ cộng đồng."
+      ],
+      "ensembleRec": [
+        "WORKER hoặc REVIEWER dự phòng để tạo góc nhìn đối chiếu độc lập."
+      ]
+    }
   },
   {
     "id": "ollama-gemma",
     "name": "Ollama Gemma 4 (12B Local)",
     "group": "Local Ollama",
-    "desc": "Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)"
+    "desc": "Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)",
+    "layer": "Local",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Chạy trực tiếp trên server Ollama nội bộ (192.168.86.23:11434) qua Aider CLI.",
+        "Hoàn toàn miễn phí, riêng tư, không giới hạn request hay quota từ bên ngoài.",
+        "Hỗ trợ chế độ tư duy (thinking mode) và chỉnh sửa tệp tin tự động."
+      ],
+      "speedQuota": [
+        "Xử lý cục bộ",
+        "Không phụ thuộc vào kết nối Internet hay hạn mức API ngoài."
+      ],
+      "ensembleRec": [
+        "Lựa chọn tối ưu cho WORKER hoặc tác vụ tự động chạy nền không lo cạn quota."
+      ]
+    }
   },
   {
     "id": "ollama-qwen",
     "name": "Ollama Qwen 3 Coder (30B Local)",
     "group": "Local Ollama",
-    "desc": "Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)"
+    "desc": "Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)",
+    "layer": "Local",
+    "apiKey": "",
+    "info": {
+      "coreStrengths": [
+        "Mô hình chuyên dụng về lập trình và kiến trúc mã nguồn 30B tham số.",
+        "Khả năng đọc hiểu repo lớn, refactor, sinh code và fix bug cực kỳ chính xác.",
+        "Chạy trực tiếp trên server Ollama nội bộ qua Aider CLI, hoàn toàn miễn phí và riêng tư."
+      ],
+      "speedQuota": [
+        "Xử lý cục bộ",
+        "Không phụ thuộc vào kết nối Internet hay hạn mức API ngoài."
+      ],
+      "ensembleRec": [
+        "Lựa chọn hàng đầu cho WORKER (Lập trình viên) khi triển khai trong mạng nội bộ."
+      ]
+    }
   }
 ]

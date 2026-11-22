@@ -18,66 +18,75 @@ import {
 import { getRuntime } from './lib/agent-runtime'
 import { v4 as uuidv4 } from 'uuid'
 
+export interface ModelInfoDef {
+  coreStrengths?: string[] | string
+  speedQuota?: string[] | string
+  ensembleRec?: string[] | string
+}
+
 export interface ModelDef {
   id: string
   name: string
   group: string
   desc?: string
+  layer?: string
+  apiKey?: string
+  info?: ModelInfoDef
 }
 
 export const DEFAULT_MODELS: ModelDef[] = [
   // 1. Gemini 4 Neon (New)
-  { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', group: 'Gemini 4 Neon', desc: 'Siêu tư duy cực hạn (XHigh)' },
-  { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', group: 'Gemini 4 Neon', desc: 'Tư duy cao nhất' },
-  { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', group: 'Gemini 4 Neon', desc: 'Cân bằng tốc độ & trí tuệ' },
-  { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', group: 'Gemini 4 Neon', desc: 'Tốc độ cao & tiết kiệm token' },
+  { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', group: 'Gemini 4 Neon', desc: 'Siêu tư duy cực hạn (XHigh)', layer: 'Tier 1' },
+  { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', group: 'Gemini 4 Neon', desc: 'Tư duy cao nhất', layer: 'Tier 1' },
+  { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', group: 'Gemini 4 Neon', desc: 'Cân bằng tốc độ & trí tuệ', layer: 'Tier 2' },
+  { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', group: 'Gemini 4 Neon', desc: 'Tốc độ cao & tiết kiệm token', layer: 'Tier 3' },
 
   // 1b. Orchestrator (Neon) (New)
-  { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', group: 'Orchestrator (Neon)', desc: 'Chuyên điều phối tác tử thế hệ mới' },
+  { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', group: 'Orchestrator (Neon)', desc: 'Chuyên điều phối tác tử thế hệ mới', layer: 'Tier 1' },
 
   // 1c. Gemini 4 Argon
-  { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', group: 'Gemini 4 Argon', desc: 'Tư duy cao nhất' },
-  { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', group: 'Gemini 4 Argon', desc: 'Tư duy tiêu chuẩn' },
-  { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', group: 'Gemini 4 Argon', desc: 'Nhanh & Nhẹ' },
+  { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', group: 'Gemini 4 Argon', desc: 'Tư duy cao nhất', layer: 'Tier 1' },
+  { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', group: 'Gemini 4 Argon', desc: 'Tư duy tiêu chuẩn', layer: 'Tier 2' },
+  { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', group: 'Gemini 4 Argon', desc: 'Nhanh & Nhẹ', layer: 'Tier 3' },
 
   // 1d. Gemini 4 Hydrogen
-  { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', group: 'Gemini 4 Hydrogen', desc: 'Siêu tư duy cực hạn (XHigh)' },
-  { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', group: 'Gemini 4 Hydrogen', desc: 'Tư duy nâng cao' },
-  { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', group: 'Gemini 4 Hydrogen', desc: 'Cân bằng thế hệ mới' },
-  { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', group: 'Gemini 4 Hydrogen', desc: 'Tốc độ cao & tiết kiệm' },
+  { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', group: 'Gemini 4 Hydrogen', desc: 'Siêu tư duy cực hạn (XHigh)', layer: 'Tier 1' },
+  { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', group: 'Gemini 4 Hydrogen', desc: 'Tư duy nâng cao', layer: 'Tier 1' },
+  { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', group: 'Gemini 4 Hydrogen', desc: 'Cân bằng thế hệ mới', layer: 'Tier 2' },
+  { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', group: 'Gemini 4 Hydrogen', desc: 'Tốc độ cao & tiết kiệm', layer: 'Tier 3' },
 
   // 1e. Orchestrator (Argon)
-  { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', group: 'Orchestrator (Argon)', desc: 'Chuyên điều phối nhóm tác tử' },
+  { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', group: 'Orchestrator (Argon)', desc: 'Chuyên điều phối nhóm tác tử', layer: 'Tier 1' },
 
   // 2. Claude Opus 5.5
-  { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', group: 'Claude Opus 5.5', desc: 'Siêu phân tích kiến trúc' },
-  { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', group: 'Claude Opus 5.5', desc: 'Cân bằng cao cấp' },
-  { id: 'claude-opus-5-5-low', name: 'Claude Opus 5.5 (Low)', group: 'Claude Opus 5.5', desc: 'Phản hồi nhanh' },
+  { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', group: 'Claude Opus 5.5', desc: 'Siêu phân tích kiến trúc', layer: 'Tier 1' },
+  { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', group: 'Claude Opus 5.5', desc: 'Cân bằng cao cấp', layer: 'Tier 2' },
+  { id: 'claude-opus-5-5-low', name: 'Claude Opus 5.5 (Low)', group: 'Claude Opus 5.5', desc: 'Phản hồi nhanh', layer: 'Tier 3' },
 
   // 3. Claude Sonnet 5.5
-  { id: 'claude-sonnet-5-5-high', name: 'Claude Sonnet 5.5 (High)', group: 'Claude Sonnet 5.5', desc: 'Lập trình chuyên sâu' },
-  { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', group: 'Claude Sonnet 5.5', desc: 'Cân bằng & code chuẩn' },
-  { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', group: 'Claude Sonnet 5.5', desc: 'Tốc độ cao' },
+  { id: 'claude-sonnet-5-5-high', name: 'Claude Sonnet 5.5 (High)', group: 'Claude Sonnet 5.5', desc: 'Lập trình chuyên sâu', layer: 'Tier 1' },
+  { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', group: 'Claude Sonnet 5.5', desc: 'Cân bằng & code chuẩn', layer: 'Tier 2' },
+  { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', group: 'Claude Sonnet 5.5', desc: 'Tốc độ cao', layer: 'Tier 3' },
 
   // 4. Claude Pro (Claude Code CLI - Gói thuê bao Claude Pro)
-  { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc' },
-  { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp' },
-  { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh' },
-  { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Lập trình chuyên sâu' },
-  { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn' },
-  { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao' },
+  { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc', layer: 'Tier 1' },
+  { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp', layer: 'Tier 2' },
+  { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh', layer: 'Tier 3' },
+  { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Lập trình chuyên sâu', layer: 'Tier 1' },
+  { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn', layer: 'Tier 2' },
+  { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao', layer: 'Tier 3' },
 
   // 5. Gemini 3.8 Flash
-  { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', group: 'Gemini 3.8 Flash', desc: 'Suy luận cao, dồi dào Quota' },
-  { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash', desc: 'Đa phương thức, tốc độ cao' },
-  { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash', desc: 'Siêu nhẹ, tiết kiệm token' },
+  { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', group: 'Gemini 3.8 Flash', desc: 'Suy luận cao, dồi dào Quota', layer: 'Tier 2' },
+  { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash', desc: 'Đa phương thức, tốc độ cao', layer: 'Tier 3' },
+  { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash', desc: 'Siêu nhẹ, tiết kiệm token', layer: 'Tier 3' },
 
   // 6. GPT-OSS 120B
-  { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B', desc: 'Mô hình mã nguồn mở 120B' },
+  { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B', desc: 'Mô hình mã nguồn mở 120B', layer: 'Tier 4' },
 
   // 7. Ollama Local
-  { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)' },
-  { id: 'ollama-qwen', name: 'Ollama Qwen 3 Coder (30B Local)', group: 'Local Ollama', desc: 'Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)' }
+  { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)', layer: 'Local' },
+  { id: 'ollama-qwen', name: 'Ollama Qwen 3 Coder (30B Local)', group: 'Local Ollama', desc: 'Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)', layer: 'Local' }
 ]
 
 export function loadModelsConfig(baseDir: string): ModelDef[] {
@@ -914,6 +923,9 @@ const server = http.createServer(async (req, res) => {
               name: String(body.addModel.name).trim(),
               group: String(body.addModel.group || 'Khác').trim(),
               desc: String(body.addModel.desc || '').trim(),
+              layer: String(body.addModel.layer || 'Tier 2').trim(),
+              ...(body.addModel.apiKey ? { apiKey: String(body.addModel.apiKey).trim() } : {}),
+              ...(body.addModel.info ? { info: body.addModel.info } : {}),
             }
             currentModels = currentModels.filter(m => m.id !== newM.id)
             currentModels.push(newM)
@@ -922,6 +934,41 @@ const server = http.createServer(async (req, res) => {
             // If it's an Ollama model, auto register 16384 token window limit
             if (newM.id.startsWith('ollama') || newM.group.toLowerCase().includes('ollama')) {
               registerAiderModelLimits(newM.id)
+            }
+          }
+
+          // 1b. Update existing or new model (with View/Edit Detail Modal)
+          if (body.updateModel && body.updateModel.id) {
+            const up = body.updateModel
+            const originalId = up.originalId || up.id
+            const idx = currentModels.findIndex(m => m.id === originalId)
+            const targetId = String(up.id).trim()
+            const targetName = String(up.name || (idx !== -1 ? currentModels[idx].name : targetId)).trim()
+            const targetGroup = String(up.group || (idx !== -1 ? currentModels[idx].group : 'Khác')).trim()
+            const targetDesc = up.desc !== undefined ? String(up.desc).trim() : (idx !== -1 ? currentModels[idx].desc : '')
+            const targetLayer = up.layer ? String(up.layer).trim() : (idx !== -1 ? currentModels[idx].layer || 'Tier 2' : 'Tier 2')
+            const targetApiKey = up.apiKey !== undefined ? String(up.apiKey).trim() : (idx !== -1 ? currentModels[idx].apiKey : undefined)
+            const targetInfo = up.info || (idx !== -1 ? currentModels[idx].info : undefined)
+
+            const updatedM: ModelDef = {
+              id: targetId,
+              name: targetName,
+              group: targetGroup,
+              desc: targetDesc,
+              layer: targetLayer,
+              ...(targetApiKey ? { apiKey: targetApiKey } : {}),
+              ...(targetInfo ? { info: targetInfo } : {}),
+            }
+
+            if (idx !== -1) {
+              currentModels[idx] = updatedM
+            } else {
+              currentModels.push(updatedM)
+            }
+            saveModelsConfig(serverDir, currentModels)
+
+            if (updatedM.id.startsWith('ollama') || updatedM.group.toLowerCase().includes('ollama')) {
+              registerAiderModelLimits(updatedM.id)
             }
           }
 
