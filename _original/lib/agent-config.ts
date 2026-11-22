@@ -176,19 +176,24 @@ export function resolveAgentProgramDetailed(program: string): AgentResolution {
 
     if (cli === 'ollama') {
       let targetM = dynamicModel.id
-      if (targetM.startsWith('ollama-')) {
+      if (targetM.startsWith('deepseek-')) {
+        targetM = 'deepseek/' + targetM.slice(9)
+      } else if (targetM.startsWith('deepseek/') || targetM.startsWith('openai/') || targetM.startsWith('openrouter/')) {
+        // Giữ nguyên định dạng cloud API
+      } else if (targetM.startsWith('ollama-')) {
         targetM = 'ollama/' + targetM.slice(7)
       } else if (!targetM.startsWith('ollama/')) {
         targetM = 'ollama/' + targetM
       }
+      const isDeepseek = targetM.includes('deepseek')
       const agent: AgentProgram = {
         name: dynamicModel.name,
         command: 'aider-smart',
         flags: ['--model', targetM],
         readyMarker: '>',
         inputMethod: 'sendKeys' as const,
-        color: dynamicModel.color || 'cyan',
-        icon: dynamicModel.icon || '🦙',
+        color: dynamicModel.color || (isDeepseek ? 'purple' : 'cyan'),
+        icon: dynamicModel.icon || (isDeepseek ? '🧠' : '🦙'),
       }
       return { agent, how: 'exact', requested: program }
     }

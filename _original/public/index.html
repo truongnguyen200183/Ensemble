@@ -859,7 +859,7 @@
             <select id="detailModelCli" onchange="handleDetailModelCliChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer">
               <option value="agy">🪐 Antigravity CLI (agy / Gemini)</option>
               <option value="claude">🟣 Claude Code CLI (claude / Anthropic)</option>
-              <option value="ollama">🦙 Ollama Local (Aider / Mạng nội bộ)</option>
+              <option value="ollama">🦙 Aider CLI (Ollama Local / DeepSeek API / Khác)</option>
               <option value="codex">💻 OpenAI Codex CLI (codex)</option>
               <option value="grok">🧠 Grok xAI CLI (grok)</option>
             </select>
@@ -3003,12 +3003,15 @@
       const colorSelect = document.getElementById('detailModelColor')
 
       if (cli === 'ollama') {
-        if (layerSelect && layerSelect.value !== 'Local') layerSelect.value = 'Local'
-        if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = '🦙'
-        if (colorSelect && (colorSelect.value === 'blue' || colorSelect.value === 'emerald')) colorSelect.value = 'cyan'
+        const isDeepseek = idInput?.value.toLowerCase().includes('deepseek')
+        if (layerSelect && !isDeepseek && layerSelect.value !== 'Local') layerSelect.value = 'Local'
+        if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = isDeepseek ? '🧠' : '🦙'
+        if (colorSelect && (colorSelect.value === 'blue' || colorSelect.value === 'emerald')) colorSelect.value = isDeepseek ? 'purple' : 'cyan'
         if (idInput) {
           let val = idInput.value.trim()
-          if (val && !val.startsWith('ollama/')) {
+          if (val.toLowerCase().startsWith('deepseek') || val.startsWith('openai/') || val.startsWith('openrouter/')) {
+            // Giữ nguyên prefix cho DeepSeek API / OpenAI
+          } else if (val && !val.startsWith('ollama/')) {
             val = val.replace(/^ollama-/, '')
             idInput.value = 'ollama/' + val
           } else if (!val) {
@@ -3171,9 +3174,13 @@
         return
       }
 
-      // Tự động đảm bảo tiền tố ollama/ khi CLI là ollama
+      // Tự động đảm bảo tiền tố khi CLI là ollama (Aider)
       if (cli === 'ollama') {
-        if (id.startsWith('ollama-')) {
+        if (id.startsWith('deepseek-')) {
+          id = 'deepseek/' + id.slice(9)
+        } else if (id.startsWith('deepseek/') || id.startsWith('openai/') || id.startsWith('openrouter/')) {
+          // Giữ nguyên định dạng cloud API
+        } else if (id.startsWith('ollama-')) {
           id = 'ollama/' + id.slice(7)
         } else if (!id.startsWith('ollama/')) {
           id = 'ollama/' + id

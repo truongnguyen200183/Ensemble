@@ -3,10 +3,6 @@
 # Hard context cap: 16384 tokens (num_ctx: 16384, max-chat-history-tokens: 12288)
 # Usage: aider-smart [options]
 
-export OLLAMA_API_BASE="${OLLAMA_API_BASE:-http://192.168.86.23:11434}"
-export OPENAI_API_BASE="${OPENAI_API_BASE:-http://192.168.86.23:11434/v1}"
-export OPENAI_API_KEY="${OPENAI_API_KEY:-ollama}"
-
 MODEL="ollama/gemma4:12b"
 ARGS=()
 SKIP_NEXT=0
@@ -24,8 +20,12 @@ for ((i=1; i<=$#; i++)); do
       MODEL="ollama/gemma4:12b"
     elif [[ "$M" == "ollama-qwen" || "$M" == "qwen3-coder:30b" || "$M" == "qwen3-coder" ]]; then
       MODEL="ollama/qwen3-coder:30b"
-    elif [[ "$M" == ollama/* || "$M" == openai/* ]]; then
+    elif [[ "$M" == ollama/* || "$M" == openai/* || "$M" == deepseek/* || "$M" == openrouter/* ]]; then
       MODEL="$M"
+    elif [[ "$M" == deepseek-* ]]; then
+      MODEL="deepseek/${M#deepseek-}"
+    elif [[ "$M" == deepseek* ]]; then
+      MODEL="deepseek/$M"
     elif [[ "$M" == ollama-* ]]; then
       MODEL="ollama/${M#ollama-}"
     else
@@ -40,6 +40,12 @@ for ((i=1; i<=$#; i++)); do
     ARGS+=("$ARG")
   fi
 done
+
+export OLLAMA_API_BASE="${OLLAMA_API_BASE:-http://192.168.86.23:11434}"
+if [[ "$MODEL" == ollama/* ]]; then
+  export OPENAI_API_BASE="${OPENAI_API_BASE:-http://192.168.86.23:11434/v1}"
+  export OPENAI_API_KEY="${OPENAI_API_KEY:-ollama}"
+fi
 
 # Locate model settings & metadata for context window (16384 tokens limit)
 EXTRA_FLAGS=()

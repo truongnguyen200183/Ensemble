@@ -1021,9 +1021,7 @@ const server = http.createServer(async (req, res) => {
               } else if (cli === 'ollama') {
                 // Model Ollama Local -> chạy qua aider-smart
                 a.command = 'aider-smart'
-                let targetM = model
-                if (!targetM.startsWith('ollama/')) targetM = `ollama/${targetM}`
-                a.flags = ['--model', targetM]
+                a.flags = ['--model', model]
                 a.readyMarker = '>'
                 a.unsetEnv = []
               } else if (cli === 'codex') {

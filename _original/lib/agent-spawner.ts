@@ -82,10 +82,52 @@ export async function spawnLocalAgent(options: SpawnAgentOptions): Promise<Spawn
 
   // Forward ENSEMBLE_* and agent-specific env vars to tmux session
   const inheritedEnv = Object.entries(process.env)
-    .filter(([k]) => k.startsWith('ENSEMBLE_') || k.startsWith('NVIDIA_') || k.startsWith('OPENAI_') || k.startsWith('ANTHROPIC_'))
+    .filter(([k]) => k.startsWith('ENSEMBLE_') || k.startsWith('NVIDIA_') || k.startsWith('OPENAI_') || k.startsWith('ANTHROPIC_') || k.startsWith('DEEPSEEK_') || k.startsWith('GEMINI_') || k.startsWith('GROK_'))
     .filter(([, v]) => v)
+
+  // Look up model-specific apiKey in models.json if present
+  const modelKey = options.program.toLowerCase()
+  let modelApiKey = ''
+  let modelCli = ''
+  try {
+    const candidates = [
+      path.join(__dirname, '..', 'models.json'),
+      path.join(__dirname, '..', '..', 'models.json'),
+      '/mnt/d/Ensemble/models.json',
+      '/home/truong/ensemble/models.json',
+    ]
+    for (const c of candidates) {
+      if (fs.existsSync(c)) {
+        const raw = fs.readFileSync(c, 'utf-8')
+        const data = JSON.parse(raw)
+        if (Array.isArray(data)) {
+          const found = data.find((m: any) => m && m.id && (m.id.toLowerCase() === modelKey || m.id.toLowerCase().endsWith(modelKey)))
+          if (found) {
+            modelApiKey = found.apiKey ? String(found.apiKey).trim() : ''
+            modelCli = found.cli ? String(found.cli).trim() : ''
+            break
+          }
+        }
+      }
+    }
+  } catch {}
+
+  const dynamicModelEnv: Record<string, string> = {}
+  if (modelApiKey) {
+    if (modelKey.includes('deepseek')) {
+      dynamicModelEnv['DEEPSEEK_API_KEY'] = modelApiKey
+      dynamicModelEnv['OPENAI_API_KEY'] = modelApiKey
+    } else if (modelKey.includes('claude') || modelCli === 'claude') {
+      dynamicModelEnv['ANTHROPIC_API_KEY'] = modelApiKey
+    } else if (modelKey.includes('gemini') || modelCli === 'agy') {
+      dynamicModelEnv['GEMINI_API_KEY'] = modelApiKey
+    } else {
+      dynamicModelEnv['OPENAI_API_KEY'] = modelApiKey
+    }
+  }
+
   // Explicit pane exports also reach shells created by an already-running tmux server.
-  const envForward = Object.entries({ ...Object.fromEntries(inheritedEnv), ...readEnsembleConfig().agentEnv })
+  const envForward = Object.entries({ ...Object.fromEntries(inheritedEnv), ...readEnsembleConfig().agentEnv, ...dynamicModelEnv })
     // Ongeescaped ging de waarde als kale toetsaanslagen de pane in: API-sleutels
     // stonden zo letterlijk in de tmux-scrollback van elke agent.
     .map(([k, v]) => `export ${k}=${shellEscape(v as string)}`)
