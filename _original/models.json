@@ -329,7 +329,9 @@
     "group": "Claude Opus 5.5",
     "desc": "Siêu phân tích kiến trúc",
     "layer": "Tier 1",
-    "apiKey": "",
+    "cli": "agy",
+    "icon": "●",
+    "color": "purple",
     "info": {
       "coreStrengths": [
         "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
@@ -342,10 +344,7 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    },
-    "cli": "claude",
-    "icon": "●",
-    "color": "purple"
+    }
   },
   {
     "id": "claude-opus-5-5-medium",
@@ -353,7 +352,9 @@
     "group": "Claude Opus 5.5",
     "desc": "Cân bằng cao cấp",
     "layer": "Tier 1",
-    "apiKey": "",
+    "cli": "agy",
+    "icon": "●",
+    "color": "purple",
     "info": {
       "coreStrengths": [
         "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
@@ -366,10 +367,7 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    },
-    "cli": "claude",
-    "icon": "●",
-    "color": "purple"
+    }
   },
   {
     "id": "claude-opus-5-5-low",
@@ -377,7 +375,9 @@
     "group": "Claude Opus 5.5",
     "desc": "Phản hồi nhanh",
     "layer": "Tier 1",
-    "apiKey": "",
+    "cli": "agy",
+    "icon": "●",
+    "color": "purple",
     "info": {
       "coreStrengths": [
         "Khả năng phân tích kiến trúc hệ thống đỉnh cao, tổng hợp thông tin đa chiều và phản biện sắc sảo.",
@@ -390,10 +390,7 @@
       "ensembleRec": [
         "Lựa chọn hàng đầu cho REVIEWER (Chuyên gia phản biện) hoặc LEAD."
       ]
-    },
-    "cli": "claude",
-    "icon": "●",
-    "color": "purple"
+    }
   },
   {
     "id": "claude-sonnet-5-5-high",
@@ -401,7 +398,9 @@
     "group": "Claude Sonnet 5.5",
     "desc": "Lập trình chuyên sâu",
     "layer": "Tier 1",
-    "apiKey": "",
+    "cli": "agy",
+    "icon": "●",
+    "color": "purple",
     "info": {
       "coreStrengths": [
         "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
@@ -414,10 +413,7 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    },
-    "cli": "claude",
-    "icon": "●",
-    "color": "purple"
+    }
   },
   {
     "id": "claude-sonnet-5-5-medium",
@@ -425,7 +421,9 @@
     "group": "Claude Sonnet 5.5",
     "desc": "Cân bằng & code chuẩn",
     "layer": "Tier 2",
-    "apiKey": "",
+    "cli": "agy",
+    "icon": "●",
+    "color": "purple",
     "info": {
       "coreStrengths": [
         "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
@@ -438,10 +436,7 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    },
-    "cli": "claude",
-    "icon": "●",
-    "color": "purple"
+    }
   },
   {
     "id": "claude-sonnet-5-5-low",
@@ -449,7 +444,9 @@
     "group": "Claude Sonnet 5.5",
     "desc": "Tốc độ cao",
     "layer": "Tier 2",
-    "apiKey": "",
+    "cli": "agy",
+    "icon": "●",
+    "color": "purple",
     "info": {
       "coreStrengths": [
         "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
@@ -462,10 +459,7 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    },
-    "cli": "claude",
-    "icon": "●",
-    "color": "purple"
+    }
   },
   {
     "id": "cc-opus-high",
@@ -692,7 +686,9 @@
     "group": "GPT-OSS 120B",
     "desc": "Mô hình mã nguồn mở 120B",
     "layer": "Tier 4",
-    "apiKey": "",
+    "cli": "agy",
+    "icon": "◆",
+    "color": "indigo",
     "info": {
       "coreStrengths": [
         "Mô hình mã nguồn mở kích thước lớn 120B tham số, phục vụ nghiên cứu và đa dạng hóa góc nhìn.",
@@ -705,10 +701,7 @@
       "ensembleRec": [
         "WORKER hoặc REVIEWER dự phòng để tạo góc nhìn đối chiếu độc lập."
       ]
-    },
-    "cli": "codex",
-    "icon": "◆",
-    "color": "indigo"
+    }
   },
   {
     "id": "ollama/qwen2.5-coder:14b",
@@ -741,6 +734,9 @@
     "group": "Khác",
     "desc": "Cực nhanh - Siêu rẻ",
     "layer": "Tier 3",
+    "cli": "ollama",
+    "icon": "🤖",
+    "color": "cyan",
     "apiKey": "sk-a70a4c48280e468fa75bd5dc70758088",
     "info": {
       "coreStrengths": [
@@ -755,17 +751,17 @@
       "ensembleRec": [
         "WORKER"
       ]
-    },
-    "cli": "agy",
-    "icon": "▲",
-    "color": "blue"
+    }
   },
   {
     "id": "deepseek-v4-pro",
     "name": "DeepSeek-Pro",
     "group": "Khác",
     "desc": "Suy luận sâu",
-    "layer": "Tier 2",
+    "layer": "Local",
+    "cli": "ollama",
+    "icon": "⚡",
+    "color": "rose",
     "apiKey": "sk-a70a4c48280e468fa75bd5dc70758088",
     "info": {
       "coreStrengths": [
@@ -780,9 +776,6 @@
       "ensembleRec": [
         "LEAD, REVIEWER"
       ]
-    },
-    "cli": "agy",
-    "icon": "▲",
-    "color": "blue"
+    }
   }
 ]

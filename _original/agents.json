@@ -3,7 +3,9 @@
     "name": "agy",
     "command": "agy-smart",
     "flags": [
-      "--dangerously-skip-permissions"
+      "--dangerously-skip-permissions",
+      "--model",
+      "gemini-4-argon-low"
     ],
     "readyMarker": "? for shortcuts",
     "inputMethod": "sendKeys",

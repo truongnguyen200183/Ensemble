@@ -916,11 +916,6 @@ const server = http.createServer(async (req, res) => {
       if (method === 'POST') {
         try {
           const body = JSON.parse(await readBody(req))
-          let currentAgents: Record<string, any> = {}
-          if (fs.existsSync(agentsPath)) {
-            try { currentAgents = JSON.parse(fs.readFileSync(agentsPath, 'utf8')) } catch {}
-          }
-
           let currentModels = loadModelsConfig(serverDir)
 
           // 1. Add model
@@ -1005,55 +1000,6 @@ const server = http.createServer(async (req, res) => {
             currentModels = body.models
             saveModelsConfig(serverDir, currentModels)
           }
-
-          const setModel = (key: string, model: string) => {
-            if (currentAgents[key] && currentAgents[key].flags) {
-              const a = currentAgents[key]
-              const targetDef = currentModels.find(m => m.id === model)
-              const cli = targetDef?.cli || (model.startsWith('ollama') ? 'ollama' : (model.startsWith('cc-') ? 'claude' : 'agy'))
-
-              if (cli === 'claude') {
-                // Model Claude Pro -> chạy qua Claude Code CLI
-                a.command = 'claude-smart'
-                a.flags = ['--permission-mode', 'auto', '--model', model]
-                a.readyMarker = '❯'
-                a.unsetEnv = ['ANTHROPIC_API_KEY']
-              } else if (cli === 'ollama') {
-                // Model Ollama Local -> chạy qua aider-smart
-                a.command = 'aider-smart'
-                a.flags = ['--model', model]
-                a.readyMarker = '>'
-                a.unsetEnv = []
-              } else if (cli === 'codex') {
-                // Model Codex -> chạy qua codex-smart
-                a.command = 'codex-smart'
-                a.flags = ['--model', model]
-                a.readyMarker = '$'
-                a.unsetEnv = []
-              } else if (cli === 'grok') {
-                // Model Grok -> chạy qua grok-smart
-                a.command = 'grok-smart'
-                a.flags = ['--model', model]
-                a.readyMarker = '?'
-                a.unsetEnv = []
-              } else {
-                // Model Antigravity -> chạy qua agy-smart
-                a.command = 'agy-smart'
-                a.flags = ['--dangerously-skip-permissions', '--model', model]
-                a.readyMarker = '? for shortcuts'
-                a.unsetEnv = ['GEMINI_API_KEY', 'GOOGLE_API_KEY']
-              }
-            }
-          }
-
-          if (body.roles) {
-            if (body.roles.lead) setModel('agy', body.roles.lead)
-          }
-
-          fs.writeFileSync(agentsPath, JSON.stringify(currentAgents, null, 2), 'utf8')
-          try {
-            fs.writeFileSync('/mnt/d/Ensemble/_original/agents.json', JSON.stringify(currentAgents, null, 2), 'utf8')
-          } catch {}
 
           if (body.clearExhausted) {
             fs.writeFileSync(exhaustedFile, '', 'utf8')

@@ -3007,46 +3007,23 @@
         if (layerSelect && !isDeepseek && layerSelect.value !== 'Local') layerSelect.value = 'Local'
         if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = isDeepseek ? '🧠' : '🦙'
         if (colorSelect && (colorSelect.value === 'blue' || colorSelect.value === 'emerald')) colorSelect.value = isDeepseek ? 'purple' : 'cyan'
-        if (idInput) {
-          let val = idInput.value.trim()
-          if (val.toLowerCase().startsWith('deepseek') || val.startsWith('openai/') || val.startsWith('openrouter/')) {
-            // Giữ nguyên prefix cho DeepSeek API / OpenAI
-          } else if (val && !val.startsWith('ollama/')) {
-            val = val.replace(/^ollama-/, '')
-            idInput.value = 'ollama/' + val
-          } else if (!val) {
-            idInput.value = 'ollama/'
-          }
-        }
       } else if (cli === 'claude') {
         if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 1'
         if (iconSelect && iconSelect.value === '🦙') iconSelect.value = '●'
         if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'emerald'
-        if (idInput && idInput.value.startsWith('ollama/')) {
-          idInput.value = idInput.value.replace(/^ollama\//, '')
-        }
       } else if (cli === 'codex') {
         if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 2'
         if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = '💻'
         if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'emerald'
-        if (idInput && idInput.value.startsWith('ollama/')) {
-          idInput.value = idInput.value.replace(/^ollama\//, '')
-        }
       } else if (cli === 'grok') {
         if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 2'
         if (iconSelect && (iconSelect.value === '▲' || iconSelect.value === '●')) iconSelect.value = '🧠'
         if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'purple'
-        if (idInput && idInput.value.startsWith('ollama/')) {
-          idInput.value = idInput.value.replace(/^ollama\//, '')
-        }
       } else {
         // agy
         if (layerSelect && layerSelect.value === 'Local') layerSelect.value = 'Tier 2'
         if (iconSelect && iconSelect.value === '🦙') iconSelect.value = '▲'
         if (colorSelect && colorSelect.value === 'cyan') colorSelect.value = 'blue'
-        if (idInput && idInput.value.startsWith('ollama/')) {
-          idInput.value = idInput.value.replace(/^ollama\//, '')
-        }
       }
     }
 
@@ -3172,19 +3149,6 @@
       if (!id) {
         alert('Vui lòng nhập Mã ID của mô hình!')
         return
-      }
-
-      // Tự động đảm bảo tiền tố khi CLI là ollama (Aider)
-      if (cli === 'ollama') {
-        if (id.startsWith('deepseek-')) {
-          id = 'deepseek/' + id.slice(9)
-        } else if (id.startsWith('deepseek/') || id.startsWith('openai/') || id.startsWith('openrouter/')) {
-          // Giữ nguyên định dạng cloud API
-        } else if (id.startsWith('ollama-')) {
-          id = 'ollama/' + id.slice(7)
-        } else if (!id.startsWith('ollama/')) {
-          id = 'ollama/' + id
-        }
       }
 
       const modelPayload = {
