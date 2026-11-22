@@ -142,6 +142,22 @@
     .animate-pulse-subtle {
       animation: pulse-subtle 1.8s infinite ease-in-out;
     }
+    /* Dark theme select dropdown options */
+    select option {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    #agentStatusIntervalSelect,
+    #agentStatusIntervalSelect option {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    #agentStatusIntervalSelect option:hover,
+    #agentStatusIntervalSelect option:focus,
+    #agentStatusIntervalSelect option:checked {
+      background-color: #1e293b !important;
+      color: #38bdf8 !important;
+    }
   </style>
 </head>
 <body class="bg-[#0b0f19] text-slate-100 flex flex-col h-screen overflow-hidden font-sans antialiased relative">
@@ -378,6 +394,18 @@
         <span>👥</span>
         <span>Quản lý Agent</span>
       </button>
+
+      <!-- Toggle Agent Status Sidebar Button in Header -->
+      <button 
+        id="toggleAgentSidebarBtn" 
+        type="button" 
+        onclick="toggleAgentStatusSidebar()"
+        title="Đóng / Mở Panel Trạng thái Agent (Phím tắt: Alt+S)" 
+        class="ml-1.5 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 text-[11px] font-medium flex items-center space-x-1 transition cursor-pointer shrink-0"
+      >
+        <span>🤖</span>
+        <span id="toggleAgentSidebarText">Ẩn trạng thái</span>
+      </button>
     </div>
     <div class="hidden sm:flex items-center space-x-2 text-slate-400 shrink-0 text-[11px]">
       <span id="taskDir" class="truncate max-w-xs text-slate-400"></span>
@@ -409,113 +437,213 @@
     </div>
   </div>
 
-  <!-- CHAT CONTAINER (GOM 2 PANEL THÀNH 1 GROUP CHAT DUY NHẤT) -->
-  <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
-    <!-- Initial empty placeholder -->
-    <div id="emptyFeed" class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3">
-      <div class="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
-        💬
-      </div>
-      <p class="text-sm">Chưa có tin nhắn trong phiên này. Hãy đợi các agent bắt đầu trò chuyện...</p>
-    </div>
-  </main>
-
-  <!-- FLOATING SCROLL TO BOTTOM BUTTON (Sticky scroll / New messages indicator) -->
-  <button 
-    id="scrollToBottomBtn" 
-    type="button" 
-    onclick="scrollToBottom()" 
-    class="hidden absolute bottom-24 right-6 z-30 bg-blue-600/90 hover:bg-blue-500 active:scale-95 text-white font-medium px-4 py-2 rounded-full shadow-2xl border border-blue-400/50 backdrop-blur text-xs flex items-center space-x-2 cursor-pointer transition-all duration-200 animate-bounce"
-    title="Bấm để cuộn xuống tin nhắn mới nhất"
-  >
-    <span class="text-sm">⬇️</span>
-    <span id="unreadNoticeText" class="font-semibold tracking-wide">Tin nhắn mới</span>
-  </button>
-
-  <!-- BOTTOM INPUT BAR & IMAGE PREVIEW -->
-  <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20">
-    <div class="max-w-5xl mx-auto flex flex-col space-y-2">
-
-      <!-- Replying Quote Bar (Trích dẫn tin nhắn) -->
-      <div id="replyPreviewBar" class="hidden flex items-center justify-between px-3 py-1.5 bg-slate-800/95 border-l-4 border-l-blue-500 rounded-lg shadow-lg text-xs transition max-w-3xl">
-        <div class="flex items-center space-x-2 truncate min-w-0">
-          <span id="replyAuthorText" class="text-blue-400 font-bold shrink-0 flex items-center space-x-1">
-            <span>↩️</span>
-            <span>Đang trả lời:</span>
-          </span>
-          <span id="replyContentPreview" class="truncate text-slate-300 italic text-[11px]"></span>
+  <!-- MAIN WORKSPACE: COL-3 (AGENT LIVE STATUS) + COL-9 (CHAT FEED & FULL INPUT) -->
+  <div class="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden w-full relative">
+    
+    <!-- COL-3: LIVE AGENT STATUS (w-full md:w-80 lg:w-3/12 shrink-0) -->
+    <aside id="agentStatusSidebar" class="w-full md:w-80 lg:w-3/12 shrink-0 bg-[#0c121e] border-r border-slate-800/90 flex flex-col h-full overflow-hidden z-10 transition-all duration-200">
+      <!-- Header -->
+      <div class="p-2.5 sm:p-3 bg-[#0f172a] border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-2">
+          <span class="text-base">🤖</span>
+          <div>
+            <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center space-x-1.5">
+              <span>Trạng thái Agent</span>
+              <span id="agentCountBadge" class="bg-blue-900/60 text-blue-300 text-[10px] px-1.5 py-0.2 rounded border border-blue-700/50 font-mono">0</span>
+            </h2>
+            <p id="agentStatusLastUpdated" class="text-[10px] text-slate-400">Đang đồng bộ...</p>
+          </div>
         </div>
-        <button id="cancelReplyBtn" type="button" onclick="cancelReply()" class="text-slate-400 hover:text-rose-400 text-xs px-2 py-0.5 rounded hover:bg-slate-700/60 transition shrink-0 ml-2 cursor-pointer font-bold" title="Hủy trích dẫn (Esc)">
-          ✕
-        </button>
-      </div>
 
-      <!-- Attached Images Preview Bar (Supports Multiple Files) -->
-      <div id="imagePreviewContainer" class="hidden flex flex-col space-y-1.5 p-2 bg-slate-800/95 border border-slate-700 rounded-xl shadow-lg transition max-w-2xl">
-        <div class="flex items-center justify-between px-1 text-[11px] text-slate-300">
-          <span class="font-semibold flex items-center space-x-1.5 text-blue-300">
-            <span>📎</span>
-            <span id="imagePreviewCount">Đã đính kèm 0 tệp</span>
-          </span>
-          <button id="clearAllImagesBtn" type="button" class="text-rose-400 hover:text-rose-300 text-[11px] hover:underline cursor-pointer">
-            Xóa tất cả
+        <!-- Interval & Refresh Controls -->
+        <div class="flex items-center space-x-1.5">
+          <div class="relative flex items-center bg-slate-900 rounded-lg border border-slate-700 px-1.5 py-0.5 shadow-inner" title="Định kỳ làm mới trạng thái">
+            <span class="text-[11px] mr-1 select-none">⏱️</span>
+            <select 
+              id="agentStatusIntervalSelect" 
+              onchange="onAgentStatusIntervalChange(this.value)" 
+              class="bg-[#0f172a] text-slate-100 text-[11px] font-semibold focus:outline-none cursor-pointer py-0.5 pr-1 rounded"
+              style="background-color: #0f172a; color: #f8fafc;"
+            >
+              <option value="2000" style="background-color: #0f172a; color: #f8fafc;">2s</option>
+              <option value="5000" selected style="background-color: #0f172a; color: #f8fafc;">5s (Chuẩn)</option>
+              <option value="10000" style="background-color: #0f172a; color: #f8fafc;">10s</option>
+              <option value="30000" style="background-color: #0f172a; color: #f8fafc;">30s</option>
+              <option value="0" style="background-color: #0f172a; color: #fda4af;">Tắt (Dừng)</option>
+            </select>
+          </div>
+          <button 
+            id="refreshAgentStatusBtn" 
+            type="button" 
+            onclick="fetchAgentLiveStatus(true)" 
+            title="Làm mới trạng thái ngay bây giờ"
+            class="p-1 hover:bg-slate-700 text-slate-300 hover:text-blue-300 rounded border border-slate-700 transition cursor-pointer"
+          >
+            <span class="text-xs">🔄</span>
+          </button>
+          <button 
+            id="closeAgentSidebarBtn" 
+            type="button" 
+            onclick="toggleAgentStatusSidebar(true)" 
+            title="Đóng panel trạng thái (Alt+S)"
+            class="p-1 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded border border-slate-700 transition cursor-pointer ml-0.5"
+          >
+            <span class="text-xs">◀</span>
           </button>
         </div>
-        <div id="imagePreviewList" class="flex items-center space-x-2 overflow-x-auto pb-1 max-w-full">
-          <!-- Dynamic thumbnails rendered here -->
-        </div>
       </div>
 
-      <div class="flex items-center space-x-2">
-        <!-- Target Selection -->
-        <div class="relative shrink-0">
-          <select id="msgTarget" class="bg-slate-800 text-slate-200 text-xs rounded-lg border border-slate-700 px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-            <option value="team">👥 Cả nhóm (Team)</option>
-            <option value="lead">👑 Chỉ gửi LEAD</option>
-            <option value="worker">⚡ Chỉ gửi WORKER</option>
-          </select>
+      <!-- Quick Summary Stats Bar -->
+      <div class="px-3 py-1 bg-[#0a0f18] border-b border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+        <div class="flex items-center space-x-3">
+          <span class="flex items-center space-x-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="activeAgentCount">0 Trực tuyến</span>
+          </span>
+          <span class="flex items-center space-x-1">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span id="busyAgentCount">0 Bận</span>
+          </span>
         </div>
-
-        <!-- Image Attachment Button (multiple) -->
-        <input type="file" id="imageFileInput" accept="image/*" multiple class="hidden">
         <button 
-          id="attachImageBtn" 
+          id="toggleAllPaneDetailsBtn" 
           type="button" 
-          title="Đính kèm hoặc chụp ảnh gửi Agent (Có thể bấm Ctrl + V dán ảnh trực tiếp)"
-          class="p-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 hover:text-blue-400 rounded-lg border border-slate-700 transition flex items-center justify-center shrink-0"
+          onclick="toggleAllAgentDetails()" 
+          class="text-[10px] text-slate-400 hover:text-blue-300 transition underline cursor-pointer"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
-        </button>
-
-        <!-- Input Box (Textarea) -->
-        <textarea 
-          id="msgInput" 
-          rows="1" 
-          placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V)... (Enter gửi • Shift+Enter hoặc Ctrl+Enter xuống hàng)" 
-          class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-[44px] max-h-[500px] overflow-y-auto leading-relaxed"
-          style="min-height: 44px; height: 44px;"
-        ></textarea>
-
-        <!-- Send Button -->
-        <button 
-          id="sendBtn" 
-          class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0 self-end"
-          style="height: 44px;"
-        >
-          <span>Gửi</span>
-          <span>🚀</span>
+          Hiện/ẩn log
         </button>
       </div>
 
-      <!-- Quick Hint -->
-      <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
-        <span>💡 <b>Hỗ trợ ảnh:</b> Chụp màn hình (Windows+Shift+S) rồi bấm <b>Ctrl + V</b> để dán ảnh trực tiếp cho Agent phân tích.</span>
-        <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd> gửi • <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Shift + Enter</kbd> hoặc <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Ctrl + Enter</kbd> xuống hàng</span>
+      <!-- Scrollable Agent Cards List -->
+      <div id="agentStatusCardsContainer" class="flex-1 overflow-y-auto p-2.5 space-y-2.5">
+        <!-- Rendered dynamically by JS -->
       </div>
-    </div>
-  </footer>
+    </aside>
+
+    <!-- COL-9: FULL CHAT FEED & FULL WIDTH INPUT BAR (flex-1) -->
+    <section class="flex-1 flex flex-col h-full min-w-0 bg-[#0b0f19] relative overflow-hidden">
+      <!-- Floating Reopen Sidebar Button (when sidebar is closed) -->
+      <button 
+        id="floatingOpenSidebarBtn" 
+        type="button" 
+        onclick="toggleAgentStatusSidebar(false)" 
+        class="hidden absolute top-2.5 left-2.5 z-20 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-blue-300 font-medium px-2 py-1 rounded-md border border-slate-700 shadow-xl backdrop-blur text-[11px] flex items-center space-x-1 cursor-pointer transition shadow-2xl"
+        title="Mở lại Panel Trạng thái Agent (Alt+S)"
+      >
+        <span>🤖</span>
+        <span>Hiện trạng thái</span>
+      </button>
+      <!-- CHAT CONTAINER -->
+      <main id="chatFeed" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Initial empty placeholder -->
+        <div id="emptyFeed" class="flex flex-col items-center justify-center h-full text-slate-500 space-y-3">
+          <div class="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
+            💬
+          </div>
+          <p class="text-sm">Chưa có tin nhắn trong phiên này. Hãy đợi các agent bắt đầu trò chuyện...</p>
+        </div>
+      </main>
+
+      <!-- FLOATING SCROLL TO BOTTOM BUTTON (Sticky scroll / New messages indicator) -->
+      <button 
+        id="scrollToBottomBtn" 
+        type="button" 
+        onclick="scrollToBottom()" 
+        class="hidden absolute bottom-24 right-6 z-30 bg-blue-600/90 hover:bg-blue-500 active:scale-95 text-white font-medium px-4 py-2 rounded-full shadow-2xl border border-blue-400/50 backdrop-blur text-xs flex items-center space-x-2 cursor-pointer transition-all duration-200 animate-bounce"
+        title="Bấm để cuộn xuống tin nhắn mới nhất"
+      >
+        <span class="text-sm">⬇️</span>
+        <span id="unreadNoticeText" class="font-semibold tracking-wide">Tin nhắn mới</span>
+      </button>
+
+      <!-- BOTTOM INPUT BAR & IMAGE PREVIEW (FULL WIDTH COL-9) -->
+      <footer class="bg-[#111827] border-t border-slate-800 p-3 shrink-0 shadow-lg z-20 w-full">
+        <div class="w-full flex flex-col space-y-2">
+
+          <!-- Replying Quote Bar (Trích dẫn tin nhắn) -->
+          <div id="replyPreviewBar" class="hidden flex items-center justify-between px-3 py-1.5 bg-slate-800/95 border-l-4 border-l-blue-500 rounded-lg shadow-lg text-xs transition max-w-3xl">
+            <div class="flex items-center space-x-2 truncate min-w-0">
+              <span id="replyAuthorText" class="text-blue-400 font-bold shrink-0 flex items-center space-x-1">
+                <span>↩️</span>
+                <span>Đang trả lời:</span>
+              </span>
+              <span id="replyContentPreview" class="truncate text-slate-300 italic text-[11px]"></span>
+            </div>
+            <button id="cancelReplyBtn" type="button" onclick="cancelReply()" class="text-slate-400 hover:text-rose-400 text-xs px-2 py-0.5 rounded hover:bg-slate-700/60 transition shrink-0 ml-2 cursor-pointer font-bold" title="Hủy trích dẫn (Esc)">
+              ✕
+            </button>
+          </div>
+
+          <!-- Attached Images Preview Bar (Supports Multiple Files) -->
+          <div id="imagePreviewContainer" class="hidden flex flex-col space-y-1.5 p-2 bg-slate-800/95 border border-slate-700 rounded-xl shadow-lg transition max-w-2xl">
+            <div class="flex items-center justify-between px-1 text-[11px] text-slate-300">
+              <span class="font-semibold flex items-center space-x-1.5 text-blue-300">
+                <span>📎</span>
+                <span id="imagePreviewCount">Đã đính kèm 0 tệp</span>
+              </span>
+              <button id="clearAllImagesBtn" type="button" class="text-rose-400 hover:text-rose-300 text-[11px] hover:underline cursor-pointer">
+                Xóa tất cả
+              </button>
+            </div>
+            <div id="imagePreviewList" class="flex items-center space-x-2 overflow-x-auto pb-1 max-w-full">
+              <!-- Dynamic thumbnails rendered here -->
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 w-full">
+            <!-- Target Selection -->
+            <div class="relative shrink-0">
+              <select id="msgTarget" class="bg-slate-800 text-slate-200 text-xs rounded-lg border border-slate-700 px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                <option value="team">👥 Cả nhóm (Team)</option>
+                <option value="lead">👑 Chỉ gửi LEAD</option>
+                <option value="worker">⚡ Chỉ gửi WORKER</option>
+              </select>
+            </div>
+
+            <!-- Image Attachment Button (multiple) -->
+            <input type="file" id="imageFileInput" accept="image/*" multiple class="hidden">
+            <button 
+              id="attachImageBtn" 
+              type="button" 
+              title="Đính kèm hoặc chụp ảnh gửi Agent (Có thể bấm Ctrl + V dán ảnh trực tiếp)"
+              class="p-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 hover:text-blue-400 rounded-lg border border-slate-700 transition flex items-center justify-center shrink-0"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </button>
+
+            <!-- Input Box (Textarea) -->
+            <textarea 
+              id="msgInput" 
+              rows="1" 
+              placeholder="Nhập yêu cầu phân tích hoặc dán ảnh (Ctrl + V)... (Enter gửi • Shift+Enter hoặc Ctrl+Enter xuống hàng)" 
+              class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y min-h-[44px] max-h-[500px] overflow-y-auto leading-relaxed"
+              style="min-height: 44px; height: 44px;"
+            ></textarea>
+
+            <!-- Send Button -->
+            <button 
+              id="sendBtn" 
+              class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg flex items-center space-x-1.5 transition shadow-sm active:scale-95 shrink-0 self-end"
+              style="height: 44px;"
+            >
+              <span>Gửi</span>
+              <span>🚀</span>
+            </button>
+          </div>
+
+          <!-- Quick Hint -->
+          <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
+            <span>💡 <b>Hỗ trợ ảnh:</b> Chụp màn hình (Windows+Shift+S) rồi bấm <b>Ctrl + V</b> để dán ảnh trực tiếp cho Agent phân tích.</span>
+            <span class="hidden sm:inline">Phím tắt: <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Enter</kbd> gửi • <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Shift + Enter</kbd> hoặc <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700 text-slate-400 font-mono">Ctrl + Enter</kbd> xuống hàng</span>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+  </div>
 
   <!-- NEW TASK MODAL -->
   <div id="newTaskModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
@@ -583,7 +711,7 @@
           <span class="text-xl">👥</span>
           <div>
             <h3 class="text-sm font-bold text-slate-100">Thiết Lập & Quản Lý Đội Ngũ Agent</h3>
-            <p class="text-[11px] text-slate-400">Thêm, bớt Agent, đổi tên, phân vai trò và chọn mô hình (28 mô hình AI)</p>
+            <p class="text-[11px] text-slate-400">Thêm, bớt Agent, đổi tên, phân vai trò, mô hình và nhiệm vụ cụ thể</p>
           </div>
         </div>
         <button id="closeManageAgentsBtn" type="button" onclick="closeManageAgentsModal()" class="p-1.5 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition cursor-pointer">
@@ -609,7 +737,7 @@
             <span>Thêm Agent</span>
           </button>
         </div>
-        <div id="currentTeamAgentsContainer" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+        <div id="currentTeamAgentsContainer" class="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
           <!-- Rendered dynamically -->
         </div>
       </div>
@@ -671,15 +799,61 @@
           </div>
         </div>
 
-        <!-- Quota Status Block -->
-        <div class="p-3 bg-slate-800/40 border border-slate-700/80 rounded-xl space-y-2">
-          <div class="flex items-center justify-between">
+        <!-- Quota Status Block & Model Management -->
+        <div class="p-3 bg-slate-800/40 border border-slate-700/80 rounded-xl space-y-2.5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <span class="font-semibold text-slate-300 flex items-center space-x-1.5">
               <span>📊</span>
-              <span>Tình trạng Quota các Mô hình:</span>
+              <span>Tình trạng Quota & Danh Sách Mô Hình:</span>
             </span>
-            <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa đánh dấu hết Quota (Reset)</button>
+            <div class="flex items-center space-x-2 shrink-0">
+              <button type="button" onclick="showAddModelForm()" class="text-[11px] px-2.5 py-1 rounded bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/60 font-semibold transition cursor-pointer flex items-center space-x-1 shadow-sm">
+                <span>➕</span>
+                <span>Thêm Model</span>
+              </button>
+              <button type="button" onclick="resetDefaultModels()" class="text-[11px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer flex items-center space-x-1" title="Khôi phục danh sách mô hình về mặc định ban đầu">
+                <span>🔄</span>
+                <span>Mặc định</span>
+              </button>
+              <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa Quota</button>
+            </div>
           </div>
+
+          <!-- Add Model Inline Form -->
+          <div id="addModelFormContainer" class="hidden p-3 bg-slate-950/95 border border-emerald-500/40 rounded-xl space-y-2.5 shadow-xl transition-all">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+              <span class="font-bold text-emerald-400 text-xs flex items-center space-x-1.5">
+                <span>✨</span>
+                <span>Thêm Mô Hình AI Mới (Local Ollama / Gemini / Claude / OpenRouter)</span>
+              </span>
+              <button type="button" onclick="hideAddModelForm()" class="text-slate-400 hover:text-slate-200 text-xs cursor-pointer">✕</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Tên hiển thị (Display Name) <span class="text-rose-400">*</span></label>
+                <input id="newModelName" type="text" placeholder="Ví dụ: Ollama Phi 4 (14B Local)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Mã / ID Model (Dùng cho CLI/API) <span class="text-rose-400">*</span></label>
+                <input id="newModelId" type="text" placeholder="Ví dụ: ollama/phi4:14b hoặc gemini-2.5-pro" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Nhóm (Group)</label>
+                <input id="newModelGroup" type="text" placeholder="Local Ollama, Gemini 4, Claude, OpenRouter..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Mô tả ngắn</label>
+                <input id="newModelDesc" type="text" placeholder="Ví dụ: Mô hình lập trình & suy luận cục bộ 14B" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+            </div>
+            <div class="flex items-center justify-end space-x-2 pt-1 border-t border-slate-800">
+              <button type="button" onclick="hideAddModelForm()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs cursor-pointer">Hủy</button>
+              <button type="button" onclick="submitAddNewModel()" class="px-3.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1 shadow cursor-pointer">
+                <span>✓ Thêm Model</span>
+              </button>
+            </div>
+          </div>
+
           <div id="quotaStatusList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] max-h-72 overflow-y-auto pr-1">
           </div>
         </div>
@@ -775,6 +949,305 @@
     let consecutiveErrors = 0
     let isDropdownOpen = false
     let pendingFiles = []    // Array of { id: string, data: base64, filename: string, sizeText: string, sizeKb: number }
+
+    // Agent Live Status State (Col-3)
+    let agentStatusPollInterval = parseInt(localStorage.getItem('ensemble_agent_status_interval') || '5000', 10)
+    let agentStatusTimer = null
+    let allAgentDetailsOpen = false
+    let lastAgentStatusData = null
+    let isAgentSidebarCollapsed = localStorage.getItem('ensemble_agent_sidebar_collapsed') === '1'
+
+    function toggleAgentStatusSidebar(explicitState) {
+      if (typeof explicitState === 'boolean') {
+        isAgentSidebarCollapsed = explicitState
+      } else {
+        isAgentSidebarCollapsed = !isAgentSidebarCollapsed
+      }
+      localStorage.setItem('ensemble_agent_sidebar_collapsed', isAgentSidebarCollapsed ? '1' : '0')
+      applyAgentSidebarState()
+    }
+
+    function applyAgentSidebarState() {
+      const sidebar = document.getElementById('agentStatusSidebar')
+      const toggleText = document.getElementById('toggleAgentSidebarText')
+      const toggleBtn = document.getElementById('toggleAgentSidebarBtn')
+      const floatingBtn = document.getElementById('floatingOpenSidebarBtn')
+
+      if (isAgentSidebarCollapsed) {
+        if (sidebar) sidebar.classList.add('hidden')
+        if (toggleText) toggleText.textContent = 'Hiện trạng thái'
+        if (toggleBtn) {
+          toggleBtn.classList.remove('bg-slate-800', 'text-slate-200')
+          toggleBtn.classList.add('bg-blue-950/80', 'text-blue-300', 'border-blue-700/60')
+        }
+        if (floatingBtn) floatingBtn.classList.remove('hidden')
+      } else {
+        if (sidebar) sidebar.classList.remove('hidden')
+        if (toggleText) toggleText.textContent = 'Ẩn trạng thái'
+        if (toggleBtn) {
+          toggleBtn.classList.add('bg-slate-800', 'text-slate-200')
+          toggleBtn.classList.remove('bg-blue-950/80', 'text-blue-300', 'border-blue-700/60')
+        }
+        if (floatingBtn) floatingBtn.classList.add('hidden')
+        fetchAgentLiveStatus()
+      }
+    }
+
+    // Keyboard shortcut: Alt + S to toggle Agent Status Sidebar
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault()
+        toggleAgentStatusSidebar()
+      }
+    })
+
+    function getRoleIcon(role) {
+      const r = (role || '').toLowerCase()
+      if (r.includes('lead')) return '👑'
+      if (r.includes('review')) return '🔍'
+      return '⚡'
+    }
+
+    function getRoleBadgeClass(role) {
+      const r = (role || '').toLowerCase()
+      if (r.includes('lead')) return 'bg-amber-950/80 text-amber-300 border border-amber-600/50'
+      if (r.includes('review')) return 'bg-indigo-950/80 text-indigo-300 border border-indigo-600/50'
+      return 'bg-emerald-950/80 text-emerald-300 border border-emerald-600/50'
+    }
+
+    function getStateBadgeHtml(state, detail) {
+      if (state === 'thinking') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-950/90 text-purple-300 border border-purple-500/60 shadow-sm animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-purple-400 mr-1 animate-ping"></span>Suy luận</span>`
+      }
+      if (state === 'running') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-950/90 text-blue-300 border border-blue-500/60 shadow-sm animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-blue-400 mr-1"></span>Chạy lệnh</span>`
+      }
+      if (state === 'quota_exceeded') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-950/90 text-rose-300 border border-rose-600/70 shadow-sm animate-bounce"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1"></span>Hết Quota</span>`
+      }
+      if (state === 'offline') {
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700"><span class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1"></span>Ngoại tuyến</span>`
+      }
+      return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-600/50"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1"></span>Sẵn sàng</span>`
+    }
+
+    function getStateIcon(state) {
+      if (state === 'thinking') return '🧠'
+      if (state === 'running') return '⚡'
+      if (state === 'quota_exceeded') return '⚠️'
+      if (state === 'offline') return '⚪'
+      return '💤'
+    }
+
+    const agentLogOpenState = {}
+
+    function toggleSingleAgentLog(agentName) {
+      const current = (agentName in agentLogOpenState) ? agentLogOpenState[agentName] : allAgentDetailsOpen
+      agentLogOpenState[agentName] = !current
+
+      const container = document.getElementById(`agentLogContainer_${agentName}`)
+      const btn = document.getElementById(`logBtn_${agentName}`)
+      if (container) {
+        if (agentLogOpenState[agentName]) {
+          container.classList.remove('hidden')
+        } else {
+          container.classList.add('hidden')
+        }
+      }
+      if (btn) {
+        const isOpen = agentLogOpenState[agentName]
+        btn.className = `text-[9.5px] px-1.5 py-0.5 rounded border transition cursor-pointer flex items-center space-x-1 ${isOpen ? 'border-blue-600/70 bg-blue-950/70 text-blue-300' : 'border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200'}`
+        btn.innerHTML = `<span>📜</span><span>${isOpen ? 'Ẩn log' : 'Xem log'}</span><span class="text-[8px]">${isOpen ? '▲' : '▼'}</span>`
+      }
+    }
+
+    function toggleAllAgentDetails() {
+      allAgentDetailsOpen = !allAgentDetailsOpen
+      if (lastAgentStatusData && Array.isArray(lastAgentStatusData.agents)) {
+        lastAgentStatusData.agents.forEach(a => {
+          agentLogOpenState[a.name] = allAgentDetailsOpen
+        })
+      }
+      const btn = document.getElementById('toggleAllPaneDetailsBtn')
+      if (btn) {
+        btn.textContent = allAgentDetailsOpen ? 'Ẩn tất cả log' : 'Hiện tất cả log'
+      }
+      if (lastAgentStatusData) {
+        renderAgentStatusCards(lastAgentStatusData.agents || [], lastAgentStatusData.teamStatus)
+      }
+    }
+
+    function onAgentStatusIntervalChange(val) {
+      agentStatusPollInterval = parseInt(val, 10) || 0
+      localStorage.setItem('ensemble_agent_status_interval', agentStatusPollInterval.toString())
+      initAgentStatusPolling()
+    }
+
+    function initAgentStatusPolling() {
+      if (agentStatusTimer) {
+        clearInterval(agentStatusTimer)
+        agentStatusTimer = null
+      }
+      const sel = document.getElementById('agentStatusIntervalSelect')
+      if (sel) {
+        sel.value = agentStatusPollInterval.toString()
+      }
+      if (agentStatusPollInterval > 0) {
+        agentStatusTimer = setInterval(() => {
+          fetchAgentLiveStatus()
+        }, agentStatusPollInterval)
+      }
+      fetchAgentLiveStatus()
+    }
+
+    async function fetchAgentLiveStatus(manual = false) {
+      if (!currentTeamId) {
+        const container = document.getElementById('agentStatusCardsContainer')
+        if (container) {
+          container.innerHTML = `<div class="p-4 text-center text-xs text-slate-500">Chưa chọn phiên hoạt động</div>`
+        }
+        return
+      }
+
+      const refreshBtn = document.getElementById('refreshAgentStatusBtn')
+      if (manual && refreshBtn) {
+        refreshBtn.classList.add('animate-spin')
+        setTimeout(() => refreshBtn.classList.remove('animate-spin'), 600)
+      }
+
+      try {
+        const res = await fetch(`/api/ensemble/teams/${currentTeamId}/agents-status`)
+        if (!res.ok) return
+        const data = await res.json()
+        lastAgentStatusData = data
+
+        const timeStr = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        const updateText = document.getElementById('agentStatusLastUpdated')
+        if (updateText) {
+          updateText.textContent = `Cập nhật lúc ${timeStr}`
+        }
+
+        renderAgentStatusCards(data.agents || [], data.teamStatus)
+      } catch (err) {
+        console.warn('[AgentStatus] Failed to fetch:', err)
+      }
+    }
+
+    function renderAgentStatusCards(agents, teamStatus) {
+      const container = document.getElementById('agentStatusCardsContainer')
+      if (!container) return
+
+      const countBadge = document.getElementById('agentCountBadge')
+      if (countBadge) countBadge.textContent = agents.length.toString()
+
+      let activeCount = 0
+      let busyCount = 0
+
+      agents.forEach(a => {
+        if (a.alive && a.state !== 'offline') activeCount++
+        if (a.state === 'running' || a.state === 'thinking') busyCount++
+      })
+
+      const activeEl = document.getElementById('activeAgentCount')
+      if (activeEl) activeEl.textContent = `${activeCount} Trực tuyến`
+
+      const busyEl = document.getElementById('busyAgentCount')
+      if (busyEl) busyEl.textContent = `${busyCount} Bận`
+
+      if (agents.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 text-center text-xs text-slate-500 space-y-2">
+            <span class="text-2xl block">👥</span>
+            <span>Chưa có Agent nào trong phiên này.</span>
+          </div>
+        `
+        return
+      }
+
+      let html = ''
+      agents.forEach(agent => {
+        const isOpen = (agent.name in agentLogOpenState) ? agentLogOpenState[agent.name] : allAgentDetailsOpen
+        const borderClass = agent.state === 'thinking' 
+          ? 'border-purple-600/50 bg-slate-900/95 ring-1 ring-purple-500/20' 
+          : agent.state === 'running'
+            ? 'border-blue-600/50 bg-slate-900/95 ring-1 ring-blue-500/20'
+            : agent.state === 'quota_exceeded'
+              ? 'border-rose-600/60 bg-rose-950/20'
+              : 'border-slate-800 bg-slate-900/80 hover:border-slate-700'
+
+        html += `
+          <div class="border rounded-xl p-2.5 shadow-md transition-all duration-150 space-y-2 ${borderClass}">
+            <!-- Header -->
+            <div class="flex items-start justify-between gap-1">
+              <div class="flex items-center space-x-2 min-w-0">
+                <div class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-sm shrink-0 shadow-sm">
+                  ${getRoleIcon(agent.role)}
+                </div>
+                <div class="truncate min-w-0">
+                  <div class="flex items-center space-x-1.5 truncate">
+                    <span class="font-bold text-xs text-slate-100 truncate">${escapeHtml(agent.name)}</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase shrink-0 ${getRoleBadgeClass(agent.role)}">
+                      ${escapeHtml(agent.role)}
+                    </span>
+                  </div>
+                  <div class="text-[10px] text-blue-400 font-medium truncate" title="${escapeHtml(agent.modelDisplay)}">
+                    ${escapeHtml(agent.modelDisplay)}
+                  </div>
+                  ${agent.instruction ? `<div class="text-[10px] text-amber-300/90 font-medium truncate mt-0.5" title="${escapeHtml(agent.instruction)}">🎯 ${escapeHtml(agent.instruction)}</div>` : ''}
+                </div>
+              </div>
+              <div class="shrink-0 flex flex-col items-end space-y-1">
+                ${getStateBadgeHtml(agent.state, agent.detail)}
+                <button 
+                  id="logBtn_${escapeHtml(agent.name)}" 
+                  type="button" 
+                  onclick="toggleSingleAgentLog('${escapeHtml(agent.name)}')" 
+                  class="text-[9.5px] px-1.5 py-0.5 rounded border transition cursor-pointer flex items-center space-x-1 ${isOpen ? 'border-blue-600/70 bg-blue-950/70 text-blue-300' : 'border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200'}"
+                  title="Bật/Tắt xem terminal log của riêng ${escapeHtml(agent.name)}"
+                >
+                  <span>📜</span>
+                  <span>${isOpen ? 'Ẩn log' : 'Xem log'}</span>
+                  <span class="text-[8px]">${isOpen ? '▲' : '▼'}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Current Action Box -->
+            <div class="bg-slate-950/80 rounded-lg p-2 border border-slate-800/80 text-[11px] space-y-1">
+              <div class="flex items-start space-x-1.5">
+                <span class="text-xs shrink-0 select-none">${getStateIcon(agent.state)}</span>
+                <span class="font-medium text-slate-200 leading-snug break-words flex-1">${escapeHtml(agent.detail)}</span>
+              </div>
+              ${agent.thinkingTime ? `
+                <div class="text-[10px] text-purple-300 font-mono flex items-center space-x-1 pt-0.5">
+                  <span>⏱️</span>
+                  <span>Thời gian suy nghĩ: <b>${escapeHtml(agent.thinkingTime)}</b></span>
+                </div>
+              ` : ''}
+              ${agent.lastMessageSnippet ? `
+                <div class="text-[10px] text-slate-400 pt-1 border-t border-slate-800/60 truncate" title="${escapeHtml(agent.lastMessageSnippet)}">
+                  <span class="text-slate-500 font-semibold">Tin nhắn:</span> "${escapeHtml(agent.lastMessageSnippet)}"
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Terminal Log Preview (Per-Agent) -->
+            <div id="agentLogContainer_${escapeHtml(agent.name)}" class="${isOpen ? '' : 'hidden'} mt-1.5 pt-1.5 border-t border-slate-800/80">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                <span class="font-mono text-slate-400 flex items-center space-x-1">
+                  <span>💻</span>
+                  <span>Log Terminal (${escapeHtml(agent.name)}):</span>
+                </span>
+                <span class="text-[9px] text-slate-500 font-mono">${agent.alive ? '● Kết nối' : '○ Ngoại tuyến'}</span>
+              </div>
+              <pre class="p-2 bg-black/90 rounded border border-slate-800/80 font-mono text-[9px] text-slate-300 overflow-x-auto whitespace-pre-wrap leading-tight max-h-36 select-text">${agent.paneTail ? escapeHtml(agent.paneTail) : '<span class="text-slate-500 italic">[Chưa có log terminal hoặc agent đang ngoại tuyến]</span>'}</pre>
+            </div>
+          </div>
+        `
+      })
+
+      container.innerHTML = html
+    }
 
     // Scroll helpers for Smart Auto-scroll (Sticky scroll UX)
     function showScrollToBottomBtn(count) {
@@ -1138,10 +1611,10 @@
               <div class="flex items-center space-x-2">
                 <span class="px-2 py-0.5 rounded-md bg-blue-600/30 text-blue-300 border border-blue-500/40 font-bold text-xs flex items-center space-x-1">
                   <span>👑</span>
-                  <span>${role}</span>
+                  <span>${role} (${escapeHtml(msg.from)})</span>
                 </span>
+                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs font-bold">➔</span><span class="text-[10px] text-purple-300 font-semibold px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-800/60">${escapeHtml(msg.to)}</span>` : ''}
                 ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
-                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs">➔</span><span class="text-[10px] text-blue-300 font-semibold px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800/60">${escapeHtml(msg.to)}</span>` : ''}
               </div>
               <div class="flex items-center space-x-2">
                 <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
@@ -1180,12 +1653,12 @@
                 <span class="text-[10px] text-slate-400 font-mono">${formatTime(msg.timestamp)}</span>
               </div>
               <div class="flex items-center space-x-2">
-                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-[10px] text-purple-300 font-semibold px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-800/60">${escapeHtml(msg.to)}</span><span class="text-slate-400 text-xs">➔</span>` : ''}
-                ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
                 <span class="px-2 py-0.5 rounded-md ${badgeStyle} border font-bold text-xs flex items-center space-x-1">
                   <span>${icon}</span>
-                  <span>${role}</span>
+                  <span>${role} (${escapeHtml(msg.from)})</span>
                 </span>
+                ${(msg.to && msg.to.toLowerCase() !== 'team') ? `<span class="text-slate-400 text-xs font-bold">➔</span><span class="text-[10px] text-blue-300 font-semibold px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800/60">${escapeHtml(msg.to)}</span>` : ''}
+                ${model ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${model}</span>` : ''}
               </div>
             </div>
             <div class="prose-custom text-sm text-slate-200">
@@ -1846,6 +2319,7 @@
           const data = await res.json()
           const team = data.team || {}
           currentTeamAgents = team.agents || []
+          fetchAgentLiveStatus(true)
 
           // Update Task Banner
           document.getElementById('taskDescription').textContent = team.description || team.name || 'Không có mô tả'
@@ -1893,9 +2367,12 @@
             const { role, isLead } = getAgentRoleInfo(a.name)
             const pill = document.createElement('div')
             pill.className = isLead
-              ? 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-950/80 border border-blue-500/50 text-blue-300 flex items-center space-x-1'
-              : 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center space-x-1'
-            pill.innerHTML = `<span>${isLead ? '👑' : '⚡'}</span><span>${role}</span>`
+              ? 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-950/80 border border-blue-500/50 text-blue-300 flex items-center space-x-1 cursor-default'
+              : 'px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center space-x-1 cursor-default'
+            if (a.instruction) {
+              pill.title = `🎯 Nhiệm vụ: ${a.instruction}`
+            }
+            pill.innerHTML = `<span>${isLead ? '👑' : '⚡'}</span><span>${role}</span>${a.instruction ? '<span class="text-[9px] text-amber-300 ml-0.5" title="' + escapeHtml(a.instruction) + '">🎯</span>' : ''}`
             rosterEl.appendChild(pill)
           })
 
@@ -2390,7 +2867,7 @@
         console.warn('Error rendering teamSection:', err)
       }
 
-      // 2. Render Quota status list
+      // 2. Render Quota status list with delete buttons
       try {
         const quotaList = document.getElementById('quotaStatusList')
         if (quotaList) {
@@ -2399,22 +2876,135 @@
           modelsToRender.forEach(m => {
             const isExhausted = (exhaustedModels || []).includes(m.id)
             const item = document.createElement('div')
-            item.className = 'flex items-center justify-between py-1.5 px-2 bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg transition'
+            item.className = 'flex items-center justify-between py-1.5 px-2 bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg transition group'
             item.innerHTML = `
               <div class="flex items-center space-x-2 min-w-0 pr-2">
                 <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
-                <span class="text-slate-200 font-medium truncate">${escapeHtml(m.name)}</span>
-                ${m.desc ? `<span class="text-[10px] text-slate-400 truncate hidden md:inline">(${escapeHtml(m.desc)})</span>` : ''}
+                <span class="text-slate-200 font-medium truncate" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>
+                ${m.desc ? `<span class="text-[10px] text-slate-400 truncate hidden md:inline" title="${escapeHtml(m.desc)}">(${escapeHtml(m.desc)})</span>` : ''}
               </div>
-              <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
-                ${isExhausted ? 'Khóa hạn mức' : 'Sẵn sàng'}
-              </span>
+              <div class="flex items-center space-x-1.5 shrink-0">
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
+                  ${isExhausted ? 'Khóa hạn mức' : 'Sẵn sàng'}
+                </span>
+                <button type="button" onclick="deleteModel('${escapeHtml(m.id)}', '${escapeHtml(m.name)}')" class="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-950/50 transition cursor-pointer" title="Xóa model '${escapeHtml(m.name)}' khỏi danh sách">
+                  <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
             `
             quotaList.appendChild(item)
           })
         }
       } catch (err) {
         console.warn('Error rendering quotaList:', err)
+      }
+    }
+
+    function showAddModelForm() {
+      const form = document.getElementById('addModelFormContainer')
+      if (form) form.classList.remove('hidden')
+      const nameInput = document.getElementById('newModelName')
+      if (nameInput) nameInput.focus()
+    }
+
+    function hideAddModelForm() {
+      const form = document.getElementById('addModelFormContainer')
+      if (form) form.classList.add('hidden')
+      const nameInput = document.getElementById('newModelName')
+      const idInput = document.getElementById('newModelId')
+      const groupInput = document.getElementById('newModelGroup')
+      const descInput = document.getElementById('newModelDesc')
+      if (nameInput) nameInput.value = ''
+      if (idInput) idInput.value = ''
+      if (groupInput) groupInput.value = ''
+      if (descInput) descInput.value = ''
+    }
+
+    async function submitAddNewModel() {
+      const name = (document.getElementById('newModelName')?.value || '').trim()
+      const id = (document.getElementById('newModelId')?.value || '').trim()
+      const group = (document.getElementById('newModelGroup')?.value || '').trim() || 'Khác'
+      const desc = (document.getElementById('newModelDesc')?.value || '').trim()
+
+      if (!name) {
+        alert('Vui lòng nhập Tên hiển thị của mô hình!')
+        return
+      }
+      if (!id) {
+        alert('Vui lòng nhập Mã / ID của mô hình!')
+        return
+      }
+
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            addModel: { id, name, group, desc }
+          })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          hideAddModelForm()
+          await loadModelConfig(true)
+          if (typeof renderCurrentTeamAgentsList === 'function') {
+            renderCurrentTeamAgentsList()
+          }
+        } else {
+          alert('Lỗi thêm model: ' + (data.error || 'Không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi thêm model: ' + err.message)
+      }
+    }
+
+    async function deleteModel(modelId, modelName) {
+      if (!confirm(`Bạn có chắc muốn xóa mô hình "${modelName}" (${modelId}) khỏi danh sách không?`)) {
+        return
+      }
+
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deleteModelId: modelId })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          await loadModelConfig(true)
+          if (typeof renderCurrentTeamAgentsList === 'function') {
+            renderCurrentTeamAgentsList()
+          }
+        } else {
+          alert('Lỗi khi xóa model: ' + (data.error || 'Không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi xóa model: ' + err.message)
+      }
+    }
+
+    async function resetDefaultModels() {
+      if (!confirm('Bạn có muốn khôi phục danh sách mô hình về mặc định ban đầu không?')) {
+        return
+      }
+
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resetModels: true })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          await loadModelConfig(true)
+          if (typeof renderCurrentTeamAgentsList === 'function') {
+            renderCurrentTeamAgentsList()
+          }
+        } else {
+          alert('Lỗi khi khôi phục model: ' + (data.error || 'Không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi khôi phục model: ' + err.message)
       }
     }
 
@@ -2726,6 +3316,38 @@
         ensembleRec: [
           '<strong>WORKER</strong> hoặc <strong>REVIEWER</strong> dự phòng để tạo góc nhìn đối chiếu độc lập.'
         ]
+      },
+      'ollama-gemma': {
+        name: 'Ollama Gemma 4 12B (Local)',
+        badge: 'Mạng nội bộ • Không tốn Quota',
+        coreStrengths: [
+          'Chạy trực tiếp trên server Ollama nội bộ (192.168.86.23:11434) qua Aider CLI.',
+          'Hoàn toàn miễn phí, riêng tư, không giới hạn request hay quota từ bên ngoài.',
+          'Hỗ trợ chế độ tư duy (thinking mode) và chỉnh sửa tệp tin tự động.'
+        ],
+        speedQuota: [
+          '<strong>Xử lý cục bộ</strong>',
+          'Không phụ thuộc vào kết nối Internet hay hạn mức API ngoài.'
+        ],
+        ensembleRec: [
+          'Lựa chọn tối ưu cho <strong>WORKER</strong> hoặc tác vụ tự động chạy nền không lo cạn quota.'
+        ]
+      },
+      'ollama-qwen': {
+        name: 'Ollama Qwen 3 Coder 30B (Local)',
+        badge: 'Chuyên Gia Lập Trình • Mạng nội bộ',
+        coreStrengths: [
+          'Mô hình chuyên dụng về lập trình và kiến trúc mã nguồn 30B tham số.',
+          'Khả năng đọc hiểu repo lớn, refactor, sinh code và fix bug cực kỳ chính xác.',
+          'Chạy trực tiếp trên server Ollama nội bộ qua Aider CLI, hoàn toàn miễn phí và riêng tư.'
+        ],
+        speedQuota: [
+          '<strong>Xử lý cục bộ</strong>',
+          'Không phụ thuộc vào kết nối Internet hay hạn mức API ngoài.'
+        ],
+        ensembleRec: [
+          'Lựa chọn hàng đầu cho <strong>WORKER (Lập trình viên)</strong> khi triển khai trong mạng nội bộ.'
+        ]
       }
     }
 
@@ -2741,6 +3363,8 @@
       if (id.includes('sonnet')) return 'claude-sonnet-5-5'
       if (id.includes('flash')) return 'gemini-3.8-flash'
       if (id.includes('gpt-oss') || id.includes('120b')) return 'gpt-oss-120b'
+      if (id.includes('qwen')) return 'ollama-qwen'
+      if (id.includes('ollama') || id.includes('gemma')) return 'ollama-gemma'
       return 'gemini-4-neon'
     }
 
@@ -2866,6 +3490,8 @@
         { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash' },
         { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash' },
         { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B' },
+        { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama' },
+        { id: 'ollama-qwen', name: 'Ollama Qwen 3 Coder (30B Local)', group: 'Local Ollama' },
       ]
 
       const models = (modelConfigData && modelConfigData.availableModels && modelConfigData.availableModels.length > 0)
@@ -2927,38 +3553,47 @@
         const canDelete = newTaskAgents.length > 1
         const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
         const div = document.createElement('div')
-        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs'
+        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start space-x-2 text-xs'
         div.innerHTML = `
-          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold">
+          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold self-start mt-2">
             <span>${icon}</span>
             <span>#${idx + 1}</span>
           </div>
-          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div class="sm:col-span-3">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
-              <input type="text" value="${ag.name}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <div class="flex-1 min-w-0 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
+                <input type="text" value="${escapeHtml(ag.name)}" oninput="updateNewTaskAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
+                <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
+                  <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
+                  <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
+                  <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
+                  <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
+                  <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
+                  <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
+                  <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-5">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
+                <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  ${renderAgentProgramOptions(ag.program)}
+                </select>
+              </div>
             </div>
-            <div class="sm:col-span-4">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-              <select onchange="updateNewTaskAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
-                <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
-                <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
-                <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
-                <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
-                <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
-                <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
-                <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
-              </select>
-            </div>
-            <div class="sm:col-span-5">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-              <select onchange="updateNewTaskAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                ${renderAgentProgramOptions(ag.program)}
-              </select>
+            <div>
+              <label class="block text-[10px] text-blue-300 font-semibold mb-0.5 flex items-center space-x-1">
+                <span>🎯</span>
+                <span>Nhiệm vụ & Chỉ dẫn vai trò cụ thể:</span>
+              </label>
+              <input type="text" value="${ag.instruction ? escapeHtml(ag.instruction) : ''}" oninput="updateNewTaskAgentItem(${idx}, 'instruction', this.value)" placeholder="Ví dụ: Thực hiện công việc code, báo cáo về code đã viết..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded px-2.5 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
           </div>
-          <button type="button" onclick="removeNewTaskAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0" title="Bớt Agent này">
+          <button type="button" onclick="removeNewTaskAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0 self-start mt-2" title="Bớt Agent này">
             <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
           </button>
         `
@@ -2971,12 +3606,13 @@
       let prog = 'agy-worker'
       let role = 'WORKER'
       let name = `Worker-${idx - 1}`
+      let instruction = ''
       if (idx === 3) {
         prog = 'agy-pro'
         role = 'REVIEWER'
         name = 'Reviewer'
       }
-      newTaskAgents.push({ name, role, program: prog })
+      newTaskAgents.push({ name, role, program: prog, instruction })
       renderNewTaskAgentsList()
     }
 
@@ -2995,23 +3631,23 @@
     function onNewTaskTemplateChange(template) {
       if (template === 'review') {
         newTaskAgents = [
-          { name: 'Reviewer', role: 'REVIEWER', program: 'agy' },
-          { name: 'Critic', role: 'CRITIC', program: 'agy-pro' }
+          { name: 'Reviewer', role: 'REVIEWER', program: 'agy', instruction: 'Đọc kỹ code, phân tích kiến trúc và chỉ ra điểm chưa tối ưu' },
+          { name: 'Critic', role: 'CRITIC', program: 'agy-pro', instruction: 'Tìm kiếm bug, lỗ hổng bảo mật và phản biện gay gắt các phương án' }
         ]
       } else if (template === 'implement') {
         newTaskAgents = [
-          { name: 'Architect', role: 'ARCHITECT', program: 'agy' },
-          { name: 'Developer', role: 'DEVELOPER', program: 'agy-worker' }
+          { name: 'Architect', role: 'ARCHITECT', program: 'agy', instruction: 'Lập kế hoạch kiến trúc, thiết kế cấu trúc file và chia việc' },
+          { name: 'Developer', role: 'DEVELOPER', program: 'agy-worker', instruction: 'Thực hiện code chi tiết, viết unit test và báo cáo tiến độ' }
         ]
       } else if (template === 'debug') {
         newTaskAgents = [
-          { name: 'Lead-Debugger', role: 'LEAD', program: 'agy' },
-          { name: 'Worker-Reproducer', role: 'WORKER', program: 'agy-worker' }
+          { name: 'Lead-Debugger', role: 'LEAD', program: 'agy', instruction: 'Phân tích log lỗi, xác định nguyên nhân gốc rễ và đề xuất cách sửa' },
+          { name: 'Worker-Reproducer', role: 'WORKER', program: 'agy-worker', instruction: 'Tái hiện lỗi, thử nghiệm bản vá và kiểm tra kết quả' }
         ]
       } else {
         newTaskAgents = [
-          { name: 'Lead', role: 'LEAD', program: 'agy' },
-          { name: 'Worker', role: 'WORKER', program: 'agy-worker' }
+          { name: 'Lead', role: 'LEAD', program: 'agy', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả' },
+          { name: 'Worker', role: 'WORKER', program: 'agy-worker', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết' }
         ]
       }
       renderNewTaskAgentsList()
@@ -3038,12 +3674,13 @@
         name: a.name || 'Agent',
         role: a.role || 'worker',
         program: a.program || 'agy-worker',
+        instruction: a.instruction || '',
         status: a.status || 'active'
       }))
       if (editingRunningAgents.length === 0) {
         editingRunningAgents = [
-          { name: 'Lead', role: 'LEAD', program: 'agy', status: 'active' },
-          { name: 'Worker', role: 'WORKER', program: 'agy-worker', status: 'active' }
+          { name: 'Lead', role: 'LEAD', program: 'agy', instruction: 'Lập kế hoạch tổng thể, điều phối nhóm và rà soát kết quả', status: 'active' },
+          { name: 'Worker', role: 'WORKER', program: 'agy-worker', instruction: 'Thực thi các bước nhiệm vụ được giao và báo cáo chi tiết', status: 'active' }
         ]
       }
 
@@ -3083,38 +3720,47 @@
         const canDelete = editingRunningAgents.length > 1
         const icon = roleIcons[ag.role.toUpperCase()] || '🤖'
         const div = document.createElement('div')
-        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center space-x-2 text-xs'
+        div.className = 'p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start space-x-2 text-xs'
         div.innerHTML = `
-          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold">
+          <div class="flex items-center space-x-1 shrink-0 w-12 text-slate-400 font-bold self-start mt-2">
             <span>${icon}</span>
             <span>#${idx + 1}</span>
           </div>
-          <div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div class="sm:col-span-3">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
-              <input type="text" value="${ag.name}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <div class="flex-1 min-w-0 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <div class="sm:col-span-3">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Tên Agent</label>
+                <input type="text" value="${escapeHtml(ag.name)}" oninput="updateRunningTeamAgentItem(${idx}, 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              <div class="sm:col-span-4">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
+                  <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
+                  <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
+                  <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
+                  <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
+                  <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
+                  <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
+                  <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-5">
+                <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
+                <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                  ${renderAgentProgramOptions(ag.program)}
+                </select>
+              </div>
             </div>
-            <div class="sm:col-span-4">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Vai trò (Role)</label>
-              <select onchange="updateRunningTeamAgentItem(${idx}, 'role', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                <option value="LEAD" ${ag.role.toUpperCase() === 'LEAD' ? 'selected' : ''}>👑 LEAD (Trưởng nhóm)</option>
-                <option value="WORKER" ${ag.role.toUpperCase() === 'WORKER' ? 'selected' : ''}>⚡ WORKER (Thực thi)</option>
-                <option value="REVIEWER" ${ag.role.toUpperCase() === 'REVIEWER' ? 'selected' : ''}>🔍 REVIEWER (Phản biện)</option>
-                <option value="CRITIC" ${ag.role.toUpperCase() === 'CRITIC' ? 'selected' : ''}>🧐 CRITIC (Đánh giá lỗi)</option>
-                <option value="ARCHITECT" ${ag.role.toUpperCase() === 'ARCHITECT' ? 'selected' : ''}>📐 ARCHITECT (Kiến trúc)</option>
-                <option value="DEVELOPER" ${ag.role.toUpperCase() === 'DEVELOPER' ? 'selected' : ''}>💻 DEVELOPER (Lập trình)</option>
-                <option value="TESTER" ${ag.role.toUpperCase() === 'TESTER' ? 'selected' : ''}>🧪 TESTER (Kiểm thử)</option>
-                <option value="RESEARCHER" ${ag.role.toUpperCase() === 'RESEARCHER' ? 'selected' : ''}>🔬 RESEARCHER (Nghiên cứu)</option>
-              </select>
-            </div>
-            <div class="sm:col-span-5">
-              <label class="block text-[10px] text-slate-400 font-medium mb-0.5">Chương trình / Model</label>
-              <select onchange="updateRunningTeamAgentItem(${idx}, 'program', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                ${renderAgentProgramOptions(ag.program)}
-              </select>
+            <div>
+              <label class="block text-[10px] text-blue-300 font-semibold mb-0.5 flex items-center space-x-1">
+                <span>🎯</span>
+                <span>Nhiệm vụ & Chỉ dẫn vai trò cụ thể:</span>
+              </label>
+              <input type="text" value="${ag.instruction ? escapeHtml(ag.instruction) : ''}" oninput="updateRunningTeamAgentItem(${idx}, 'instruction', this.value)" placeholder="Ví dụ: Worker Ollama thực hiện công việc code, báo cáo về code đã viết..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded px-2.5 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
           </div>
-          <button type="button" onclick="removeRunningTeamAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0" title="Bớt Agent này">
+          <button type="button" onclick="removeRunningTeamAgentItem(${idx})" ${canDelete ? '' : 'disabled'} class="p-1.5 rounded hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition cursor-pointer shrink-0 self-start mt-2" title="Bớt Agent này">
             <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
           </button>
         `
@@ -3128,6 +3774,7 @@
         name: idx === 3 ? 'Reviewer' : `Worker-${idx - 1}`,
         role: idx === 3 ? 'REVIEWER' : 'WORKER',
         program: idx === 3 ? 'agy-pro' : 'agy-worker',
+        instruction: '',
         status: 'active'
       })
       renderRunningTeamAgentsList()
@@ -3328,6 +3975,12 @@
 
       // Poll current team feed every 1.5 seconds
       setInterval(fetchMessages, 1500)
+
+      // Initialize agent status sidebar state (collapsed/expanded)
+      applyAgentSidebarState()
+
+      // Poll agent live status (Default 5s, configurable by user)
+      initAgentStatusPolling()
     }
 
     window.addEventListener('DOMContentLoaded', init)

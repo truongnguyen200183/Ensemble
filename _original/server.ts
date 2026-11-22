@@ -18,6 +18,134 @@ import {
 import { getRuntime } from './lib/agent-runtime'
 import { v4 as uuidv4 } from 'uuid'
 
+export interface ModelDef {
+  id: string
+  name: string
+  group: string
+  desc?: string
+}
+
+export const DEFAULT_MODELS: ModelDef[] = [
+  // 1. Gemini 4 Neon (New)
+  { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', group: 'Gemini 4 Neon', desc: 'Siêu tư duy cực hạn (XHigh)' },
+  { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', group: 'Gemini 4 Neon', desc: 'Tư duy cao nhất' },
+  { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', group: 'Gemini 4 Neon', desc: 'Cân bằng tốc độ & trí tuệ' },
+  { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', group: 'Gemini 4 Neon', desc: 'Tốc độ cao & tiết kiệm token' },
+
+  // 1b. Orchestrator (Neon) (New)
+  { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', group: 'Orchestrator (Neon)', desc: 'Chuyên điều phối tác tử thế hệ mới' },
+
+  // 1c. Gemini 4 Argon
+  { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', group: 'Gemini 4 Argon', desc: 'Tư duy cao nhất' },
+  { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', group: 'Gemini 4 Argon', desc: 'Tư duy tiêu chuẩn' },
+  { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', group: 'Gemini 4 Argon', desc: 'Nhanh & Nhẹ' },
+
+  // 1d. Gemini 4 Hydrogen
+  { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', group: 'Gemini 4 Hydrogen', desc: 'Siêu tư duy cực hạn (XHigh)' },
+  { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', group: 'Gemini 4 Hydrogen', desc: 'Tư duy nâng cao' },
+  { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', group: 'Gemini 4 Hydrogen', desc: 'Cân bằng thế hệ mới' },
+  { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', group: 'Gemini 4 Hydrogen', desc: 'Tốc độ cao & tiết kiệm' },
+
+  // 1e. Orchestrator (Argon)
+  { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', group: 'Orchestrator (Argon)', desc: 'Chuyên điều phối nhóm tác tử' },
+
+  // 2. Claude Opus 5.5
+  { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', group: 'Claude Opus 5.5', desc: 'Siêu phân tích kiến trúc' },
+  { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', group: 'Claude Opus 5.5', desc: 'Cân bằng cao cấp' },
+  { id: 'claude-opus-5-5-low', name: 'Claude Opus 5.5 (Low)', group: 'Claude Opus 5.5', desc: 'Phản hồi nhanh' },
+
+  // 3. Claude Sonnet 5.5
+  { id: 'claude-sonnet-5-5-high', name: 'Claude Sonnet 5.5 (High)', group: 'Claude Sonnet 5.5', desc: 'Lập trình chuyên sâu' },
+  { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', group: 'Claude Sonnet 5.5', desc: 'Cân bằng & code chuẩn' },
+  { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', group: 'Claude Sonnet 5.5', desc: 'Tốc độ cao' },
+
+  // 4. Claude Pro (Claude Code CLI - Gói thuê bao Claude Pro)
+  { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc' },
+  { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp' },
+  { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh' },
+  { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Lập trình chuyên sâu' },
+  { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn' },
+  { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao' },
+
+  // 5. Gemini 3.8 Flash
+  { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', group: 'Gemini 3.8 Flash', desc: 'Suy luận cao, dồi dào Quota' },
+  { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash', desc: 'Đa phương thức, tốc độ cao' },
+  { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash', desc: 'Siêu nhẹ, tiết kiệm token' },
+
+  // 6. GPT-OSS 120B
+  { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B', desc: 'Mô hình mã nguồn mở 120B' },
+
+  // 7. Ollama Local
+  { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)' },
+  { id: 'ollama-qwen', name: 'Ollama Qwen 3 Coder (30B Local)', group: 'Local Ollama', desc: 'Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)' }
+]
+
+export function loadModelsConfig(baseDir: string): ModelDef[] {
+  const candidates = [
+    nodePath.join(baseDir, 'models.json'),
+    nodePath.join(baseDir, '_original', 'models.json'),
+    '/mnt/d/Ensemble/models.json',
+    '/mnt/d/Ensemble/_original/models.json',
+  ]
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(p, 'utf8'))
+        if (Array.isArray(data) && data.length > 0) return data
+      } catch {}
+    }
+  }
+  return DEFAULT_MODELS
+}
+
+export function saveModelsConfig(baseDir: string, models: ModelDef[]): void {
+  const targets = [
+    nodePath.join(baseDir, 'models.json'),
+    nodePath.join(baseDir, '_original', 'models.json'),
+    '/mnt/d/Ensemble/models.json',
+    '/mnt/d/Ensemble/_original/models.json',
+  ]
+  const content = JSON.stringify(models, null, 2)
+  for (const t of targets) {
+    try {
+      if (fs.existsSync(nodePath.dirname(t))) {
+        fs.writeFileSync(t, content, 'utf8')
+      }
+    } catch {}
+  }
+}
+
+export function registerAiderModelLimits(modelId: string) {
+  try {
+    const aid = modelId.startsWith('ollama/') ? modelId : `ollama/${modelId.replace(/^ollama-/, '')}`
+    const metaPaths = [
+      nodePath.join(process.env.HOME || '/home/truong', '.aider.model.metadata.json'),
+      nodePath.join(process.env.HOME || '/home/truong', 'ensemble', '.aider.model.metadata.json'),
+      '/mnt/d/Ensemble/.aider.model.metadata.json',
+      '/mnt/d/Ensemble/_original/.aider.model.metadata.json',
+    ]
+    for (const mp of metaPaths) {
+      if (fs.existsSync(mp)) {
+        try {
+          const meta = JSON.parse(fs.readFileSync(mp, 'utf8'))
+          if (!meta[aid]) {
+            meta[aid] = {
+              max_tokens: 4096,
+              max_input_tokens: 16384,
+              max_output_tokens: 4096,
+              input_cost_per_token: 0.0,
+              output_cost_per_token: 0.0,
+              litellm_provider: 'ollama',
+              mode: 'chat',
+            }
+            fs.writeFileSync(mp, JSON.stringify(meta, null, 2), 'utf8')
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
 const PORT = parseInt(process.env.ENSEMBLE_PORT || process.env.ORCHESTRA_PORT || '23000', 10)
 const HOST = process.env.ENSEMBLE_HOST || '0.0.0.0'
 const RATE_LIMIT_WINDOW_MS = 60_000
@@ -249,6 +377,12 @@ const server = http.createServer(async (req, res) => {
         'gemini-4-neon-high': 'Gemini 4 Neon (High)',
         'gemini-4-neon-medium': 'Gemini 4 Neon (Medium)',
         'gemini-4-neon-low': 'Gemini 4 Neon (Low)',
+      }
+
+      // Merge dynamic model configurations from models.json
+      const allRegisteredModels = loadModelsConfig(serverDir)
+      for (const m of allRegisteredModels) {
+        modelMap[m.id] = m.name
       }
 
       const results = await Promise.all(agents.map(async (agent) => {
@@ -723,67 +857,7 @@ const server = http.createServer(async (req, res) => {
       const agentsPath = nodePath.join(serverDir, 'agents.json')
       const exhaustedFile = nodePath.join(process.env.HOME || '/home/truong', '.ensemble', 'exhausted-models.txt')
 
-      const hasOllama = fs.existsSync('/usr/local/bin/aider-smart') ||
-                        fs.existsSync('/usr/bin/aider-smart') ||
-                        fs.existsSync('/usr/local/bin/aider') ||
-                        fs.existsSync(nodePath.join(process.env.HOME || '/root', '.local/bin/aider'))
-
-      const availableModels = [
-        // 1. Gemini 4 Neon (New)
-        { id: 'gemini-4-neon-xhigh', name: 'Gemini 4 Neon (XHigh)', group: 'Gemini 4 Neon', desc: 'Siêu tư duy cực hạn (XHigh)' },
-        { id: 'gemini-4-neon-high', name: 'Gemini 4 Neon (High)', group: 'Gemini 4 Neon', desc: 'Tư duy cao nhất' },
-        { id: 'gemini-4-neon-medium', name: 'Gemini 4 Neon (Medium)', group: 'Gemini 4 Neon', desc: 'Cân bằng tốc độ & trí tuệ' },
-        { id: 'gemini-4-neon-low', name: 'Gemini 4 Neon (Low)', group: 'Gemini 4 Neon', desc: 'Tốc độ cao & tiết kiệm token' },
-
-        // 1b. Orchestrator (Neon) (New)
-        { id: 'gemini-pro-orchestrator-neon', name: 'Orchestrator (Neon)', group: 'Orchestrator (Neon)', desc: 'Chuyên điều phối tác tử thế hệ mới' },
-
-        // 1c. Gemini 4 Argon
-        { id: 'gemini-4-argon-high', name: 'Gemini 4 Argon (High)', group: 'Gemini 4 Argon', desc: 'Tư duy cao nhất' },
-        { id: 'gemini-4-argon-medium', name: 'Gemini 4 Argon (Medium)', group: 'Gemini 4 Argon', desc: 'Tư duy tiêu chuẩn' },
-        { id: 'gemini-4-argon-low', name: 'Gemini 4 Argon (Low)', group: 'Gemini 4 Argon', desc: 'Nhanh & Nhẹ' },
-
-        // 1d. Gemini 4 Hydrogen
-        { id: 'gemini-4-hydrogen-xhigh', name: 'Gemini 4 Hydrogen (XHigh)', group: 'Gemini 4 Hydrogen', desc: 'Siêu tư duy cực hạn (XHigh)' },
-        { id: 'gemini-4-hydrogen-high', name: 'Gemini 4 Hydrogen (High)', group: 'Gemini 4 Hydrogen', desc: 'Tư duy nâng cao' },
-        { id: 'gemini-4-hydrogen-medium', name: 'Gemini 4 Hydrogen (Medium)', group: 'Gemini 4 Hydrogen', desc: 'Cân bằng thế hệ mới' },
-        { id: 'gemini-4-hydrogen-low', name: 'Gemini 4 Hydrogen (Low)', group: 'Gemini 4 Hydrogen', desc: 'Tốc độ cao & tiết kiệm' },
-
-        // 1e. Orchestrator (Argon)
-        { id: 'gemini-pro-orchestrator-g1-pro', name: 'Orchestrator (Argon)', group: 'Orchestrator (Argon)', desc: 'Chuyên điều phối nhóm tác tử' },
-
-        // 2. Claude Opus 5.5
-        { id: 'claude-opus-5-5-high', name: 'Claude Opus 5.5 (High)', group: 'Claude Opus 5.5', desc: 'Siêu phân tích kiến trúc' },
-        { id: 'claude-opus-5-5-medium', name: 'Claude Opus 5.5 (Medium)', group: 'Claude Opus 5.5', desc: 'Cân bằng cao cấp' },
-        { id: 'claude-opus-5-5-low', name: 'Claude Opus 5.5 (Low)', group: 'Claude Opus 5.5', desc: 'Phản hồi nhanh' },
-
-        // 3. Claude Sonnet 5.5
-        { id: 'claude-sonnet-5-5-high', name: 'Claude Sonnet 5.5 (High)', group: 'Claude Sonnet 5.5', desc: 'Lập trình chuyên sâu' },
-        { id: 'claude-sonnet-5-5-medium', name: 'Claude Sonnet 5.5 (Medium)', group: 'Claude Sonnet 5.5', desc: 'Cân bằng & code chuẩn' },
-        { id: 'claude-sonnet-5-5-low', name: 'Claude Sonnet 5.5 (Low)', group: 'Claude Sonnet 5.5', desc: 'Tốc độ cao' },
-
-        // 4. Claude Pro (Claude Code CLI - Gói thuê bao Claude Pro)
-        { id: 'cc-opus-high', name: 'Claude Opus (Pro) (High)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Siêu phân tích kiến trúc' },
-        { id: 'cc-opus-medium', name: 'Claude Opus (Pro) (Medium)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Cân bằng cao cấp' },
-        { id: 'cc-opus-low', name: 'Claude Opus (Pro) (Low)', group: 'Claude Opus (Pro)', desc: 'Claude Pro: Phản hồi nhanh' },
-        { id: 'cc-sonnet-high', name: 'Claude Sonnet (Pro) (High)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Lập trình chuyên sâu' },
-        { id: 'cc-sonnet-medium', name: 'Claude Sonnet (Pro) (Medium)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Cân bằng & code chuẩn' },
-        { id: 'cc-sonnet-low', name: 'Claude Sonnet (Pro) (Low)', group: 'Claude Sonnet (Pro)', desc: 'Claude Pro: Tốc độ cao' },
-
-        // 5. Gemini 3.8 Flash
-        { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', group: 'Gemini 3.8 Flash', desc: 'Suy luận cao, dồi dào Quota' },
-        { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', group: 'Gemini 3.8 Flash', desc: 'Đa phương thức, tốc độ cao' },
-        { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', group: 'Gemini 3.8 Flash', desc: 'Siêu nhẹ, tiết kiệm token' },
-
-        // 6. GPT-OSS 120B
-        { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', group: 'GPT-OSS 120B', desc: 'Mô hình mã nguồn mở 120B' },
-
-        ...(hasOllama ? [
-          // 7. Ollama Local (chỉ hiện khi máy đã cài đặt kết nối Ollama/Aider)
-          { id: 'ollama-gemma', name: 'Ollama Gemma 4 (12B Local)', group: 'Local Ollama', desc: 'Chạy trực tiếp trên máy chủ nội bộ (Không tốn quota)' },
-          { id: 'ollama-qwen', name: 'Ollama Qwen 3 Coder (30B Local)', group: 'Local Ollama', desc: 'Chuyên lập trình & kiến trúc mã nguồn 30B (Mạng nội bộ)' }
-        ] : []),
-      ]
+      const availableModels = loadModelsConfig(serverDir)
 
       if (method === 'GET') {
         let currentAgents: Record<string, any> = {}
@@ -825,6 +899,44 @@ const server = http.createServer(async (req, res) => {
             try { currentAgents = JSON.parse(fs.readFileSync(agentsPath, 'utf8')) } catch {}
           }
 
+          let currentModels = loadModelsConfig(serverDir)
+
+          // 1. Add model
+          if (body.addModel && body.addModel.id && body.addModel.name) {
+            const newM: ModelDef = {
+              id: String(body.addModel.id).trim(),
+              name: String(body.addModel.name).trim(),
+              group: String(body.addModel.group || 'Khác').trim(),
+              desc: String(body.addModel.desc || '').trim(),
+            }
+            currentModels = currentModels.filter(m => m.id !== newM.id)
+            currentModels.push(newM)
+            saveModelsConfig(serverDir, currentModels)
+
+            // If it's an Ollama model, auto register 16384 token window limit
+            if (newM.id.startsWith('ollama') || newM.group.toLowerCase().includes('ollama')) {
+              registerAiderModelLimits(newM.id)
+            }
+          }
+
+          // 2. Delete model
+          if (body.deleteModelId) {
+            currentModels = currentModels.filter(m => m.id !== body.deleteModelId)
+            saveModelsConfig(serverDir, currentModels)
+          }
+
+          // 3. Reset to default models
+          if (body.resetModels) {
+            currentModels = [...DEFAULT_MODELS]
+            saveModelsConfig(serverDir, currentModels)
+          }
+
+          // 4. Batch replace models
+          if (Array.isArray(body.models)) {
+            currentModels = body.models
+            saveModelsConfig(serverDir, currentModels)
+          }
+
           const setModel = (key: string, model: string) => {
             if (currentAgents[key] && currentAgents[key].flags) {
               const a = currentAgents[key]
@@ -834,12 +946,13 @@ const server = http.createServer(async (req, res) => {
                 a.flags = ['--permission-mode', 'auto', '--model', model]
                 a.readyMarker = '❯'
                 a.unsetEnv = ['ANTHROPIC_API_KEY']
-              } else if (model.startsWith('ollama') || model.includes('gemma') || model.includes('qwen')) {
+              } else if (model.startsWith('ollama') || model.includes('gemma') || model.includes('qwen') || model.includes('phi') || model.includes('llama') || model.includes('mistral')) {
                 // Model Ollama Local -> chạy qua aider-smart
                 a.command = 'aider-smart'
                 let targetM = model
                 if (model === 'ollama-gemma') targetM = 'ollama/gemma4:12b'
                 else if (model === 'ollama-qwen') targetM = 'ollama/qwen3-coder:30b'
+                else if (!targetM.startsWith('ollama/')) targetM = `ollama/${targetM}`
                 a.flags = ['--model', targetM]
                 a.readyMarker = '>'
                 a.unsetEnv = []
@@ -875,7 +988,7 @@ const server = http.createServer(async (req, res) => {
             fs.writeFileSync(exhaustedFile, body.exhaustedModels.join('\n') + '\n', 'utf8')
           }
 
-          return json(res, { success: true }, 200, origin)
+          return json(res, { success: true, availableModels: currentModels }, 200, origin)
         } catch (err) {
           return json(res, { error: String(err) }, 400, origin)
         }

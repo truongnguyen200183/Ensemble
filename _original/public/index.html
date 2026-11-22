@@ -799,15 +799,61 @@
           </div>
         </div>
 
-        <!-- Quota Status Block -->
-        <div class="p-3 bg-slate-800/40 border border-slate-700/80 rounded-xl space-y-2">
-          <div class="flex items-center justify-between">
+        <!-- Quota Status Block & Model Management -->
+        <div class="p-3 bg-slate-800/40 border border-slate-700/80 rounded-xl space-y-2.5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <span class="font-semibold text-slate-300 flex items-center space-x-1.5">
               <span>📊</span>
-              <span>Tình trạng Quota các Mô hình:</span>
+              <span>Tình trạng Quota & Danh Sách Mô Hình:</span>
             </span>
-            <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa đánh dấu hết Quota (Reset)</button>
+            <div class="flex items-center space-x-2 shrink-0">
+              <button type="button" onclick="showAddModelForm()" class="text-[11px] px-2.5 py-1 rounded bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/60 font-semibold transition cursor-pointer flex items-center space-x-1 shadow-sm">
+                <span>➕</span>
+                <span>Thêm Model</span>
+              </button>
+              <button type="button" onclick="resetDefaultModels()" class="text-[11px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer flex items-center space-x-1" title="Khôi phục danh sách mô hình về mặc định ban đầu">
+                <span>🔄</span>
+                <span>Mặc định</span>
+              </button>
+              <button id="resetQuotaBtn" type="button" class="text-[11px] text-blue-400 hover:text-blue-300 underline cursor-pointer">Xóa Quota</button>
+            </div>
           </div>
+
+          <!-- Add Model Inline Form -->
+          <div id="addModelFormContainer" class="hidden p-3 bg-slate-950/95 border border-emerald-500/40 rounded-xl space-y-2.5 shadow-xl transition-all">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+              <span class="font-bold text-emerald-400 text-xs flex items-center space-x-1.5">
+                <span>✨</span>
+                <span>Thêm Mô Hình AI Mới (Local Ollama / Gemini / Claude / OpenRouter)</span>
+              </span>
+              <button type="button" onclick="hideAddModelForm()" class="text-slate-400 hover:text-slate-200 text-xs cursor-pointer">✕</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Tên hiển thị (Display Name) <span class="text-rose-400">*</span></label>
+                <input id="newModelName" type="text" placeholder="Ví dụ: Ollama Phi 4 (14B Local)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Mã / ID Model (Dùng cho CLI/API) <span class="text-rose-400">*</span></label>
+                <input id="newModelId" type="text" placeholder="Ví dụ: ollama/phi4:14b hoặc gemini-2.5-pro" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Nhóm (Group)</label>
+                <input id="newModelGroup" type="text" placeholder="Local Ollama, Gemini 4, Claude, OpenRouter..." class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-slate-400 text-[10px] mb-1 font-semibold">Mô tả ngắn</label>
+                <input id="newModelDesc" type="text" placeholder="Ví dụ: Mô hình lập trình & suy luận cục bộ 14B" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 text-xs focus:border-blue-500 focus:outline-none" />
+              </div>
+            </div>
+            <div class="flex items-center justify-end space-x-2 pt-1 border-t border-slate-800">
+              <button type="button" onclick="hideAddModelForm()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs cursor-pointer">Hủy</button>
+              <button type="button" onclick="submitAddNewModel()" class="px-3.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1 shadow cursor-pointer">
+                <span>✓ Thêm Model</span>
+              </button>
+            </div>
+          </div>
+
           <div id="quotaStatusList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] max-h-72 overflow-y-auto pr-1">
           </div>
         </div>
@@ -993,17 +1039,41 @@
       return '💤'
     }
 
+    const agentLogOpenState = {}
+
+    function toggleSingleAgentLog(agentName) {
+      const current = (agentName in agentLogOpenState) ? agentLogOpenState[agentName] : allAgentDetailsOpen
+      agentLogOpenState[agentName] = !current
+
+      const container = document.getElementById(`agentLogContainer_${agentName}`)
+      const btn = document.getElementById(`logBtn_${agentName}`)
+      if (container) {
+        if (agentLogOpenState[agentName]) {
+          container.classList.remove('hidden')
+        } else {
+          container.classList.add('hidden')
+        }
+      }
+      if (btn) {
+        const isOpen = agentLogOpenState[agentName]
+        btn.className = `text-[9.5px] px-1.5 py-0.5 rounded border transition cursor-pointer flex items-center space-x-1 ${isOpen ? 'border-blue-600/70 bg-blue-950/70 text-blue-300' : 'border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200'}`
+        btn.innerHTML = `<span>📜</span><span>${isOpen ? 'Ẩn log' : 'Xem log'}</span><span class="text-[8px]">${isOpen ? '▲' : '▼'}</span>`
+      }
+    }
+
     function toggleAllAgentDetails() {
       allAgentDetailsOpen = !allAgentDetailsOpen
-      const container = document.getElementById('agentStatusCardsContainer')
-      if (container) {
-        container.querySelectorAll('details').forEach(d => {
-          d.open = allAgentDetailsOpen
+      if (lastAgentStatusData && Array.isArray(lastAgentStatusData.agents)) {
+        lastAgentStatusData.agents.forEach(a => {
+          agentLogOpenState[a.name] = allAgentDetailsOpen
         })
       }
       const btn = document.getElementById('toggleAllPaneDetailsBtn')
       if (btn) {
-        btn.textContent = allAgentDetailsOpen ? 'Ẩn log' : 'Hiện log'
+        btn.textContent = allAgentDetailsOpen ? 'Ẩn tất cả log' : 'Hiện tất cả log'
+      }
+      if (lastAgentStatusData) {
+        renderAgentStatusCards(lastAgentStatusData.agents || [], lastAgentStatusData.teamStatus)
       }
     }
 
@@ -1096,6 +1166,7 @@
 
       let html = ''
       agents.forEach(agent => {
+        const isOpen = (agent.name in agentLogOpenState) ? agentLogOpenState[agent.name] : allAgentDetailsOpen
         const borderClass = agent.state === 'thinking' 
           ? 'border-purple-600/50 bg-slate-900/95 ring-1 ring-purple-500/20' 
           : agent.state === 'running'
@@ -1125,8 +1196,19 @@
                   ${agent.instruction ? `<div class="text-[10px] text-amber-300/90 font-medium truncate mt-0.5" title="${escapeHtml(agent.instruction)}">🎯 ${escapeHtml(agent.instruction)}</div>` : ''}
                 </div>
               </div>
-              <div class="shrink-0">
+              <div class="shrink-0 flex flex-col items-end space-y-1">
                 ${getStateBadgeHtml(agent.state, agent.detail)}
+                <button 
+                  id="logBtn_${escapeHtml(agent.name)}" 
+                  type="button" 
+                  onclick="toggleSingleAgentLog('${escapeHtml(agent.name)}')" 
+                  class="text-[9.5px] px-1.5 py-0.5 rounded border transition cursor-pointer flex items-center space-x-1 ${isOpen ? 'border-blue-600/70 bg-blue-950/70 text-blue-300' : 'border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200'}"
+                  title="Bật/Tắt xem terminal log của riêng ${escapeHtml(agent.name)}"
+                >
+                  <span>📜</span>
+                  <span>${isOpen ? 'Ẩn log' : 'Xem log'}</span>
+                  <span class="text-[8px]">${isOpen ? '▲' : '▼'}</span>
+                </button>
               </div>
             </div>
 
@@ -1149,16 +1231,17 @@
               ` : ''}
             </div>
 
-            <!-- Terminal Log Preview (details) -->
-            ${agent.paneTail ? `
-              <details class="text-[10px] text-slate-400 group" ${allAgentDetailsOpen ? 'open' : ''}>
-                <summary class="cursor-pointer select-none text-slate-500 hover:text-slate-300 transition flex items-center justify-between font-mono py-0.5 text-[10px]">
-                  <span>Log terminal gần nhất</span>
-                  <span class="text-[8px] group-open:rotate-180 transition-transform">▼</span>
-                </summary>
-                <pre class="mt-1 p-2 bg-black/90 rounded border border-slate-800/80 font-mono text-[9px] text-slate-300 overflow-x-auto whitespace-pre-wrap leading-tight max-h-32 select-text">${escapeHtml(agent.paneTail)}</pre>
-              </details>
-            ` : ''}
+            <!-- Terminal Log Preview (Per-Agent) -->
+            <div id="agentLogContainer_${escapeHtml(agent.name)}" class="${isOpen ? '' : 'hidden'} mt-1.5 pt-1.5 border-t border-slate-800/80">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                <span class="font-mono text-slate-400 flex items-center space-x-1">
+                  <span>💻</span>
+                  <span>Log Terminal (${escapeHtml(agent.name)}):</span>
+                </span>
+                <span class="text-[9px] text-slate-500 font-mono">${agent.alive ? '● Kết nối' : '○ Ngoại tuyến'}</span>
+              </div>
+              <pre class="p-2 bg-black/90 rounded border border-slate-800/80 font-mono text-[9px] text-slate-300 overflow-x-auto whitespace-pre-wrap leading-tight max-h-36 select-text">${agent.paneTail ? escapeHtml(agent.paneTail) : '<span class="text-slate-500 italic">[Chưa có log terminal hoặc agent đang ngoại tuyến]</span>'}</pre>
+            </div>
           </div>
         `
       })
@@ -2784,7 +2867,7 @@
         console.warn('Error rendering teamSection:', err)
       }
 
-      // 2. Render Quota status list
+      // 2. Render Quota status list with delete buttons
       try {
         const quotaList = document.getElementById('quotaStatusList')
         if (quotaList) {
@@ -2793,22 +2876,135 @@
           modelsToRender.forEach(m => {
             const isExhausted = (exhaustedModels || []).includes(m.id)
             const item = document.createElement('div')
-            item.className = 'flex items-center justify-between py-1.5 px-2 bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg transition'
+            item.className = 'flex items-center justify-between py-1.5 px-2 bg-slate-900/80 border border-slate-800/80 hover:border-slate-700 rounded-lg transition group'
             item.innerHTML = `
               <div class="flex items-center space-x-2 min-w-0 pr-2">
                 <span class="w-2 h-2 rounded-full shrink-0 ${isExhausted ? 'bg-red-500 animate-pulse-subtle' : 'bg-emerald-400'}"></span>
-                <span class="text-slate-200 font-medium truncate">${escapeHtml(m.name)}</span>
-                ${m.desc ? `<span class="text-[10px] text-slate-400 truncate hidden md:inline">(${escapeHtml(m.desc)})</span>` : ''}
+                <span class="text-slate-200 font-medium truncate" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>
+                ${m.desc ? `<span class="text-[10px] text-slate-400 truncate hidden md:inline" title="${escapeHtml(m.desc)}">(${escapeHtml(m.desc)})</span>` : ''}
               </div>
-              <span class="text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
-                ${isExhausted ? 'Khóa hạn mức' : 'Sẵn sàng'}
-              </span>
+              <div class="flex items-center space-x-1.5 shrink-0">
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${isExhausted ? 'bg-red-950 text-red-300 border border-red-700/60' : 'bg-emerald-950 text-emerald-300 border border-emerald-700/60'}">
+                  ${isExhausted ? 'Khóa hạn mức' : 'Sẵn sàng'}
+                </span>
+                <button type="button" onclick="deleteModel('${escapeHtml(m.id)}', '${escapeHtml(m.name)}')" class="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-950/50 transition cursor-pointer" title="Xóa model '${escapeHtml(m.name)}' khỏi danh sách">
+                  <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
             `
             quotaList.appendChild(item)
           })
         }
       } catch (err) {
         console.warn('Error rendering quotaList:', err)
+      }
+    }
+
+    function showAddModelForm() {
+      const form = document.getElementById('addModelFormContainer')
+      if (form) form.classList.remove('hidden')
+      const nameInput = document.getElementById('newModelName')
+      if (nameInput) nameInput.focus()
+    }
+
+    function hideAddModelForm() {
+      const form = document.getElementById('addModelFormContainer')
+      if (form) form.classList.add('hidden')
+      const nameInput = document.getElementById('newModelName')
+      const idInput = document.getElementById('newModelId')
+      const groupInput = document.getElementById('newModelGroup')
+      const descInput = document.getElementById('newModelDesc')
+      if (nameInput) nameInput.value = ''
+      if (idInput) idInput.value = ''
+      if (groupInput) groupInput.value = ''
+      if (descInput) descInput.value = ''
+    }
+
+    async function submitAddNewModel() {
+      const name = (document.getElementById('newModelName')?.value || '').trim()
+      const id = (document.getElementById('newModelId')?.value || '').trim()
+      const group = (document.getElementById('newModelGroup')?.value || '').trim() || 'Khác'
+      const desc = (document.getElementById('newModelDesc')?.value || '').trim()
+
+      if (!name) {
+        alert('Vui lòng nhập Tên hiển thị của mô hình!')
+        return
+      }
+      if (!id) {
+        alert('Vui lòng nhập Mã / ID của mô hình!')
+        return
+      }
+
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            addModel: { id, name, group, desc }
+          })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          hideAddModelForm()
+          await loadModelConfig(true)
+          if (typeof renderCurrentTeamAgentsList === 'function') {
+            renderCurrentTeamAgentsList()
+          }
+        } else {
+          alert('Lỗi thêm model: ' + (data.error || 'Không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi thêm model: ' + err.message)
+      }
+    }
+
+    async function deleteModel(modelId, modelName) {
+      if (!confirm(`Bạn có chắc muốn xóa mô hình "${modelName}" (${modelId}) khỏi danh sách không?`)) {
+        return
+      }
+
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deleteModelId: modelId })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          await loadModelConfig(true)
+          if (typeof renderCurrentTeamAgentsList === 'function') {
+            renderCurrentTeamAgentsList()
+          }
+        } else {
+          alert('Lỗi khi xóa model: ' + (data.error || 'Không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi xóa model: ' + err.message)
+      }
+    }
+
+    async function resetDefaultModels() {
+      if (!confirm('Bạn có muốn khôi phục danh sách mô hình về mặc định ban đầu không?')) {
+        return
+      }
+
+      try {
+        const res = await fetch('/api/ensemble/model-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resetModels: true })
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          await loadModelConfig(true)
+          if (typeof renderCurrentTeamAgentsList === 'function') {
+            renderCurrentTeamAgentsList()
+          }
+        } else {
+          alert('Lỗi khi khôi phục model: ' + (data.error || 'Không xác định'))
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi khôi phục model: ' + err.message)
       }
     }
 

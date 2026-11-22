@@ -3,8 +3,8 @@
     "max_tokens": 4096,
     "max_input_tokens": 16384,
     "max_output_tokens": 4096,
-    "input_cost_per_token": 0.0,
-    "output_cost_per_token": 0.0,
+    "input_cost_per_token": 0,
+    "output_cost_per_token": 0,
     "litellm_provider": "ollama",
     "mode": "chat"
   },
@@ -12,8 +12,8 @@
     "max_tokens": 4096,
     "max_input_tokens": 16384,
     "max_output_tokens": 4096,
-    "input_cost_per_token": 0.0,
-    "output_cost_per_token": 0.0,
+    "input_cost_per_token": 0,
+    "output_cost_per_token": 0,
     "litellm_provider": "ollama",
     "mode": "chat"
   },
@@ -21,8 +21,8 @@
     "max_tokens": 4096,
     "max_input_tokens": 16384,
     "max_output_tokens": 4096,
-    "input_cost_per_token": 0.0,
-    "output_cost_per_token": 0.0,
+    "input_cost_per_token": 0,
+    "output_cost_per_token": 0,
     "litellm_provider": "ollama",
     "mode": "chat"
   },
@@ -30,8 +30,17 @@
     "max_tokens": 4096,
     "max_input_tokens": 16384,
     "max_output_tokens": 4096,
-    "input_cost_per_token": 0.0,
-    "output_cost_per_token": 0.0,
+    "input_cost_per_token": 0,
+    "output_cost_per_token": 0,
+    "litellm_provider": "ollama",
+    "mode": "chat"
+  },
+  "ollama/test-ollama-phi": {
+    "max_tokens": 4096,
+    "max_input_tokens": 16384,
+    "max_output_tokens": 4096,
+    "input_cost_per_token": 0,
+    "output_cost_per_token": 0,
     "litellm_provider": "ollama",
     "mode": "chat"
   }
