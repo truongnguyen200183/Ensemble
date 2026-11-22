@@ -3,7 +3,7 @@
 # Hard context cap: 16384 tokens (num_ctx: 16384, max-chat-history-tokens: 12288)
 # Usage: aider-smart [options]
 
-MODEL="ollama/gemma4:12b"
+MODEL=""
 ARGS=()
 SKIP_NEXT=0
 
