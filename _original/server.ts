@@ -666,6 +666,33 @@ const server = http.createServer(async (req, res) => {
           }
         }
 
+        // Kill tmux sessions for agents whose model (program) or host changed so they respawn with the new CLI
+        const changedAgents = updatedAgents.filter(up => {
+          const prev = previousAgents.find(p => p.name.toLowerCase() === up.name.toLowerCase())
+          return prev && (prev.program.trim().toLowerCase() !== up.program.trim().toLowerCase() || prev.hostId !== up.hostId)
+        })
+
+        if (changedAgents.length > 0) {
+          const runtime = getRuntime()
+          for (const ch of changedAgents) {
+            const sessionName = `${team.name}-${ch.name}`
+            try {
+              await runtime.killSession(sessionName)
+            } catch (err) {
+              console.warn(`[Agents] Could not kill session ${sessionName}:`, err)
+            }
+            appendMessage(teamId, {
+              id: uuidv4(),
+              teamId,
+              from: 'ensemble',
+              to: 'team',
+              type: 'chat',
+              timestamp: new Date().toISOString(),
+              content: `🔄 Tác tử **${ch.name}** đã được đổi mô hình sang **${ch.program}**. Đang khởi động lại tiến trình với CLI tương ứng...`,
+            })
+          }
+        }
+
         // Notify team feed if any agent role has changed
         for (const up of updatedAgents) {
           const prev = previousAgents.find(p => p.name.toLowerCase() === up.name.toLowerCase())
@@ -695,11 +722,11 @@ const server = http.createServer(async (req, res) => {
 
         const updated = updateTeam(teamId, { agents: updatedAgents })
 
-        // If team is active and new agents were added, spin them up
+        // If team is active and new agents were added OR existing agents had their model/host changed, spin them up
         if (team.status === 'active') {
           const prevNames = new Set(previousAgents.map(a => a.name.toLowerCase()))
           const newlyAdded = updatedAgents.filter(a => !prevNames.has(a.name.toLowerCase()))
-          if (newlyAdded.length > 0) {
+          if (newlyAdded.length > 0 || changedAgents.length > 0) {
             await reactivateTeam(teamId)
           }
         }
