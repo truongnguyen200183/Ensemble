@@ -6,6 +6,7 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { readEnsembleConfig } from './ensemble-config'
 import { getRuntime } from './agent-runtime'
@@ -89,6 +90,7 @@ export async function spawnLocalAgent(options: SpawnAgentOptions): Promise<Spawn
   const modelKey = options.program.toLowerCase()
   let modelApiKey = ''
   let modelCli = ''
+  let modelCodeMode = false
   try {
     const candidates = [
       path.join(__dirname, '..', 'models.json'),
@@ -105,6 +107,7 @@ export async function spawnLocalAgent(options: SpawnAgentOptions): Promise<Spawn
           if (found) {
             modelApiKey = found.apiKey ? String(found.apiKey).trim() : ''
             modelCli = found.cli ? String(found.cli).trim() : ''
+            modelCodeMode = found.codeMode === true
             break
           }
         }
@@ -124,6 +127,12 @@ export async function spawnLocalAgent(options: SpawnAgentOptions): Promise<Spawn
     } else {
       dynamicModelEnv['OPENAI_API_KEY'] = modelApiKey
     }
+  }
+
+  // Per-model Claude Code "Code Mode" (experimental, Claude Code >= 2.1.323, only for CLI 'claude')
+  const isClaudeCli = modelCli === 'claude' || (!modelCli && modelKey.startsWith('cc-'))
+  if (modelCodeMode && isClaudeCli) {
+    dynamicModelEnv['CLAUDE_CODE_EXPERIMENTAL_CODE_MODE'] = '1'
   }
 
   // Explicit pane exports also reach shells created by an already-running tmux server.

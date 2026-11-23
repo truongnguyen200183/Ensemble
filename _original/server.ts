@@ -34,6 +34,7 @@ export interface ModelDef {
   cli?: string
   icon?: string
   color?: string
+  codeMode?: boolean
   info?: ModelInfoDef
 }
 
@@ -951,6 +952,7 @@ const server = http.createServer(async (req, res) => {
               icon: body.addModel.icon ? String(body.addModel.icon).trim() : undefined,
               color: body.addModel.color ? String(body.addModel.color).trim() : undefined,
               ...(body.addModel.apiKey ? { apiKey: String(body.addModel.apiKey).trim() } : {}),
+              ...(body.addModel.codeMode ? { codeMode: true } : {}),
               ...(body.addModel.info ? { info: body.addModel.info } : {}),
             }
             currentModels = currentModels.filter(m => m.id !== newM.id)
@@ -978,6 +980,7 @@ const server = http.createServer(async (req, res) => {
             const targetColor = up.color !== undefined ? String(up.color).trim() : (idx !== -1 ? currentModels[idx].color : undefined)
             const targetApiKey = up.apiKey !== undefined ? String(up.apiKey).trim() : (idx !== -1 ? currentModels[idx].apiKey : undefined)
             const targetInfo = up.info || (idx !== -1 ? currentModels[idx].info : undefined)
+            const targetCodeMode = up.codeMode !== undefined ? Boolean(up.codeMode) : (idx !== -1 ? Boolean(currentModels[idx].codeMode) : false)
 
             const updatedM: ModelDef = {
               id: targetId,
@@ -989,6 +992,7 @@ const server = http.createServer(async (req, res) => {
               ...(targetIcon ? { icon: targetIcon } : {}),
               ...(targetColor ? { color: targetColor } : {}),
               ...(targetApiKey ? { apiKey: targetApiKey } : {}),
+              ...(targetCodeMode ? { codeMode: true } : {}),
               ...(targetInfo ? { info: targetInfo } : {}),
             }
 
