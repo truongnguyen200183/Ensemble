@@ -28,6 +28,15 @@ const GATES: Array<{ name: string; pattern: RegExp; defaultKeys: GateKeys }> = [
     pattern: /WARNING: Claude Code running in Bypass Permissions mode/i,
     defaultKeys: 'down-enter',
   },
+  {
+    // Shown at startup when CLAUDE_CODE_EXPERIMENTAL_CODE_MODE is set (per-model
+    // "Code Mode" toggle). The cursor defaults to "No, start without it", and its
+    // ❯ is also Claude's ready marker: without this gate the pane counts as ready
+    // and the first prompt is typed into the dialog.
+    name: 'code mode opt-in',
+    pattern: /Yes, turn on Code Mode/i,
+    defaultKeys: 'enter',
+  },
 ]
 
 /** How many non-empty lines at the bottom of the pane a live dialog occupies. */

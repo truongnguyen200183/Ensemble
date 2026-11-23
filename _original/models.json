@@ -563,7 +563,10 @@
     "group": "Claude Sonnet (Pro)",
     "desc": "Claude Pro: Cân bằng & code chuẩn",
     "layer": "Tier 2",
-    "apiKey": "",
+    "cli": "claude",
+    "icon": "●",
+    "color": "purple",
+    "codeMode": true,
     "info": {
       "coreStrengths": [
         "Mô hình lập trình số 1 hiện nay: tạo diff code chính xác, tuân thủ convention, sửa lỗi nhanh.",
@@ -576,10 +579,7 @@
       "ensembleRec": [
         "Lựa chọn hoàn hảo nhất cho WORKER (Lập trình viên thực thi)."
       ]
-    },
-    "cli": "claude",
-    "icon": "●",
-    "color": "purple"
+    }
   },
   {
     "id": "cc-sonnet-low",

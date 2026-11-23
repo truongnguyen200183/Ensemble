@@ -33,7 +33,44 @@ const CLAUDE_READY_TAIL = [
   '  ⏵⏵ bypass permissions on (shift+tab to cycle)',
 ].join('\n')
 
+// Real screen text from Claude Code 2.1.330 started with
+// CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1 in a trusted directory.
+const CLAUDE_CODE_MODE_NO_SELECTED = [
+  '────────────────────────────────────────────────────────────────────────────────',
+  '  Code Mode (experimental)',
+  '  In Code Mode, Claude works by writing and running JavaScript that calls its tools, instead of calling them one at a time.',
+  '  This is an early experiment. It can behave differently from normal Claude Code, and it may change or be removed in any',
+  '  release. Remote Control, Claude in Chrome and computer use are off in Code Mode.',
+  '  A session that you start in Code Mode can be resumed only with Code Mode on. If you turn Code Mode off, turn it on again to',
+  "  resume the session. Where Code Mode isn't available, the session can't be resumed: cloud sessions and the Claude apps can't",
+  '  continue it, and older versions of Claude Code may open it but not work properly in it.',
+  '  Sessions start in the same permission mode as without Code Mode, which can be auto mode where it\'s available. In auto mode,',
+  "  the safety check reads each piece of JavaScript once, before it runs. It doesn't check each tool call that the code then",
+  "  makes, so it can't see values that the code works out as it runs.",
+  '  ❯ No, start without it',
+  '    Yes, turn on Code Mode',
+  '  Tell us how it goes with /feedback',
+  '  Enter to confirm · Esc to start without it',
+].join('\n')
+
+const CLAUDE_CODE_MODE_YES_SELECTED = CLAUDE_CODE_MODE_NO_SELECTED
+  .replace('  ❯ No, start without it', '    No, start without it')
+  .replace('    Yes, turn on Code Mode', '  ❯ Yes, turn on Code Mode')
+
 describe('detectLiveGate', () => {
+  it('chooses "Yes, turn on Code Mode" when the cursor is on "No, start without it"', () => {
+    expect(detectLiveGate(CLAUDE_CODE_MODE_NO_SELECTED)).toEqual({ name: 'code mode opt-in', keys: 'down-enter' })
+  })
+
+  it('confirms the Code Mode dialog with Enter once "Yes" is selected', () => {
+    expect(detectLiveGate(CLAUDE_CODE_MODE_YES_SELECTED)).toEqual({ name: 'code mode opt-in', keys: 'enter' })
+  })
+
+  it('ignores an answered Code Mode dialog in the scrollback above a running agent', () => {
+    const filler = Array.from({ length: 20 }, (_, i) => `  regel ${i}`).join('\n')
+    expect(detectLiveGate(`${CLAUDE_CODE_MODE_YES_SELECTED}\n${filler}\n${CLAUDE_READY_TAIL}`)).toBeNull()
+  })
+
   it('bevestigt de agy-trustvraag met de voorgeselecteerde Yes-optie', () => {
     const pane = 'Do you trust the contents of this project?\n> Yes, I trust this folder'
     expect(detectLiveGate(pane)).toEqual({ name: 'trust prompt', keys: 'enter' })

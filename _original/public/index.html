@@ -859,6 +859,7 @@
             <select id="detailModelCli" onchange="handleDetailModelCliChange(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer">
               <option value="agy">🪐 Antigravity CLI (agy / Gemini)</option>
               <option value="claude">🟣 Claude Code CLI (claude / Anthropic)</option>
+              <option value="claude-codemode">🧪 Claude Code CLI + Code Mode (thử nghiệm)</option>
               <option value="ollama">🦙 Aider CLI (Ollama Local / DeepSeek API / Khác)</option>
               <option value="codex">💻 OpenAI Codex CLI (codex)</option>
               <option value="grok">🧠 Grok xAI CLI (grok)</option>
@@ -924,15 +925,10 @@
           </div>
         </div>
 
-        <!-- Row 4b: Claude Code Mode (only CLI claude) -->
-        <div id="detailModelCodeModeRow" class="hidden">
-          <label class="flex items-start space-x-2 p-2.5 bg-slate-950 border border-slate-700 rounded-lg cursor-pointer">
-            <input id="detailModelCodeMode" type="checkbox" class="mt-0.5 cursor-pointer" />
-            <span class="text-xs">
-              <span class="font-semibold text-slate-200">🧪 Bật Code Mode (Claude Code thử nghiệm)</span><br/>
-              <span class="text-[10px] text-slate-500">Claude viết JavaScript để gom/chạy song song nhiều tool call, lọc kết quả trước khi đưa vào context → tiết kiệm token. Chỉ áp dụng CLI claude (≥ v2.1.323), có hiệu lực từ lần khởi chạy Agent tiếp theo.</span>
-            </span>
-          </label>
+        <!-- Row 4b: Code Mode hint (only when CLI = Claude Code + Code Mode) -->
+        <div id="detailModelCodeModeRow" class="hidden p-2.5 bg-slate-950 border border-slate-700 rounded-lg text-[10px] text-slate-500">
+          <span class="font-semibold text-slate-300">🧪 Code Mode đang bật cho model này.</span>
+          Claude viết JavaScript để gom/chạy song song nhiều tool call, lọc kết quả trước khi đưa vào context → tiết kiệm token. Có hiệu lực từ lần khởi chạy Agent tiếp theo. Muốn tắt: chọn lại "Claude Code CLI" thường.
         </div>
 
         <!-- Row 3: Description -->
@@ -3008,6 +3004,7 @@
     }
 
     function handleDetailModelCliChange(cli) {
+      if (cli === 'claude-codemode') cli = 'claude'
       const idInput = document.getElementById('detailModelId')
       const layerSelect = document.getElementById('detailModelLayer')
       const iconSelect = document.getElementById('detailModelIcon')
@@ -3084,8 +3081,6 @@
         if (iconSelect) iconSelect.value = '▲'
         if (colorSelect) colorSelect.value = 'blue'
         if (apiKeyInput) { apiKeyInput.value = ''; apiKeyInput.type = 'password'; }
-        const codeModeInputNew = document.getElementById('detailModelCodeMode')
-        if (codeModeInputNew) codeModeInputNew.checked = false
         if (descInput) descInput.value = ''
         if (strengthsInput) strengthsInput.value = ''
         if (speedQuotaInput) speedQuotaInput.value = ''
@@ -3095,18 +3090,16 @@
         const m = models.find(x => x.id === modelId) || { id: modelId, name: modelId }
         const inferredCli = m.cli || (m.layer === 'Local' || m.id.startsWith('ollama') ? 'ollama' : (m.id.startsWith('cc-') ? 'claude' : 'agy'))
         if (titleEl) titleEl.innerHTML = `<span>👁️ Chi Tiết: ${escapeHtml(m.name)}</span>`
-        if (subtitleEl) subtitleEl.textContent = `Mã: ${m.id} • ${m.layer || 'Tier 2'} • CLI: ${inferredCli}`
+        if (subtitleEl) subtitleEl.textContent = `Mã: ${m.id} • ${m.layer || 'Tier 2'} • CLI: ${inferredCli}${inferredCli === 'claude' && m.codeMode === true ? ' + Code Mode' : ''}`
         if (saveBtn) saveBtn.innerHTML = '<span>💾 Lưu Thay Đổi</span>'
         if (deleteBtn) deleteBtn.classList.remove('hidden')
         if (idInput) { idInput.value = m.id || ''; idInput.disabled = false; }
         if (nameInput) nameInput.value = m.name || ''
         if (layerSelect) layerSelect.value = m.layer || inferLayer(m.id, m.group) || 'Tier 2'
-        if (cliSelect) cliSelect.value = inferredCli
+        if (cliSelect) cliSelect.value = (inferredCli === 'claude' && m.codeMode === true) ? 'claude-codemode' : inferredCli
         if (iconSelect) iconSelect.value = m.icon || (inferredCli === 'ollama' ? '🦙' : (inferredCli === 'claude' ? '●' : '▲'))
         if (colorSelect) colorSelect.value = m.color || (inferredCli === 'ollama' ? 'cyan' : (inferredCli === 'claude' ? 'emerald' : 'blue'))
         if (apiKeyInput) { apiKeyInput.value = m.apiKey || ''; apiKeyInput.type = 'password'; }
-        const codeModeInput = document.getElementById('detailModelCodeMode')
-        if (codeModeInput) codeModeInput.checked = m.codeMode === true
         if (descInput) descInput.value = m.desc || ''
 
         const formatInfoLines = (val) => {
@@ -3140,7 +3133,7 @@
     function syncDetailCodeModeVisibility() {
       const row = document.getElementById('detailModelCodeModeRow')
       const cli = document.getElementById('detailModelCli')?.value
-      if (row) row.classList.toggle('hidden', cli !== 'claude')
+      if (row) row.classList.toggle('hidden', cli !== 'claude-codemode')
     }
 
     function closeModelDetailModal() {
@@ -3160,7 +3153,10 @@
       const name = (document.getElementById('detailModelName')?.value || '').trim()
       const originalId = document.getElementById('detailModelOriginalId')?.value || ''
       const layer = document.getElementById('detailModelLayer')?.value || 'Tier 2'
-      const cli = document.getElementById('detailModelCli')?.value || 'agy'
+      const cliChoice = document.getElementById('detailModelCli')?.value || 'agy'
+      // "Claude Code + Code Mode" is a UI-only choice: stored as cli 'claude' + codeMode true.
+      const codeMode = cliChoice === 'claude-codemode'
+      const cli = codeMode ? 'claude' : cliChoice
       const icon = document.getElementById('detailModelIcon')?.value || '🤖'
       const color = document.getElementById('detailModelColor')?.value || 'blue'
       const apiKey = (document.getElementById('detailModelApiKey')?.value || '').trim()
@@ -3188,7 +3184,7 @@
         icon,
         color,
         apiKey,
-        codeMode: cli === 'claude' && document.getElementById('detailModelCodeMode')?.checked === true,
+        codeMode,
         info: {
           coreStrengths: strengths ? strengths.split('\n').map(s => s.trim()).filter(Boolean) : [],
           speedQuota: speedQuota ? speedQuota.split('\n').map(s => s.trim()).filter(Boolean) : [],
