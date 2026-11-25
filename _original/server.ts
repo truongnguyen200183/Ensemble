@@ -162,11 +162,17 @@ export function registerAiderModelLimits(modelId: string) {
 const PORT = parseInt(process.env.ENSEMBLE_PORT || process.env.ORCHESTRA_PORT || '23000', 10)
 const HOST = process.env.ENSEMBLE_HOST || '0.0.0.0'
 const RATE_LIMIT_WINDOW_MS = 60_000
-const RATE_LIMIT_MAX_REQUESTS = 100
+const RATE_LIMIT_MAX_REQUESTS = 300
 const DEFAULT_CORS_ORIGIN_PATTERNS = [
-  /^http:\/\/localhost(?::\d+)?$/i,
-  /^http:\/\/127\.0\.0\.1(?::\d+)?$/i,
-  /^http:\/\/\[::1\](?::\d+)?$/i,
+  /^https?:\/\/localhost(?::\d+)?$/i,
+  /^https?:\/\/127\.0\.0\.1(?::\d+)?$/i,
+  /^https?:\/\/\[::1\](?::\d+)?$/i,
+  // LAN IPv4 patterns: 192.168.x.x, 10.x.x.x, 172.16.x.x - 172.31.x.x, 100.64-127.x.x (Tailscale)
+  /^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}(?::\d+)?$/i,
+  /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}(?::\d+)?$/i,
+  /^https?:\/\/172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}(?::\d+)?$/i,
+  /^https?:\/\/100\.(?:6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\.\d{1,3}\.\d{1,3}(?::\d+)?$/i,
+  /^https?:\/\/[a-zA-Z0-9.-]+\.local(?::\d+)?$/i,
 ]
 
 type RateLimitEntry = {
@@ -196,29 +202,44 @@ function getAllowedCorsOrigins(): string[] {
     .filter(Boolean)
 }
 
-function isAllowedOrigin(origin: string): boolean {
+function isAllowedOrigin(origin: string, host?: string): boolean {
+  if (!origin) return true
+
+  // 1. Same-origin request: origin's host matches the request's Host header
+  if (host) {
+    try {
+      const originUrl = new URL(origin)
+      if (originUrl.host === host) return true
+    } catch {}
+  }
+
+  // 2. Explicitly configured origins from env (ENSEMBLE_CORS_ORIGIN)
   const configuredOrigins = getAllowedCorsOrigins()
-  if (configuredOrigins.length > 0) return configuredOrigins.includes(origin)
+  if (configuredOrigins.length > 0) {
+    if (configuredOrigins.includes('*') || configuredOrigins.includes(origin)) return true
+  }
+
+  // 3. Localhost, loopback, LAN / private network IP patterns
   return DEFAULT_CORS_ORIGIN_PATTERNS.some(pattern => pattern.test(origin))
 }
 
-function buildCorsHeaders(origin?: string): Record<string, string> {
+function buildCorsHeaders(origin?: string, host?: string): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
     'Vary': 'Origin',
   }
 
-  if (origin && isAllowedOrigin(origin)) {
+  if (origin && isAllowedOrigin(origin, host)) {
     headers['Access-Control-Allow-Origin'] = origin
   }
 
   return headers
 }
 
-function json(res: http.ServerResponse, data: unknown, status = 200, origin?: string) {
-  res.writeHead(status, buildCorsHeaders(origin))
+function json(res: http.ServerResponse, data: unknown, status = 200, origin?: string, host?: string) {
+  res.writeHead(status, buildCorsHeaders(origin, host))
   res.end(JSON.stringify(data))
 }
 
@@ -259,14 +280,15 @@ const server = http.createServer(async (req, res) => {
   const path = url.pathname
   const method = req.method || 'GET'
   const origin = req.headers.origin
+  const host = req.headers.host
 
-  if (origin && !isAllowedOrigin(origin)) {
-    return json(res, { error: 'CORS origin forbidden' }, 403, origin)
+  if (origin && !isAllowedOrigin(origin, host)) {
+    return json(res, { error: 'CORS origin forbidden' }, 403, origin, host)
   }
 
   // CORS preflight
   if (method === 'OPTIONS') {
-    res.writeHead(204, buildCorsHeaders(origin))
+    res.writeHead(204, buildCorsHeaders(origin, host))
     res.end()
     return
   }
